@@ -40,25 +40,37 @@ Raccomandazioni dall'analisi: zoom default 12, zoom 13 solo su conferma esplicit
 
 **Nota architetturale**: lo schema v1.1 con annotazioni embedded (già mergiato) è un prerequisito naturale per il sync cloud — il formato di serializzazione di note + visitati è lo stesso.
 
+### 3. MCP server Roadbook per integrazione con Claude (nuovo repo `roadbook-mcp`)
+
+**Obiettivo**: permettere a un utente che sta lavorando a un itinerario con Claude (Desktop o Web) di **vedere in anteprima** il viaggio nella PWA Roadbook via un link cliccabile generato da una tool MCP. Il payload JSON viaggia nell'URL (parametro `?viaggio_data=<base64url>`), nessun server intermedio, nessuno storage cloud.
+
+**Design completo** nel documento di progetto: [`analisi/mcp-roadbook-v1.md`](analisi/mcp-roadbook-v1.md). Contiene: flusso utente, architettura end-to-end, stack proposto, struttura del nuovo repo `roadbook-mcp`, specifica della tool `visualizza_itinerario`, validazione lightweight lato MCP (la PWA ha già il validatore completo), soglie URL (ok <16 KB, warn 16-30, rifiuto >60), modifiche alla PWA Roadbook (gestione nuovo parametro `?viaggio_data` in `App.vue`, additiva), test plan, domande aperte, roadmap v1.1+.
+
+**Scope su questo repo**: una slice `feat` additiva che aggiunge la gestione `?viaggio_data` in `App.vue` (decodifica base64url → validatore esistente → import in IndexedDB → pulizia URL). Risk: medium (input nuovo dall'esterno, ma riusa il flusso esistente). Preceduta dal nuovo repo `roadbook-mcp` che produce il parametro.
+
+**Prerequisito concettuale**: la voce #2 "Gestione utenti con login social" è **fortemente raccomandata prima**. Con utente anonimo la feature funziona comunque (il JSON è persistente nel browser come qualsiasi altro import), ma il valore pieno emerge quando un utente può editare un viaggio in Claude e ritrovarlo *automaticamente* sul suo device Roadbook via sync — senza bisogno di passare dall'URL-payload. Finché non c'è login, il MCP resta un comodo "copia-incolla via link" piuttosto che un'integrazione vera.
+
+**Rischio di slice**: `risk:medium` sul lato Roadbook (modifica additiva ma su input esterno, richiede validazione + escape). Sul lato `roadbook-mcp` repo è nuovo quindi risk classification da rifare al kickoff.
+
 ---
 
 ## Media priorità
 
-### 3. Icone PWA reali
+### 4. Icone PWA reali
 
 Sostituire i placeholder SVG in `public/icons/` con PNG 192×192, 512×512, 512×512 maskable (per forma Android adattiva). Aggiornare `manifest.icons` in `vite.config.js`.
 
 Effetto: l'app diventa installabile al 100% su Android senza warning del browser, l'icona sulla home avrà forma coerente.
 
-### 4. Filtri per categoria e tag
+### 5. Filtri per categoria e tag
 
 Dalla v2 delle specifiche iniziali. In header o in un drawer laterale: checkbox per categoria (attive di default), filtro per tag. Il filtro si applica sia alla lista sia ai marker della mappa.
 
-### 5. Ricerca testuale nei punti
+### 6. Ricerca testuale nei punti
 
 Campo di ricerca che filtra in tempo reale nome/descrizione/tag dei punti. Tollerante a varianti diacritiche (è/e).
 
-### 6. Galleria foto a tutto schermo
+### 7. Galleria foto a tutto schermo
 
 Per i punti che hanno `foto: [...]` nel JSON: click su thumbnail → lightbox con swipe, zoom, download.
 
@@ -66,15 +78,15 @@ Per i punti che hanno `foto: [...]` nel JSON: click su thumbnail → lightbox co
 
 ## Bassa priorità / nice-to-have
 
-### 7. Pulsante "naviga al prossimo non visitato"
+### 8. Pulsante "naviga al prossimo non visitato"
 
 Bottone che apre il prossimo punto non marcato come visitato nell'area corrente, centrando la mappa e aprendo il popup.
 
-### 8. Condivisione punto come URL profondo
+### 9. Condivisione punto come URL profondo
 
 `?viaggio=<id>&area=<id>&punto=<n>` → apre l'app focalizzata su quel punto. Utile per condividere un luogo specifico via WhatsApp/email senza dover descrivere dove cercarlo.
 
-### 9. Estensioni schema JSON (v1.2+)
+### 10. Estensioni schema JSON (v1.2+)
 
 Già previste come campi opzionali, da implementare quando emergono esigenze:
 - `giorni`: array opzionale per viaggi suddivisi in giornate (alternativa a `aree`)
