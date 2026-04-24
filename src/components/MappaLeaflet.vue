@@ -4,6 +4,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { ottieniPercorso } from '../utils/routing-osrm.js'
 import { useTema } from '../composables/useTema.js'
+import { useGeolocalizzazione } from '../composables/useGeolocalizzazione.js'
 import { leggiPreferenza, salvaPreferenza } from '../utils/store-viaggi.js'
 
 const props = defineProps({
@@ -22,9 +23,12 @@ let layerPerId = {} // id → tileLayer Leaflet
 let layerAttivoId = 'osm'
 let gruppoMarker = null
 let polyline = null
+let markerPosizione = null
+let cerchioAccuratezza = null
 const origineRouting = ref(null) // 'cache' | 'osrm' | 'retta'
 
 const { tema } = useTema()
+const { posizione: posizioneUtente, stato: statoGeo, richiedi: richiediGeo } = useGeolocalizzazione()
 
 // Fornitori tile disponibili. L'id è la chiave salvata in preferenze.
 // filtraScuro: se true, in tema scuro applica un filtro CSS per invertire la
@@ -224,6 +228,14 @@ onMounted(async () => {
   })
 
   disegna()
+
+  // Chiede il consenso alla geolocalizzazione al primo rendering di una mappa,
+  // ma solo se l'utente non l'aveva esplicitamente negato in una sessione precedente
+  // (preferenza.geolocalizzazione = 'negata'). Nessun re-prompt automatico in quel
+  // caso: l'utente può riattivare dal modal Info.
+  if (statoGeo.value !== 'negata') {
+    richiediGeo()
+  }
 })
 
 onBeforeUnmount(() => {
@@ -234,6 +246,48 @@ watch(() => props.area, () => disegna())
 watch(schemaScuro, () => aggiornaFiltroScuro())
 watch(() => props.puntoEvidenziato, (n) => {
   if (n != null) evidenziaMarker(n)
+})
+
+// Marker "tu sei qui": layer dedicato fuori dal tilePane (quindi non viene
+// invertito dal filtro CSS del tema scuro). Niente auto-centering: l'utente
+// controlla inquadratura e zoom.
+watch(posizioneUtente, (p) => {
+  if (!mappa) return
+  if (!p) {
+    if (markerPosizione) { markerPosizione.remove(); markerPosizione = null }
+    if (cerchioAccuratezza) { cerchioAccuratezza.remove(); cerchioAccuratezza = null }
+    return
+  }
+  const latlng = [p.lat, p.lon]
+  if (!markerPosizione) {
+    const icona = L.divIcon({
+      className: 'marker-posizione-wrap',
+      html: '<div class="marker-posizione"></div>',
+      iconSize: [18, 18],
+      iconAnchor: [9, 9]
+    })
+    markerPosizione = L.marker(latlng, {
+      icon: icona,
+      interactive: false,
+      keyboard: false,
+      zIndexOffset: 1000,
+      alt: 'La tua posizione'
+    }).addTo(mappa)
+  } else {
+    markerPosizione.setLatLng(latlng)
+  }
+  if (!cerchioAccuratezza) {
+    cerchioAccuratezza = L.circle(latlng, {
+      radius: p.accuracy,
+      color: '#2563eb',
+      fillColor: '#2563eb',
+      fillOpacity: 0.1,
+      weight: 1,
+      interactive: false
+    }).addTo(mappa)
+  } else {
+    cerchioAccuratezza.setLatLng(latlng).setRadius(p.accuracy)
+  }
 })
 
 defineExpose({ evidenziaMarker, ricalcolaRouting: async () => {
@@ -291,6 +345,19 @@ defineExpose({ evidenziaMarker, ricalcolaRouting: async () => {
   border-radius: 0.3rem;
   font-size: 0.8rem;
   cursor: pointer;
+}
+
+/* Marker "tu sei qui": cerchietto blu vivido con bordo bianco.
+   Non è dentro il tilePane, quindi non viene invertito dal filtro scuro. */
+.marker-posizione-wrap { background: transparent; border: none; }
+.marker-posizione {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.5), 0 1px 4px rgba(0, 0, 0, 0.4);
+  margin: 2px;
 }
 
 /* Filtro CSS invertito per rendere leggibile uno stile chiaro (OSM) in tema scuro.
