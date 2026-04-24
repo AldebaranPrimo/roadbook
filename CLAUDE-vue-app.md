@@ -146,6 +146,22 @@ Step 4: test.
 
 4. Se la slice ha aggiunto test automatici, eseguirli. Se la slice è UI-visibile e classificata `risk:high` o superiore, eseguire uno smoke test manuale (Playwright ad hoc o in-browser su `npm run preview`).
 
+Step 4.5 (**gate bloccante pre-commit**) — **Self-review come PR review**. Prima di committare e aprire la PR, leggere **come se fossimo il reviewer umano** il diff completo della slice. L'obiettivo è cogliere in questa fase gli errori che un review umano avrebbe identificato (bug logici, edge case non gestiti, regressioni, XSS/injection, imports inutilizzati, pattern incoerenti con il resto del codebase, documentazione disallineata).
+
+**Come si fa**: `git diff HEAD` (o `git diff --cached` dopo `git add`) sul branch di lavoro, letto dall'inizio alla fine con attenzione file per file. Per ciascun file toccato porsi la checklist minima:
+
+- *Semantica*: il codice fa davvero quello che il task richiedeva? Ci sono rami logici mai eseguiti, condizioni impossibili, early-return che bypassano logica intenzionale?
+- *Edge case*: valori `null`/`undefined`/stringa vuota/array vuoto/unicode/input ostili entrano bene nelle funzioni toccate?
+- *Sicurezza*: ogni input utente o esterno passa da `escapeHtml` / `encodeURIComponent` / sanitize dove finisce in `innerHTML`, URL, storage? Ogni `fetch()` ha timeout e gestione errore?
+- *Consistenza*: naming, pattern, uso di composables, passaggio dati tra componenti coerenti con il resto del codebase?
+- *Dead code*: `TODO` obsoleti, variabili/import non usati, CSS orfano, `console.log` dimenticati?
+- *Documentazione*: README/CHANGELOG/STATO-PROGETTO allineati con i cambi? Commenti al codice che spiegano il *perché* (non il cosa)?
+- *Numerazione/lista*: se la slice modifica file strutturati (TODO.md numerati, CHANGELOG versioni), la rinumerazione è coerente? Non ci sono gap (#1 → #3 senza #2)?
+
+**Se la self-review trova un problema**: correggerlo **prima** del commit. Se il problema è non-risolvibile (ambiguità sul comportamento atteso, scelta di design non banale, bug profondo che richiede una ri-progettazione della slice) **non chiudere la slice**: lasciarla aperta in locale o come draft PR, descrivere il problema trovato nel messaggio all'operatore umano, richiederne esplicitamente il supporto. Chiudere una slice con un problema noto per "velocità" è una violazione del contratto — si accumulano debiti invisibili che ripresentano il lavoro come bug nelle sessioni successive.
+
+**Why**: esperienza concreta del 2026-04-24: più slice sono state chiuse dichiarando "smoke ok, build verde, zero errori console" pur contenendo problemi poi emersi alla review umana (numerazioni TODO non riallineate, voci del backlog ignorate in pianificazioni successive, stato di develop dichiarato incoerente con quello remoto, ecc.). Step 4.5 esiste per intercettare questa classe di errori senza richiedere un secondo paio d'occhi umano a ogni slice, indipendentemente dalla scale del progetto.
+
 Step 5–7: commit e deploy.
 
 5. Commit — formato: `{slice-type}: {descrizione breve}\n\n{dettagli opzionali}`
@@ -310,4 +326,5 @@ Se una sezione sarebbe vuota, dichiararlo ("nessuna deviazione dal contratto di 
 
 Solo le revisioni non banali sono registrate qui.
 
+- **2026-04-24** (rev 2) — Aggiunto Step 4.5 "Self-review come PR review" nella Fase 4 del workflow. Gate bloccante pre-commit: leggere il diff completo come se fossimo il reviewer umano (semantica, edge case, sicurezza, consistenza, dead code, documentazione, numerazione). Se la self-review trova un problema non banale, non chiudere la slice. Primo trigger: slice chiuse senza riallineare TODO.md / CHANGELOG, generando incoerenze che l'utente ha dovuto segnalare manualmente.
 - **2026-04-24** (rev 1) — Derivazione iniziale da `CLAUDE-dotnet-vue-apps.md` (Skoda) rev 1. Rimosse sezioni backend (Dapper, EF, JWT, SQL, publish profiles, Vuetify). Riscritti gli invarianti come `I-01..I-12`: solo frontend Vue 3 + Vite + Pinia opzionale, storage locale dietro astrazione, schema JSON versionato, PWA reale o assente, percorsi relativi al `base`, fetch esterni con timeout + cache applicativa, WCAG 2.1 AA. Ammessa `solo` come scale di default con rilassamenti espliciti sul branch model e sui test automatici. Eccezione docs-only estesa a `CLAUDE*.md`. Prima applicazione sul progetto **Roadbook**.
