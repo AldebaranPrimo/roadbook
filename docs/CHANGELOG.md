@@ -5,17 +5,24 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Unreleased]
 
-### Added
-- Selettore stile mappa in-app con 5 provider (OpenStreetMap / CartoDB Voyager / Positron / OpenTopoMap / Dark Matter) via `L.control.layers` nativo di Leaflet, persistito come `preferenze.stileMappa` in IndexedDB.
-- OpenStreetMap come default di entrambi i temi (chiaro e scuro) — molto più leggibile di Voyager/Dark Matter.
-- Filtro CSS invertito (`invert(1) hue-rotate(180deg) brightness(1.05) contrast(0.92) saturate(0.95)`) applicato al `.leaflet-tile-pane` quando OSM è attivo in tema scuro. Mantiene gli hue (fiumi blu, verde), inverte la luminosità. Marker e polyline restano fuori dal filtro.
-- Service Worker: pattern Workbox distinti per `tile.openstreetmap.org` e `tile.opentopomap.org` (cache separate, CacheFirst 30gg × 3000 entries).
+Questa sezione contiene le modifiche già su `develop` (mergiate via PR) più quelle in PR aperta in attesa di merge. Verranno raggruppate nella prossima versione taggata quando si promuoverà `develop → main`.
+
+### Aggiunte — su `develop`
+
+- **Selettore stile mappa in-app** con 5 provider (OpenStreetMap / CartoDB Voyager / Positron / OpenTopoMap / Dark Matter) via `L.control.layers` nativo di Leaflet, persistito come `preferenze.stileMappa` in IndexedDB. *Commit `b879c32`, mergiato con PR #2 (commit merge `4c04e7e`).*
+- **OpenStreetMap come default** di entrambi i temi (chiaro e scuro) — molto più leggibile di Voyager/Dark Matter. In tema scuro, filtro CSS invertito (`invert(1) hue-rotate(180deg) brightness(1.05) contrast(0.92) saturate(0.95)`) applicato al `.leaflet-tile-pane`: mantiene gli hue (fiumi blu, verde), inverte la luminosità. Marker e polyline restano fuori dal filtro.
+- **Service Worker**: pattern Workbox distinti per `tile.openstreetmap.org` e `tile.opentopomap.org` (cache separate, CacheFirst 30gg × 3000 entries).
 - Regola nel [`CLAUDE.md`](../CLAUDE.md): aggiungere un nuovo tile provider richiede di aggiornare sia `PROVIDERS` in `MappaLeaflet.vue` sia `workbox.runtimeCaching` in `vite.config.js`.
 
-### Changed
+### Modifiche — su `develop`
+
 - Cache Workbox dei tile CartoDB rinominata da `map-tiles` a `map-tiles-carto` per coerenza con le nuove cache per-provider.
 
-> *Branch: `ai/feat/stile-mappa-selettore`. PR aperta verso `develop`. Diventerà 1.1.0 alla prossima promozione su `main`.*
+### Aggiunte — in PR aperta, in attesa di merge
+
+- **Geolocalizzazione "tu sei qui"** sempre attiva sulla mappa. Nuovo composable `src/composables/useGeolocalizzazione.js` con stato condiviso, `watchPosition` singolo, persistenza del consenso negato per evitare re-prompt. Marker cerchietto blu + accuracy circle fuori dal filtro scuro. Sezione "Posizione corrente" in `ModalInfo.vue` con bottone riattiva. *Branch: `ai/feat/geolocalizzazione-tu-sei-qui`, commit `bfae06d`.*
+- **Schema JSON v1.1 + export/import viaggio con annotazioni embedded**. Nuovo campo root opzionale `annotazioni: { visitati: string[], note: Record<string, string> }` con chiavi nel formato `"<areaId>-<n>"`. Bottone "Esporta viaggio" in `ModalInfo.vue` con checkbox *"Includi le mie note e i punti visitati"*. Conferma a 3 opzioni in `ModalCaricaViaggio.vue` quando il JSON importato contiene annotazioni non vuote (Importa tutto / Solo il viaggio / Annulla). Funzioni `esportaViaggioSingolo` + `ripristinaAnnotazioni` nello store. Retrocompatibile: file v1.0 restano validi. *Branch: `ai/feat/export-import-annotazioni`, commit `c09e6fb`.*
+- **Analisi di fattibilità del prefetch offline** — nuovo documento `docs/analisi/prefetch-offline.md` con scomposizione tile/foto/routing/UI, volumi stimati (Friuli: ~595 tile, ~18 MB una tantum), policy OSM, stima 4 file / ~198 righe / 0 nuove dipendenze. **Verdetto: SEMPLICE** a condizione di accorpare il composable di stato dentro l'utility `prefetch-offline.js`. *Branch: `ai/analisi/prefetch-offline`, commit `009efb1`.*
 
 ---
 
