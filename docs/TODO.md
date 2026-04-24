@@ -4,6 +4,37 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ---
 
+## 🐛 Bug — da correggere asap
+
+### B-1. Header mobile: pulsanti troppo alti, titolo viaggio troncato
+
+**Screenshot**: [`bug-header.png`](bug-header.png) — cattura da mobile con viewport stretto.
+
+**Sintomo**: in mobile i 4 pulsanti "globali" dell'header (`⇄` cambio viaggio, `◐ Auto` tema, `+` carica viaggio, `ⓘ` info viaggio) hanno altezza maggiore del pulsante GitHub (l'unico "corretto" come altezza). La sproporzione delle righe causa due problemi:
+
+1. Il titolo del viaggio risulta **troncato aggressivamente** (es. *"Friuli + Slov…"* invece di *"Friuli + Slovenia in camper"*) insieme al sottotitolo (*"Ponte del 25-26 …"* invece di *"Ponte del 25-26 aprile 2026 · Camper + cane"*).
+2. L'importanza relativa è invertita: il titolo viaggio dovrebbe essere la cosa più visibile, non i bottoni.
+
+**Fase 1 — fix immediato** (`risk:low`, slice `ai/fix/header-altezza-bottoni`):
+
+- Uniformare l'altezza di tutti i `.btn-ghost` al riferimento del pulsante GitHub (padding + `height` fisso + `display: inline-flex; align-items: center; justify-content: center;`). Il link `<a class="btn-ghost">` con SVG 14×14 è la misura da rispettare; i `<button>` con caratteri Unicode (`⇄`, `◐`, `+`, `ⓘ`) oggi crescono più in alto per via del `line-height` del font.
+- **Spostare il pulsante `ⓘ` "Info viaggio"** fuori dal gruppo pulsanti globali e sotto il titolo del viaggio (accanto a titolo/sottotitolo). Razionale: l'info è **contestuale al viaggio corrente**, gli altri pulsanti sono globali (cambio viaggio, tema, carica nuovo, GitHub). Separare visivamente le due classi di azione aiuta il riconoscimento.
+- Il pulsante `⇄` "Cambia viaggio" resta tra i globali (è l'azione "torna alla lista viaggi", non "info sul viaggio corrente").
+
+File toccati: `src/components/HeaderApp.vue` + CSS associato. Scope chirurgico, nessun impatto su logica o altri componenti.
+
+**Fase 2 — da valutare dopo** (non parte del fix asap):
+
+L'utente ha notato che anche dopo il fix fase 1, il gruppo di pulsanti globali può restare affollato (`⇄` cambio + `◐ Auto` tema + `+` carica + `GitHub`), e in particolare la compresenza di `⇄` (cambio viaggio esistente) e `+` (aggiungi un nuovo viaggio) alle estremità del tema potrebbe confondere — entrambi riguardano la gestione viaggi ma fanno cose opposte. Possibili evoluzioni da valutare:
+
+- **Hamburger `☰`** che racchiude tutti i pulsanti globali in un menu a discesa. Pro: header molto pulito, titolo viaggio + sottotitolo hanno tutto lo spazio. Contro: un click in più per azioni comuni.
+- **Raggruppamento visivo** (wrapper con bordo o spaziatura) che isola `⇄` e `+` insieme come "gestione viaggi", separati da tema e GitHub.
+- **Label testuali** sui bottoni icona (accettabile su desktop, meno su mobile stretto).
+
+Questa fase 2 è intenzionalmente non dettagliata qui: va ridiscussa dopo aver visto il risultato della fase 1. Probabilmente diventerà una voce TODO separata in "media priorità" una volta definito lo scope.
+
+---
+
 ## Alta priorità — prossime slice
 
 ### 1. Precaricamento offline totale al primo import
