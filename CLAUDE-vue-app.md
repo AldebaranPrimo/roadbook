@@ -164,7 +164,7 @@ Step 4.5 (**gate bloccante pre-commit**) — **Self-review come PR review**. Pri
 
 Step 5–7: commit e deploy.
 
-5. Commit — formato: `{slice-type}: {descrizione breve}\n\n{dettagli opzionali}`
+5. Commit — formato: `{slice-type}: {descrizione breve}\n\n{dettagli opzionali}`. **Se il commit andrà a popolare una PR** (branch `ai/*` o comunque non diretto su `main`/`develop` "piatti"), aggiungere al messaggio di commit — tipicamente in fondo, su riga dedicata — la stringa `@copilot esegui revisione`. Questo attiva la review automatica di GitHub Copilot sulla PR, che fornisce un secondo pass indipendente dalla self-review dello Step 4.5. *Perché*: self-review + Copilot review sono complementari, il primo cattura errori logici e di coerenza col codebase (lo Claude di turno conosce il contesto), il secondo cattura pattern generici di best-practice che il primo può aver normalizzato per consuetudine di stile.
 6. Push branch
 7. Se `solo` e la slice è su `develop`, fine. Se `piccolo-team` o la slice è su un branch `ai/`, aprire PR verso il branch di integrazione.
 
@@ -326,5 +326,6 @@ Se una sezione sarebbe vuota, dichiararlo ("nessuna deviazione dal contratto di 
 
 Solo le revisioni non banali sono registrate qui.
 
+- **2026-04-24** (rev 3) — Aggiunta al Fase 4 Step 5: ogni commit destinato a diventare una PR deve includere `@copilot esegui revisione` nel messaggio, per attivare la review automatica di GitHub Copilot come secondo pass complementare alla self-review dello Step 4.5.
 - **2026-04-24** (rev 2) — Aggiunto Step 4.5 "Self-review come PR review" nella Fase 4 del workflow. Gate bloccante pre-commit: leggere il diff completo come se fossimo il reviewer umano (semantica, edge case, sicurezza, consistenza, dead code, documentazione, numerazione). Se la self-review trova un problema non banale, non chiudere la slice. Primo trigger: slice chiuse senza riallineare TODO.md / CHANGELOG, generando incoerenze che l'utente ha dovuto segnalare manualmente.
 - **2026-04-24** (rev 1) — Derivazione iniziale da `CLAUDE-dotnet-vue-apps.md` (Skoda) rev 1. Rimosse sezioni backend (Dapper, EF, JWT, SQL, publish profiles, Vuetify). Riscritti gli invarianti come `I-01..I-12`: solo frontend Vue 3 + Vite + Pinia opzionale, storage locale dietro astrazione, schema JSON versionato, PWA reale o assente, percorsi relativi al `base`, fetch esterni con timeout + cache applicativa, WCAG 2.1 AA. Ammessa `solo` come scale di default con rilassamenti espliciti sul branch model e sui test automatici. Eccezione docs-only estesa a `CLAUDE*.md`. Prima applicazione sul progetto **Roadbook**.
