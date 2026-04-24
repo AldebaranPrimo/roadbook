@@ -176,6 +176,89 @@ export async function salvaPreferenza(chiave, valore) {
   await db.put(STORE_PREF, { chiave, valore })
 }
 
+// Export/import singolo viaggio --------------------------
+
+/**
+ * Produce il JSON di un singolo viaggio, opzionalmente arricchito con le
+ * annotazioni personali dell'utente (punti visitati + note). Il JSON è
+ * autonomamente valido secondo lo schema v1.1 e importabile da un altro
+ * dispositivo o utente.
+ */
+export async function esportaViaggioSingolo(viaggioId, { includiAnnotazioni = true } = {}) {
+  const record = await leggiViaggio(viaggioId)
+  if (!record) throw new Error(`Viaggio "${viaggioId}" non trovato in storage.`)
+  const clone = JSON.parse(JSON.stringify(record.json))
+
+  if (includiAnnotazioni) {
+    const [visitatiRaw, noteRaw] = await Promise.all([
+      tuttiVisitatiDi(viaggioId),
+      tutteNoteDi(viaggioId)
+    ])
+    const prefisso = `${viaggioId}:`
+    const visitati = Object.keys(visitatiRaw)
+      .filter(k => k.startsWith(prefisso))
+      .map(k => k.slice(prefisso.length))
+    const note = {}
+    for (const [k, v] of Object.entries(noteRaw)) {
+      if (k.startsWith(prefisso)) {
+        note[k.slice(prefisso.length)] = v
+      }
+    }
+    if (visitati.length > 0 || Object.keys(note).length > 0) {
+      clone.annotazioni = { visitati, note }
+    }
+    // bump schema version solo se l'originale era 1.0: sopra quella versione
+    // lasciamo invariato per non mentire al lettore del file
+    if (clone.$schema_version === '1.0') {
+      clone.$schema_version = '1.1'
+    }
+  }
+
+  return clone
+}
+
+/**
+ * Sostituisce completamente visitati e note esistenti per `viaggioId` con
+ * quelli contenuti in `annotazioni`. Usato quando l'utente sceglie "Importa
+ * tutto" dopo un caricamento JSON con annotazioni.
+ * Sostituzione totale: la fonte di verità per quel momento è il JSON importato.
+ */
+export async function ripristinaAnnotazioni(viaggioId, annotazioni) {
+  if (!annotazioni || typeof annotazioni !== 'object') return
+  const db = await getDb()
+  const tx = db.transaction([STORE_VISITATI, STORE_NOTE], 'readwrite')
+  const prefisso = `${viaggioId}:`
+
+  for (const nomeStore of [STORE_VISITATI, STORE_NOTE]) {
+    const store = tx.objectStore(nomeStore)
+    let cursor = await store.openCursor()
+    while (cursor) {
+      if (String(cursor.key).startsWith(prefisso)) await cursor.delete()
+      cursor = await cursor.continue()
+    }
+  }
+
+  const now = Date.now()
+  for (const chiaveParziale of (annotazioni.visitati || [])) {
+    if (typeof chiaveParziale !== 'string') continue
+    await tx.objectStore(STORE_VISITATI).put({
+      chiave: `${viaggioId}:${chiaveParziale}`,
+      visitato: true,
+      aggiornatoIl: now
+    })
+  }
+  for (const [k, testo] of Object.entries(annotazioni.note || {})) {
+    const pulito = (typeof testo === 'string' ? testo : '').trim()
+    if (!pulito) continue
+    await tx.objectStore(STORE_NOTE).put({
+      chiave: `${viaggioId}:${k}`,
+      testo: pulito,
+      aggiornatoIl: now
+    })
+  }
+  await tx.done
+}
+
 // Backup / restore ---------------------------------------
 
 export async function esportaBackup() {

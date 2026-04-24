@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue'
-import { validaViaggio } from '../utils/valida-schema.js'
+import { ref, computed } from 'vue'
+import { validaViaggio, haAnnotazioniNonVuote } from '../utils/valida-schema.js'
 
 const props = defineProps({
   aperto: { type: Boolean, default: false }
@@ -11,15 +11,27 @@ const urlInput = ref('')
 const dragAttivo = ref(false)
 const caricamento = ref(false)
 const errore = ref('')
-const esito = ref(null)
 const file = ref(null)
+
+// Quando il JSON validato ha annotazioni non vuote, la UI si mette in attesa di
+// una scelta esplicita a 3 opzioni (importa tutto / solo viaggio / annulla).
+const attesaConferma = ref(null) // { json, origine, avvisi }
+
+const conteggioAnnotazioni = computed(() => {
+  const ann = attesaConferma.value?.json?.annotazioni
+  if (!ann) return { visitati: 0, note: 0 }
+  return {
+    visitati: Array.isArray(ann.visitati) ? ann.visitati.length : 0,
+    note: ann.note && typeof ann.note === 'object' ? Object.keys(ann.note).length : 0
+  }
+})
 
 function reset() {
   urlInput.value = ''
   errore.value = ''
-  esito.value = null
   caricamento.value = false
   dragAttivo.value = false
+  attesaConferma.value = null
 }
 
 function chiudi() {
@@ -29,7 +41,7 @@ function chiudi() {
 
 async function processaJson(jsonRaw, origine) {
   errore.value = ''
-  esito.value = null
+  attesaConferma.value = null
   let dato
   try {
     dato = typeof jsonRaw === 'string' ? JSON.parse(jsonRaw) : jsonRaw
@@ -43,7 +55,23 @@ async function processaJson(jsonRaw, origine) {
     if (v.avvisi.length) errore.value += '\n\nAvvisi:\n• ' + v.avvisi.join('\n• ')
     return
   }
-  emit('importa', { json: dato, origine, avvisi: v.avvisi })
+  if (haAnnotazioniNonVuote(dato)) {
+    // non emette subito, aspetta la scelta dell'utente
+    attesaConferma.value = { json: dato, origine, avvisi: v.avvisi }
+    return
+  }
+  emit('importa', { json: dato, origine, avvisi: v.avvisi, includiAnnotazioni: false })
+}
+
+function confermaImporta(includiAnnotazioni) {
+  if (!attesaConferma.value) return
+  const { json, origine, avvisi } = attesaConferma.value
+  emit('importa', { json, origine, avvisi, includiAnnotazioni })
+  attesaConferma.value = null
+}
+
+function annullaImporta() {
+  attesaConferma.value = null
 }
 
 async function suFile(f) {
@@ -99,31 +127,50 @@ async function scaricaUrl() {
         <button type="button" class="chiudi" aria-label="Chiudi" @click="chiudi">✕</button>
       </header>
 
-      <section
-        class="dropzone"
-        :class="{ attiva: dragAttivo }"
-        @dragover="onDragOver"
-        @dragleave="onDragLeave"
-        @drop="onDrop"
-      >
-        <p>Trascina qui un file JSON</p>
-        <p class="oppure">oppure</p>
-        <label class="btn">
-          <input ref="file" type="file" accept="application/json,.json" @change="onInputFile" hidden />
-          Scegli un file…
-        </label>
-      </section>
+      <template v-if="attesaConferma">
+        <section class="conferma-annotazioni">
+          <h3>Annotazioni trovate nel JSON</h3>
+          <p>Il file include annotazioni personali di chi l'ha esportato:</p>
+          <ul>
+            <li v-if="conteggioAnnotazioni.visitati > 0"><strong>{{ conteggioAnnotazioni.visitati }}</strong> punti marcati come visitati</li>
+            <li v-if="conteggioAnnotazioni.note > 0"><strong>{{ conteggioAnnotazioni.note }}</strong> note personali</li>
+          </ul>
+          <p class="avviso">Se importi tutto, qualsiasi annotazione esistente su questo viaggio in locale verrà <strong>sostituita</strong> da quelle del file.</p>
+          <div class="azioni-conferma">
+            <button type="button" class="btn primario" @click="confermaImporta(true)">Importa tutto</button>
+            <button type="button" class="btn" @click="confermaImporta(false)">Solo il viaggio</button>
+            <button type="button" class="btn" @click="annullaImporta">Annulla</button>
+          </div>
+        </section>
+      </template>
 
-      <section class="url">
-        <label for="carica-url">URL pubblico di un JSON viaggio</label>
-        <div class="riga-url">
-          <input id="carica-url" v-model="urlInput" type="url" placeholder="https://…/viaggio.json" />
-          <button type="button" class="btn" :disabled="caricamento || !urlInput.trim()" @click="scaricaUrl">Scarica</button>
-        </div>
-      </section>
+      <template v-else>
+        <section
+          class="dropzone"
+          :class="{ attiva: dragAttivo }"
+          @dragover="onDragOver"
+          @dragleave="onDragLeave"
+          @drop="onDrop"
+        >
+          <p>Trascina qui un file JSON</p>
+          <p class="oppure">oppure</p>
+          <label class="btn">
+            <input ref="file" type="file" accept="application/json,.json" @change="onInputFile" hidden />
+            Scegli un file…
+          </label>
+        </section>
 
-      <p v-if="caricamento" class="stato">Elaborazione in corso…</p>
-      <p v-if="errore" class="errore">{{ errore }}</p>
+        <section class="url">
+          <label for="carica-url">URL pubblico di un JSON viaggio</label>
+          <div class="riga-url">
+            <input id="carica-url" v-model="urlInput" type="url" placeholder="https://…/viaggio.json" />
+            <button type="button" class="btn" :disabled="caricamento || !urlInput.trim()" @click="scaricaUrl">Scarica</button>
+          </div>
+        </section>
+
+        <p v-if="caricamento" class="stato">Elaborazione in corso…</p>
+        <p v-if="errore" class="errore">{{ errore }}</p>
+      </template>
     </div>
   </dialog>
 </template>
@@ -218,4 +265,13 @@ async function scaricaUrl() {
 
 .stato { color: var(--muted); margin: 0; }
 .errore { color: var(--errore); white-space: pre-line; margin: 0; font-size: 0.88rem; }
+
+.conferma-annotazioni h3 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--accent); }
+.conferma-annotazioni p { margin: 0 0 0.5rem; line-height: 1.45; }
+.conferma-annotazioni ul { margin: 0 0 0.5rem; padding-left: 1.2rem; }
+.conferma-annotazioni li { margin-bottom: 0.2rem; }
+.conferma-annotazioni .avviso { font-size: 0.85rem; color: var(--muted); }
+.azioni-conferma { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.btn.primario { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.btn.primario:hover { filter: brightness(1.05); }
 </style>
