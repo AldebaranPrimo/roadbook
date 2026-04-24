@@ -23,6 +23,15 @@ Modifiche su `develop` non ancora rilasciate su `main`. Verranno raggruppate nel
 - Cache Workbox dei tile CartoDB rinominata da `map-tiles` a `map-tiles-carto` per coerenza con le nuove cache per-provider.
 - `package.json.version` allineato da `0.1.0` a `1.1.0` in vista della prossima promozione su `main`. Prima di questo bump il semver del progetto era rimasto dietro rispetto al CHANGELOG (vedere debito tecnico in TODO).
 - Nuovi file `src/globals.d.ts` + `jsconfig.json` per far riconoscere al TS/JS language server le costanti globali iniettate da Vite (`__APP_VERSION__`, `__APP_BUILD_SHA__`, `__APP_BUILD_DATE__`). Zero impatto sulla build — serve solo all'editor.
+- **`docs/SPECIFICHE-APP.md` alleggerito a documento storico del giorno zero**: rimosso lo schema JSON dettagliato (§3, ora mantenuto in `public/schema/viaggio-1.1.md` e sinteticamente nel README), smagriti le funzionalità must/nice-to-have (rimandate a TODO e CHANGELOG), aggiunto disclaimer in testa "documento non vivente". Restano a valore storico §1-2 (contesto del giorno zero), §4 (funzionalità previste all'inizio, con commento sullo stato attuale), §6 (problemi noti e lezioni apprese — ancora validi), §7-10 (hosting, UX, roadmap sprint, test consigliati). Puntatori aggiornati in `README.md`, `docs/STATO-PROGETTO.md`, `CLAUDE.md`.
+- **Nuovo file `public/schema/viaggio-1.1.md`**: schema JSON vivente servito come risorsa statica all'URL `https://AldebaranPrimo.github.io/roadbook/schema/viaggio-1.1.md`. Contiene tutti i campi (obbligatori/opzionali), esempi pratici, vincoli, struttura delle annotazioni, esempio minimale completo, suggerimenti su come usarlo come prompt per un LLM (ChatGPT/Claude/Gemini) per farsi produrre nuovi viaggi nel formato standard.
+- **Help sostanzioso nella modal "Carica un viaggio"** (`ModalCaricaViaggio.vue`): sezione collassabile `<details>` "Cos'è un file viaggio e come ottenerlo?" in testa, con due percorsi (partire dall'esempio Friuli scaricabile o passare lo schema a un LLM) e link diretti alle due risorse. Non ruba spazio a chi sa già cos'è un viaggio.
+- **Bottone GitHub nell'header** (`HeaderApp.vue`): link `<a>` con icona SVG inline del logo GitHub, aria-label, `rel="noopener"`, target `_blank`. Porta al repo `AldebaranPrimo/roadbook`.
+- **Fix sanitizzazione emoji** (`MappaLeaflet.vue`): il popup marker ora passa da `escapeHtml` anche l'`icona_emoji` della categoria (prima era inserita raw) e il `punto.n`. Chiusa una minuscola XSS potenziale su JSON maligni.
+
+### Contratto
+
+- **`CLAUDE-vue-app.md`**: aggiunto Step 4.5 "Self-review come PR review" nella Fase 4 del workflow. Gate bloccante pre-commit: leggere il diff completo come se fossimo il reviewer umano, con checklist minima (semantica, edge case, sicurezza, consistenza, dead code, documentazione, numerazione). Se la self-review trova un problema non banale: non chiudere la slice, chiedere intervento umano. Motivazione: slice chiuse in giornata che contenevano incongruenze emerse solo alla review umana dell'utente (TODO non riallineato dopo merge di slice precedenti, voci del backlog ignorate nelle pianificazioni successive).
 
 ---
 

@@ -20,15 +20,17 @@ PWA per consultare itinerari di viaggio da file JSON, online e offline. Caso d'u
 
 **In produzione (main, deployata su Pages)**: `1.0.1 — beta`.
 
-**In `develop`**: selettore stile mappa con 5 provider + OSM default con filtro scuro invertito + runtime caching esteso. Queste modifiche formeranno la `1.1.0` alla prossima promozione su main.
+**In `develop`**, pronto per la prossima promozione su `main` come `1.1.0`:
 
-**In PR verso `develop` (in attesa di merge)**:
+- Selettore stile mappa con 5 provider (OpenStreetMap / CartoDB Voyager / Positron / OpenTopoMap / Dark Matter) + OSM default con filtro CSS invertito in tema scuro + runtime caching SW esteso.
+- Geolocalizzazione "tu sei qui" live sulla mappa via `watchPosition` singolo condiviso, consenso al primo rendering mappa, niente re-prompt se l'utente nega.
+- Schema JSON v1.1 con campo root opzionale `annotazioni` (visitati + note portabili), bottone "Esporta viaggio" con checkbox *"Includi le mie note e visite"*, conferma a 3 opzioni in import quando il JSON contiene annotazioni.
+- Analisi di fattibilità del prefetch offline (`docs/analisi/prefetch-offline.md`): verdetto SEMPLICE, slice implementativa prevista come prossima prioritaria.
+- Numero di versione visibile (badge header + sezione in modal Info con SHA commit + data build) + auto-update PWA con toast "Aggiorna ora" via `virtual:pwa-register/vue`.
+- Documento `SPECIFICHE-APP.md` alleggerito a storico del giorno zero (rimosso schema ridondante, disclaimer in testa); nuovo `public/schema/viaggio-1.1.md` come schema vivente accessibile via URL statica, pensato per essere passato a un LLM.
+- Help sostanzioso nella modal import con link allo schema e all'esempio Friuli; bottone GitHub nell'header; fix sanitizzazione emoji nel popup marker.
 
-| PR / branch | Contenuto | Commit |
-|---|---|---|
-| `ai/feat/geolocalizzazione-tu-sei-qui` | Marker "tu sei qui" live via `watchPosition`, consenso al primo rendering mappa, gestione negazione senza re-prompt, sezione "Posizione corrente" in modal Info | `bfae06d` |
-| `ai/feat/export-import-annotazioni` | Schema JSON v1.1 con campo root opzionale `annotazioni` (visitati + note portabili), bottone "Esporta viaggio" con checkbox, conferma import a 3 opzioni | `c09e6fb` |
-| `ai/analisi/prefetch-offline` | Analisi di fattibilità del prefetch offline totale. Verdetto: SEMPLICE (4 file, ~198 righe stimate, 0 nuove dipendenze) | `009efb1` |
+**Contratto**: regola "Self-review come PR review" aggiunta al Fase 4 di `CLAUDE-vue-app.md` (Step 4.5).
 
 ## Stack
 
@@ -91,7 +93,9 @@ Campi sconosciuti vengono ignorati silenziosamente (forward-compat per estension
 roadbook/
 ├── public/
 │   ├── viaggi/                    JSON itinerari + manifest.json (autogenerato)
-│   └── icons/                     icone PWA (SVG placeholder)
+│   ├── icons/                     icone PWA (SVG placeholder)
+│   └── schema/
+│       └── viaggio-1.1.md         schema JSON vivente accessibile via URL statica, pensato per prompt LLM
 ├── src/
 │   ├── App.vue                    orchestratore: onboarding, routing UI
 │   ├── main.js
@@ -124,7 +128,7 @@ roadbook/
 │   ├── STATO-PROGETTO.md          questo file (snapshot corrente)
 │   ├── CHANGELOG.md               cronologia modifiche
 │   ├── TODO.md                    lista cose future
-│   ├── SPECIFICHE-APP.md          specifiche storiche iniziali (non vivente)
+│   ├── SPECIFICHE-APP.md          specifiche storiche iniziali (non vivente — vedere nota in testa)
 │   ├── analisi/                   documenti di design di slice complesse
 │   │   └── prefetch-offline.md    analisi di fattibilità prefetch offline (verdetto SEMPLICE)
 │   └── screenshots/               immagini del README

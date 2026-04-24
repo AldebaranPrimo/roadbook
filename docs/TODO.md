@@ -6,35 +6,7 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ## Alta priorità — prossime slice
 
-### 1. Alleggerire `docs/SPECIFICHE-APP.md` a storico iniziale
-
-**Obiettivo**: il documento `SPECIFICHE-APP.md` nasce come handover iniziale, da cui sono partite le prime scelte. Man mano che il prodotto si evolve, aggiornare anche le specifiche significa duplicare informazioni (già nel CHANGELOG + STATO-PROGETTO + README) e rischiare — in futuro — di regredire a scelte vecchie perché "le specifiche dicevano così".
-
-**Scope** (`risk:low`, docs-only):
-- Mantenere il documento come "storico del punto di partenza": intro, caratteristiche iniziali del caso d'uso, i problemi noti affrontati (§7 sulle tile OSM/ESRI ecc.), la roadmap degli sprint come era prevista inizialmente. Tutto ciò che è valore di **contesto storico**.
-- **Rimuovere** lo schema JSON dettagliato (§3). Lo schema vivente sta nel README (sintetico con esempio) e nelle annotazioni in-codice (`src/utils/valida-schema.js`). Nel file specifiche si lascia una sola riga tipo *"Lo schema originale v1.0 era una struttura piatta `$schema_version + viaggio + categorie + aree`. Per lo schema corrente (v1.1+) fare riferimento al README e al validatore"*.
-- **Rimuovere / smagrire** anche le tabelle che duplicano scelte di prodotto già presenti altrove, lasciando l'essenza di "cosa volevamo al giorno zero".
-- Aggiungere in testa un disclaimer chiaro: *"Documento storico non vivente — riflette il punto di partenza del progetto, non lo stato corrente. Per lo stato attuale vedere [STATO-PROGETTO.md](STATO-PROGETTO.md); per la cronologia vedere [CHANGELOG.md](CHANGELOG.md)."*
-- Aggiornare i puntatori in `README.md`, `CLAUDE.md`, `docs/STATO-PROGETTO.md` per distinguere chiaramente "specifiche iniziali storiche" da "specifiche correnti viventi nel README".
-
-**Motivazione**: evitare che un domani, rileggendo le specifiche, si faccia rollback di scelte consolidate perché lì scritte diversamente. Le specifiche diventano documento-libro di storia, non fonte di verità corrente.
-
-### 2. Help più sostanzioso nella modal "Carica un viaggio"
-
-**Obiettivo**: chi arriva sulla modal di caricamento senza sapere cos'è un JSON di viaggio oggi vede solo una drop zone e un campo URL. Deve invece capire subito cosa importare e come produrselo.
-
-**Scope** (`risk:low`):
-- Nuova sezione "Cos'è un file viaggio?" in testa alla modal (collassabile `<details>` per non rubare spazio a chi già sa): breve descrizione + link diretto a un **schema della struttura JSON corrente** servito come file statico dentro l'app (es. `public/schema/viaggio-schema.md` oppure `public/schema/viaggio-1.1.json`).
-- Il link deve puntare a una **risorsa auto-contenuta e accessibile via URL**, così l'utente può copia-incollarla in una chat con un LLM (ChatGPT, Claude, altro) e chiedere *"produci un viaggio Roadbook su X usando questo schema"*. Il LLM ha tutto quello che gli serve sapere nel file: schema, esempio reale, vincoli (formato chiavi annotazioni, campi obbligatori, ecc.).
-- In alternativa/aggiunta: bottone "Scarica esempio" che offre il JSON Friuli corrente come template di partenza.
-- Messaggio di errore del validatore già chiaro — non tocchiamo quello; l'aiuto serve a **prima** di provare l'import, non dopo.
-
-**Scelte di design da confermare nella slice**:
-- Formato del documento schema: Markdown (più leggibile per l'LLM) o JSON Schema standard? Probabilmente **Markdown** con esempio JSON incluso — più naturale come prompt.
-- Naming e path: `public/schema/viaggio-{versione}.md` così quando aggiorneremo lo schema a v1.2 manterremo le versioni precedenti accessibili.
-- Accessibilità sitemap: accessibile via `https://AldebaranPrimo.github.io/roadbook/schema/viaggio-1.1.md` — l'app lo carica relativamente, l'utente lo può condividere con un URL assoluto stabile.
-
-### 3. Precaricamento offline totale al primo import
+### 1. Precaricamento offline totale al primo import
 
 **Analisi completata**: vedere [`analisi/prefetch-offline.md`](analisi/prefetch-offline.md). Verdetto SEMPLICE, 4 file toccati, ~198 righe, 0 nuove dipendenze.
 
@@ -46,7 +18,7 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 Raccomandazioni dall'analisi: zoom default 12, zoom 13 solo su conferma esplicita dell'utente con spiegazione della policy OSM; bbox calcolata per area (non globale); UI annullabile.
 
-### 4. Gestione utenti con login social
+### 2. Gestione utenti con login social
 
 **Obiettivo**: permettere a ciascun utente di avere una lista **privata e personale** di percorsi, sincronizzata tra i suoi dispositivi (camper, telefono, desktop).
 
@@ -66,27 +38,27 @@ Raccomandazioni dall'analisi: zoom default 12, zoom 13 solo su conferma esplicit
 
 **Rischio**: `risk:high`. Andrà spezzata in più sub-slice (scelta provider → integrazione Auth → refactor store → UI login → sync effettivo → test).
 
-**Nota architetturale**: lo schema v1.1 con annotazioni embedded (già in PR) è un prerequisito naturale per il sync cloud — il formato di serializzazione di note + visitati è lo stesso.
+**Nota architetturale**: lo schema v1.1 con annotazioni embedded (già mergiato) è un prerequisito naturale per il sync cloud — il formato di serializzazione di note + visitati è lo stesso.
 
 ---
 
 ## Media priorità
 
-### 5. Icone PWA reali
+### 3. Icone PWA reali
 
 Sostituire i placeholder SVG in `public/icons/` con PNG 192×192, 512×512, 512×512 maskable (per forma Android adattiva). Aggiornare `manifest.icons` in `vite.config.js`.
 
 Effetto: l'app diventa installabile al 100% su Android senza warning del browser, l'icona sulla home avrà forma coerente.
 
-### 6. Filtri per categoria e tag
+### 4. Filtri per categoria e tag
 
-Dalla v2 delle specifiche. In header o in un drawer laterale: checkbox per categoria (attive di default), ricerca testuale nei punti. Il filtro si applica sia alla lista sia ai marker della mappa.
+Dalla v2 delle specifiche iniziali. In header o in un drawer laterale: checkbox per categoria (attive di default), filtro per tag. Il filtro si applica sia alla lista sia ai marker della mappa.
 
-### 7. Ricerca testuale nei punti
+### 5. Ricerca testuale nei punti
 
 Campo di ricerca che filtra in tempo reale nome/descrizione/tag dei punti. Tollerante a varianti diacritiche (è/e).
 
-### 8. Galleria foto a tutto schermo
+### 6. Galleria foto a tutto schermo
 
 Per i punti che hanno `foto: [...]` nel JSON: click su thumbnail → lightbox con swipe, zoom, download.
 
@@ -94,15 +66,15 @@ Per i punti che hanno `foto: [...]` nel JSON: click su thumbnail → lightbox co
 
 ## Bassa priorità / nice-to-have
 
-### 9. Pulsante "naviga al prossimo non visitato"
+### 7. Pulsante "naviga al prossimo non visitato"
 
 Bottone che apre il prossimo punto non marcato come visitato nell'area corrente, centrando la mappa e aprendo il popup.
 
-### 10. Condivisione punto come URL profondo
+### 8. Condivisione punto come URL profondo
 
 `?viaggio=<id>&area=<id>&punto=<n>` → apre l'app focalizzata su quel punto. Utile per condividere un luogo specifico via WhatsApp/email senza dover descrivere dove cercarlo.
 
-### 11. Estensioni schema JSON (v1.2+)
+### 9. Estensioni schema JSON (v1.2+)
 
 Già previste come campi opzionali, da implementare quando emergono esigenze:
 - `giorni`: array opzionale per viaggi suddivisi in giornate (alternativa a `aree`)
@@ -119,7 +91,6 @@ Già previste come campi opzionali, da implementare quando emergono esigenze:
 - **ESLint + Prettier** configurati. Al momento non c'è lint step — un semplice `eslint-config` Vue 3 con regole blande coprirebbe già i casi critici (unused imports, var drift).
 - **TypeScript**: eventuale migrazione JS → TS. Scope contenuto (~15 file), beneficio concreto su `store-viaggi.js` e `valida-schema.js` che oggi ricostruiscono tipi "a mano" nei commenti. Da valutare quando la codebase cresce.
 - **Hook Claude Code** (`.claude/settings.json`): PostToolUse per auto-build su edit + SessionStart briefing. Utile soprattutto quando la codebase cresce o passiamo a `piccolo-team`.
-- ~~**Versioning effettivo**: oggi `package.json` resta a `0.1.0` mentre il CHANGELOG dichiara `1.0.1`. Allineare al primo bump "vero" post-sync main.~~ **Fatto** — allineato a `1.1.0` nella slice `versione-visibile-e-auto-update`.
 
 ---
 
@@ -127,10 +98,15 @@ Già previste come campi opzionali, da implementare quando emergono esigenze:
 
 Rimossi da questo elenco e spostati su [`CHANGELOG.md`](CHANGELOG.md) — di solito nella sezione `[Unreleased]` finché non si promuove a `main`.
 
-Al 2026-04-24 sono state completate (tutte mergiate su `develop`, da rilasciare con la prossima promozione su `main`):
+Al 2026-04-24 sono state completate:
 
 - ✅ Selettore stile mappa in-app con 5 provider + default OSM leggibile
 - ✅ Geolocalizzazione "tu sei qui" sulla mappa
 - ✅ Export/import viaggio con note e stato "visitato" embedded nello schema v1.1
-- ✅ Analisi di fattibilità del prefetch offline con verdetto (il prefetch implementativo resta in TODO come voce #3)
+- ✅ Analisi di fattibilità del prefetch offline con verdetto (il prefetch implementativo resta in alta priorità come voce #1)
 - ✅ Numero di versione visibile nell'app + auto-update PWA con toast "Aggiorna ora"
+- ✅ Alleggerimento `docs/SPECIFICHE-APP.md` a documento storico del giorno zero (schema rimosso, disclaimer in testa)
+- ✅ Help sostanzioso nella modal import + schema JSON vivente accessibile via URL statica (`public/schema/viaggio-1.1.md`) pensata per essere passata a un LLM
+- ✅ Bottone GitHub nell'header dell'app con deep link al repo
+- ✅ Fix sanitizzazione emoji delle categorie nel popup marker (chiusa una minuscola potenziale XSS se un JSON maligno avesse iniettato HTML in `categorie.<k>.icona_emoji`)
+- ✅ Regola "Self-review come PR review" nel contratto `CLAUDE-vue-app.md` (Step 4.5, gate bloccante pre-commit)

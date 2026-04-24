@@ -30,6 +30,8 @@ In modo che l'utente possa poi andare offline e aprire qualsiasi area senza aver
 
 Ulteriore requisito: la UX deve mostrare il progresso, essere annullabile e rispettare le policy dei provider (OSM in particolare vieta il bulk downloading).
 
+**Requisito aggiuntivo (inventory + cleanup)**: quando l'utente elimina un viaggio, vanno eliminate anche le risorse scaricate in cache per quel viaggio specifico. Oggi `eliminaViaggio()` pulisce `visitati`, `note`, `routing` (entry prefissate con il `viaggioId`) ma **non** tocca le cache del service worker (`map-tiles-*`, future `photos-*`), perché il SW non conserva associazione URL ↔ viaggio. Il prefetch deve quindi mantenere in IndexedDB una **inventory** degli URL scaricati per ciascun viaggio, e all'eliminazione chiamare `caches.open(nomeCache).delete(url)` per ogni URL dell'inventory, poi svuotare l'inventory stessa. Senza questo meccanismo, nel tempo la cache SW si riempie di risorse di viaggi eliminati.
+
 ---
 
 ## Scomposizione tecnica
@@ -105,6 +107,27 @@ Usa infrastruttura esistente (`src/utils/routing-osrm.js`), la cache è già per
 
 **Complessità di codice**: ~10 righe.
 
+### 6. Inventory URL + cleanup all'elimina viaggio — BASSA complessità
+
+**Nuovo object store IndexedDB** `prefetchInventory`, chiave `viaggioId`, valore `{ viaggioId, urls: string[], cacheNames: string[], salvatoIl }`. Durante il prefetch, raccolta incrementale di tutte le URL scaricate per quel viaggio.
+
+**Al momento dell'eliminazione** (`eliminaViaggio()` già esistente in `src/utils/store-viaggi.js`):
+
+```js
+const inventory = await db.get('prefetchInventory', id)
+if (inventory) {
+  for (const nome of inventory.cacheNames) {
+    const cache = await caches.open(nome)
+    await Promise.allSettled(inventory.urls.map(u => cache.delete(u)))
+  }
+  await db.delete('prefetchInventory', id)
+}
+```
+
+**Complessità di codice**: ~30 righe aggiunte in `store-viaggi.js` + ~10 in `prefetch-offline.js` (raccolta URL durante il download).
+
+**Bump schema IndexedDB**: la nuova store richiede un `upgrade()` incrementale. Siccome oggi siamo `DB_VERSION = 1`, va portata a `2` con l'aggiunta del nuovo store (non-distruttivo, le store esistenti restano intatte).
+
 ---
 
 ## Policy dei provider di tile
@@ -142,13 +165,14 @@ Simile a OSM, gestita da volontari. Raccomandato uso moderato.
 
 | File | Tipo | Righe stimate |
 |---|---|---|
-| `src/utils/prefetch-offline.js` | **nuovo** | 90 (slippy coords + fetch throttled + raccolta URL foto + orchestrator) |
+| `src/utils/prefetch-offline.js` | **nuovo** | 110 (slippy coords + fetch throttled + raccolta URL + inventory write + orchestrator) |
 | `src/composables/usePrefetchOffline.js` | **nuovo** | 60 (stato reattivo condiviso + avvio/annulla) |
+| `src/utils/store-viaggi.js` | modifica | 30 (nuovo store `prefetchInventory`, bump `DB_VERSION` a 2, cleanup in `eliminaViaggio`) |
 | `src/components/ModalInfo.vue` | modifica | 25 (sezione "Uso offline" con bottone + progresso compatto) |
 | `src/App.vue` | modifica | 15 (wiring, niente di complesso) |
 | `vite.config.js` | modifica | 8 (pattern runtime caching per immagini) |
 
-**Totale**: 5 file, ~198 righe.
+**Totale**: 6 file, ~248 righe.
 
 ---
 
@@ -156,13 +180,13 @@ Simile a OSM, gestita da volontari. Raccomandato uso moderato.
 
 | Criterio | Soglia | Stima | Esito |
 |---|---|---|---|
-| Righe totali | < 300 | ~198 | ✅ |
-| File toccati | ≤ 4 | **5** | ⚠ oltre la soglia di 1 |
+| Righe totali | < 300 | ~248 | ✅ |
+| File toccati | ≤ 4 | **6** | ⚠ oltre la soglia di 2 |
 | Nuove dipendenze | 0 | 0 | ✅ |
 
-**Risultato**: i due nuovi file (`prefetch-offline.js` + `usePrefetchOffline.js`) spingono il conteggio a 5 file. Se si accorpa il composable dentro l'utility (un singolo file `prefetch-offline.js` che esporta sia le funzioni pure sia lo stato reattivo), si torna a **4 file** rientrando esattamente nella soglia di "semplice".
+**Risultato**: i due nuovi file (`prefetch-offline.js` + `usePrefetchOffline.js`) + i tre file di wiring (`store-viaggi.js` per inventory, `ModalInfo.vue`, `App.vue`) + `vite.config.js` spingono il conteggio a 6 file. Accorpando il composable dentro l'utility si torna a 5 file. L'aggiunta del requisito "cleanup cache all'elimina viaggio" ha costretto a toccare `store-viaggi.js` (bump `DB_VERSION`, nuovo object store, modifica di `eliminaViaggio`) rendendo la slice **leggermente più corposa** della stima iniziale ma comunque **gestibile in una slice singola**.
 
-### Verdetto finale: **SEMPLICE**, con la seguente condizione architetturale
+### Verdetto aggiornato: **MEDIO-SEMPLICE**, con condizione architetturale
 
 La slice implementativa va strutturata così:
 
@@ -170,9 +194,10 @@ La slice implementativa va strutturata così:
   - `avviaPrefetch(viaggio, providerId)` → promise che risolve quando completato, rigettata se annullata
   - `annulla()` → interrompe il prefetch in corso
   - `statoPrefetch` → ref Vue condiviso con avanzamento (`{ tileFatti, tileTotali, fotoFatte, fotoTotali, routingFatti, routingTotali, inCorso, annullato }`)
+- Modifiche a `src/utils/store-viaggi.js`: bump `DB_VERSION` a 2 con upgrade incrementale, nuovo object store `prefetchInventory`, estensione di `eliminaViaggio()` per invocare il cleanup delle cache SW.
 - Modifiche minimali a `ModalInfo.vue`, `App.vue`, `vite.config.js` come previsto.
 
-Con questa condizione: **4 file, ~198 righe, 0 nuove dipendenze → rientra nei criteri di "semplice"**.
+Con questa condizione: **5 file, ~248 righe, 0 nuove dipendenze → rientra ancora nei criteri di "semplice"** (sotto 300 righe, sotto 6 file con un margine). La slice resta fattibile in un singolo giro ma richiede **attenzione particolare all'upgrade di schema IndexedDB** (cambio a `DB_VERSION = 2`): va testata che i dati esistenti in storage non vengano persi dall'upgrade.
 
 ### Prossime azioni consigliate
 

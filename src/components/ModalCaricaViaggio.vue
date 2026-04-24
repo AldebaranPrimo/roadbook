@@ -13,6 +13,11 @@ const caricamento = ref(false)
 const errore = ref('')
 const file = ref(null)
 
+// Link alle risorse aiuto, costruiti sul base path corrente (funzionano sia in dev
+// al path /roadbook/ sia nel deploy Pages, sia con qualsiasi futuro sottopath).
+const urlSchema = `${import.meta.env.BASE_URL}schema/viaggio-1.1.md`
+const urlFriuli = `${import.meta.env.BASE_URL}viaggi/viaggio-friuli-2026.json`
+
 // Quando il JSON validato ha annotazioni non vuote, la UI si mette in attesa di
 // una scelta esplicita a 3 opzioni (importa tutto / solo viaggio / annulla).
 const attesaConferma = ref(null) // { json, origine, avvisi }
@@ -104,6 +109,22 @@ function onDragLeave() { dragAttivo.value = false }
 async function scaricaUrl() {
   const u = urlInput.value.trim()
   if (!u) return
+
+  // Ammettiamo solo http:/https: per evitare che l'utente infili accidentalmente
+  // file://, data:, blob: o schemi esotici. Non è un rischio XSS (fetch non esegue
+  // JS), ma protegge da confusion UX e da integrazioni future più permissive.
+  let parsed
+  try {
+    parsed = new URL(u)
+  } catch {
+    errore.value = 'URL non valida. Inserisci un indirizzo http(s) completo.'
+    return
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    errore.value = `Protocollo "${parsed.protocol}" non supportato. Usa http:// o https://.`
+    return
+  }
+
   caricamento.value = true
   errore.value = ''
   try {
@@ -145,6 +166,34 @@ async function scaricaUrl() {
       </template>
 
       <template v-else>
+        <details class="help-import">
+          <summary>Cos'è un file viaggio e come ottenerlo?</summary>
+          <div class="help-contenuto">
+            <p>
+              Roadbook legge viaggi da <strong>file JSON</strong> con una struttura dichiarata.
+              Ogni file descrive un viaggio intero: aree geografiche, punti di interesse, coordinate, foto,
+              categorie, orari, note.
+            </p>
+            <p>
+              Puoi produrre un tuo viaggio in due modi:
+            </p>
+            <ol>
+              <li>
+                <strong>Partendo da un esempio</strong>: scarica il viaggio <a :href="urlFriuli" target="_blank" rel="noopener">Friuli 2026</a>
+                (30 punti in 7 aree) e modificalo a mano.
+              </li>
+              <li>
+                <strong>Con un LLM</strong> (ChatGPT, Claude, Gemini…): copia e passagli questo
+                <a :href="urlSchema" target="_blank" rel="noopener">schema della struttura JSON</a>
+                e chiedigli <em>"produci un itinerario Roadbook per X"</em>. Otterrai un file pronto da trascinare qui.
+              </li>
+            </ol>
+            <p class="hint">
+              Il formato è retrocompatibile: i campi sconosciuti vengono ignorati, così puoi sperimentare estensioni.
+            </p>
+          </div>
+        </details>
+
         <section
           class="dropzone"
           :class="{ attiva: dragAttivo }"
@@ -265,6 +314,30 @@ async function scaricaUrl() {
 
 .stato { color: var(--muted); margin: 0; }
 .errore { color: var(--errore); white-space: pre-line; margin: 0; font-size: 0.88rem; }
+
+.help-import {
+  border: 1px solid var(--bordo);
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--hover);
+}
+.help-import summary {
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--accent);
+  font-weight: 600;
+  padding: 0.1rem 0;
+}
+.help-import[open] summary { margin-bottom: 0.5rem; }
+.help-contenuto p, .help-contenuto ol, .help-contenuto li {
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+.help-contenuto p { margin: 0 0 0.5rem; }
+.help-contenuto ol { margin: 0 0 0.5rem 1.2rem; padding: 0; }
+.help-contenuto li { margin-bottom: 0.35rem; }
+.help-contenuto a { color: var(--accent); text-decoration: underline; }
+.help-contenuto .hint { color: var(--muted); font-size: 0.8rem; margin: 0; }
 
 .conferma-annotazioni h3 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--accent); }
 .conferma-annotazioni p { margin: 0 0 0.5rem; line-height: 1.45; }
