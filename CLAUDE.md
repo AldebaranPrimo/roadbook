@@ -26,12 +26,23 @@ Valori effettivi in uso al 2026-04-24 (override motivato rispetto ai default di 
 
 ## Policy aggiornamento Service Worker
 
-**`autoUpdate` + toast utente** (rev 4 del contratto, I-08):
+**`prompt` + toast utente + check periodico** (rev 4 del contratto, I-08, aggiornata 2026-04-24):
 
-- `registerType: 'autoUpdate'` in `vite.config.js`: il SW nuovo viene scaricato automaticamente in background quando Workbox lo rileva.
+- `registerType: 'prompt'` in `vite.config.js`: il SW nuovo scaricato resta in stato `waiting`; non prende il controllo finché l'utente non clicca il toast. **Non usare `autoUpdate`**: attiverebbe il SW in silenzio (`skipWaiting` + `clientsClaim`) ma la UI già caricata in memoria resterebbe vecchia, e su PWA installate con tab sempre aperta l'utente vedrebbe per giorni la versione precedente senza segnali visibili. Questo è esattamente il bug osservato in produzione il 2026-04-24 (B-3 nel CHANGELOG).
 - `virtual:pwa-register/vue` wrappato in `src/composables/useAggiornamentoPwa.js`: espone `aggiornamentoDisponibile` reattivo + `aggiornaOra()`.
 - Toast in `App.vue` mostrato quando `aggiornamentoDisponibile === true`: "✨ Nuova versione disponibile — Aggiorna ora". Click → `updateServiceWorker(true)` = `skipWaiting` + reload.
-- Se l'utente ignora il toast, l'aggiornamento avviene alla prossima chiusura/riapertura tab (comportamento default di `autoUpdate`).
+- **Check periodico obbligatorio**: `useAggiornamentoPwa` registra un `setInterval(registration.update(), 60min)` per forzare il browser a verificare il SW anche quando l'utente non chiude mai la tab (caso PWA installata). Senza questo controllo le PWA installate resterebbero sulla versione vecchia indefinitamente, perché il check del SW avviene di default solo alle navigation e una PWA installata non navighi mai.
+- Se l'utente ignora il toast, l'aggiornamento avviene alla prossima chiusura di tutte le tab che tengono attivo il SW vecchio.
+
+## Versionamento
+
+Ogni commit destinato a essere visibile online **deve portare avanti `package.json.version`**, minimo la patch (`1.1.0 → 1.1.1`). Il bump vale per:
+
+- Modifiche di codice (`src/**`, `vite.config.js`, `package.json` di dipendenze): sempre.
+- Modifiche di docs (`docs/**`, `*.md`, commenti): sì se sono accompagnate da un deploy (promozione a `main`). No se restano in uno slice `docs` interno.
+- Tooling puro o configurazione CI che non cambia il bundle prodotto: opzionale, ma raccomandato per tenere il badge sincronizzato con la SHA di build.
+
+**Ragione**: il badge `v{version}` nell'header è l'unico modo per l'utente di distinguere a colpo d'occhio se la PWA sta mostrando l'ultima build o una cachata. Dimenticarsi il bump = impossibilità di distinguere bug veri da cache stantia, e rischio di segnalare falsi positivi. **Se dubiti se fare il bump, fallo**: un numero di versione "sprecato" costa nulla, un bug diagnosticato male costa molto.
 
 ---
 
