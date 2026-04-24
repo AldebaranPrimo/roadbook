@@ -29,9 +29,16 @@ Modifiche su `develop` non ancora rilasciate su `main`. Verranno raggruppate nel
 - **Bottone GitHub nell'header** (`HeaderApp.vue`): link `<a>` con icona SVG inline del logo GitHub, aria-label, `rel="noopener"`, target `_blank`. Porta al repo `AldebaranPrimo/roadbook`.
 - **Fix sanitizzazione emoji** (`MappaLeaflet.vue`): il popup marker ora passa da `escapeHtml` anche l'`icona_emoji` della categoria (prima era inserita raw) e il `punto.n`. Chiusa una minuscola XSS potenziale su JSON maligni.
 
+### Correzioni
+
+- **B-1 fase 1 — pulsanti header mobile ad altezza uniforme**. In `src/styles/app.css` la classe `.btn-ghost` ora forza `display: inline-flex` + `height: 28px` + `align-items: center`: button con caratteri Unicode (⇄, ◐, +) e link `<a>` con SVG (GitHub) hanno la stessa altezza. Prima il line-height dei caratteri faceva crescere i button rispetto agli `<a>`.
+- **B-1 fase 1 — `ⓘ` Info viaggio spostato accanto al titolo**. Il bottone Info è contestuale al viaggio corrente (apre "Informazioni viaggio"), non un'azione globale dell'app: in `HeaderApp.vue` vive ora inline dopo il `titolo-viaggio`, con stile dedicato `.btn-info-viaggio` (no bordo, tono muted, `margin-left: 0.3rem`). Fuori dalla fila `.azioni`. Scompare in `@media print` insieme al resto.
+- **B-2 — bottone "Dettagli →" del popup marker temporaneamente nascosto** (opzione C scelta dall'utente). In `MappaLeaflet.vue` nuovo flag costante `mostraBottoneDettagli = false` che lo rende vuoto nel `bindPopup`. Motivazione: oggi il bottone era ridondante (il click sul marker già scrolla + evidenzia la scheda in lista) e confondeva. Sarà riattivato quando verrà implementata la voce TODO #8 "Scheda dettagliata punto (modal full-screen)", che gli darà una funzione concreta.
+
 ### Contratto
 
 - **`CLAUDE-vue-app.md`**: aggiunto Step 4.5 "Self-review come PR review" nella Fase 4 del workflow. Gate bloccante pre-commit: leggere il diff completo come se fossimo il reviewer umano, con checklist minima (semantica, edge case, sicurezza, consistenza, dead code, documentazione, numerazione). Se la self-review trova un problema non banale: non chiudere la slice, chiedere intervento umano. Motivazione: slice chiuse in giornata che contenevano incongruenze emerse solo alla review umana dell'utente (TODO non riallineato dopo merge di slice precedenti, voci del backlog ignorate nelle pianificazioni successive).
+- **`CLAUDE-vue-app.md` v1.1.1**: aggiornamento consolidato post-critica costruttiva. Nuovi invarianti **I-13** (slice docs senza codice passano comunque da Fase 4 review), **I-14** (label `risk:*` obbligatoria nel kickoff), **I-15** (nessun commit con `@copilot esegui revisione` o altre varianti tradotte: la stringa è `@copilot review`, handler GitHub). Ampliamenti **I-05/07/08/11/12** (riferimenti espliciti a CHANGELOG, TODO, self-review, convenzione B-N). Sezioni minime richieste nel `CLAUDE.md` di repo estese. Fix sintassi `@copilot review` in tutte le occorrenze (prima era scritta erroneamente come `@copilot esegui revisione` in alcune parti della revision history).
 
 ---
 

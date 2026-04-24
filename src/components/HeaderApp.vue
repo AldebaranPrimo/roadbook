@@ -29,7 +29,17 @@ const etichettaTema = computed(() => {
         <span class="versione" :title="`Build ${APP_BUILD_SHA}`">v{{ APP_VERSION }}</span>
       </h1>
       <div v-if="viaggio" class="viaggio-info">
-        <p class="titolo-viaggio">{{ viaggio.titolo }}</p>
+        <p class="titolo-viaggio">
+          {{ viaggio.titolo }}
+          <!-- Info è contestuale al viaggio corrente: vive vicino al titolo, non tra le azioni globali. -->
+          <button
+            type="button"
+            class="btn-info-viaggio"
+            title="Informazioni viaggio"
+            aria-label="Apri informazioni viaggio"
+            @click="emit('apriInfo')"
+          >ⓘ</button>
+        </p>
         <p v-if="viaggio.sottotitolo" class="sottotitolo">{{ viaggio.sottotitolo }}</p>
       </div>
     </div>
@@ -56,7 +66,6 @@ const etichettaTema = computed(() => {
             A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
         </svg>
       </a>
-      <button v-if="viaggio" class="btn-ghost" type="button" title="Informazioni viaggio" @click="emit('apriInfo')">ⓘ</button>
     </div>
   </header>
 </template>
@@ -104,6 +113,25 @@ const etichettaTema = computed(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Bottone info viaggio inline col titolo: piccolo, senza bordo, in tono muted.
+   Distinto dai btn-ghost globali perché contestuale al viaggio corrente. */
+.btn-info-viaggio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.3rem;
+  padding: 0 0.1rem;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+  opacity: 0.8;
+}
+.btn-info-viaggio:hover { opacity: 1; color: var(--accent); }
 .sottotitolo {
   margin: 0.1rem 0 0;
   font-size: 0.78rem;
@@ -119,16 +147,8 @@ const etichettaTema = computed(() => {
   flex-shrink: 0;
   align-items: center;
 }
-.azioni a.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.35rem 0.4rem;
-  color: var(--fg);
-  text-decoration: none;
-}
 @media print {
-  .azioni { display: none; }
+  .azioni, .btn-info-viaggio { display: none; }
   .app-header { position: static; border: none; padding: 0 0 0.5rem; }
   .marchio { display: none; }
   .titolo-viaggio { font-size: 1.4rem; white-space: normal; }
