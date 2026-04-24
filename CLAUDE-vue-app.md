@@ -176,7 +176,7 @@ Step 5–7: commit e deploy.
 
 ## Vietato senza autorizzazione esplicita
 
-- Commit diretti su `main` quando esiste un branch `develop` e la slice non è docs-only. L'**eccezione docs-only** si applica a modifiche che toccano *esclusivamente*: `*.md`, `docs/**`, `CLAUDE*.md`, commenti di codice, e **opzionalmente** i soli campi *metadata* di `package.json` (`scripts`, `name`, `version`, `description`, `keywords`, `author`, `license`, `repository`, `bugs`, `homepage`). L'eccezione **non** copre `dependencies`, `devDependencies`, `peerDependencies`, `engines`, `type`, `main`, `exports`, `private`, o qualsiasi altro campo con effetto runtime/build. Se il diff di `package.json` tocca sia metadata sia campi runtime, la slice non è docs-only.
+- Commit diretti su `main` quando esiste un branch `develop` e la slice non è docs-only. L'**eccezione docs-only** si applica a modifiche che toccano *esclusivamente*: `*.md`, `docs/**`, `CLAUDE*.md` e commenti di codice. L'eccezione **non** copre `package.json`: qualsiasi modifica a `package.json` (inclusi campi metadata come `scripts`, `name`, `version`, `description`, `keywords`, `author`, `license`, `repository`, `bugs`, `homepage`) rende la slice non docs-only.
 - Committare segreti: API key, token, credenziali di terze parti, chiavi private. `.env*` mai nel repo.
 - Aggiungere una nuova dipendenza runtime (npm dependency, non devDependency) senza un task dedicato. `devDependencies` solo se davvero necessarie al flusso di build/test.
 - Bumpare la versione major di framework (Vue, Vite, TS) fuori da una slice `deps` dedicata.
