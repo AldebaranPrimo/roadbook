@@ -1,10 +1,13 @@
 # Roadbook
 
+[![Versione](https://img.shields.io/badge/versione-1.0_beta-f59e0b)](#stato-del-progetto)
 [![Vue 3](https://img.shields.io/badge/Vue-3-42b883?logo=vue.js&logoColor=white)](https://vuejs.org/)
 [![Vite](https://img.shields.io/badge/Vite-6-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Leaflet](https://img.shields.io/badge/Leaflet-1.9-199900?logo=leaflet&logoColor=white)](https://leafletjs.com/)
 [![PWA](https://img.shields.io/badge/PWA-offline--ready-5a0fc8)](https://web.dev/progressive-web-apps/)
 [![Deploy](https://img.shields.io/badge/GitHub_Pages-live-222?logo=github)](https://AldebaranPrimo.github.io/roadbook/)
+
+> ⚠ **Versione 1.0 — beta iniziale.** Tutte le funzionalità "must" sono implementate e verificate con test visuali, ma è comunque un primo rilascio destinato all'uso diretto e al feedback. Rotture di schema, piccole regressioni di UI e cambi di formato sono ancora possibili. Segnalare problemi e suggerimenti aprendo una issue.
 
 **Roadbook** è una Progressive Web App per consultare itinerari di viaggio da file JSON, online e offline. È pensata per l'uso in viaggio, da telefono, spesso in zone con connessione scarsa o assente.
 
@@ -69,6 +72,19 @@ Solo alla **primissima apertura** di un'area senza rete appare una polyline rett
 A sinistra un'area mai aperta online: polyline tratteggiata + banner. A destra la stessa sessione offline su un'area già vista: percorso reale letto dalla cache, nessun banner, nessuna chiamata di rete.
 
 ---
+
+## Stato del progetto
+
+**Versione corrente: 1.0 — beta iniziale** (24 aprile 2026).
+
+Questo è il primo rilascio pubblico: è *funzionalmente* completo rispetto al perimetro della v1 (vedi sotto) e ha superato una batteria di test visuali con Playwright su desktop, mobile e con la rete OSRM disattivata, ma:
+
+- Lo **schema JSON** è versionato (`$schema_version: "1.0"`) e potrebbe subire piccoli aggiustamenti in v1.x se emergono esigenze non previste.
+- L'app si aspetta di girare sul path `/roadbook/` (GitHub Pages). In ambienti alternativi vanno aggiornati `base` in `vite.config.js` e `start_url`/`scope` del manifest.
+- **Nessun meccanismo di sync cloud** ancora: tutto è locale al dispositivo (IndexedDB). È in roadmap per la v2.
+- Le **icone PWA** sono ancora placeholder SVG; per installabilità Android al 100% vanno sostituite con PNG 192/512/maskable.
+
+Stato dettagliato, decisioni prese e migliorie rinviate: [`STATO-PROGETTO.md`](STATO-PROGETTO.md).
 
 ## Funzionalità v1
 
