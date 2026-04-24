@@ -6,14 +6,33 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ## Alta priorità — prossime slice
 
-### 1. Export/import viaggio con note e stato "visitato" embedded
+### 1. Geolocalizzazione "tu sei qui" sulla mappa
+
+**Obiettivo**: mostrare sempre sulla mappa la posizione corrente dell'utente come marker distinto, in modo che appena apre l'app in viaggio veda subito dove si trova rispetto ai punti dell'area.
+
+**Scope v1** (deliberatamente semplice, `risk:low`):
+- All'avvio dell'app: richiesta consenso geolocalizzazione tramite `navigator.geolocation`. Il prompt è quello nativo del browser, niente UI custom aggiuntiva.
+- Se l'utente concede: attivare `navigator.geolocation.watchPosition(...)` per tutta la durata della sessione. Ogni update → aggiorna posizione del marker "tu sei qui" sulla mappa.
+- Marker dedicato, non numerato e visivamente distinto dai marker-punti (es. cerchietto blu pieno al centro + cerchio trasparente dell'accuracy), fuori dal `layerGroup` dei marker-punti.
+- Se l'utente nega o revoca il consenso: nessun marker, niente re-prompt automatico. Preferenza salvata come `preferenze.geolocalizzazione = 'negata'` per evitare prompt ripetuti, ma lasciando all'utente un'azione esplicita per ritentare (bottone nel modal Info tipo "Attiva posizione corrente").
+- Il marker "tu sei qui" vive fuori dal `tilePane`, quindi **non** viene invertito dal filtro CSS del tema scuro — è sempre blu vivido.
+- Nessun auto-centering sulla mappa: l'utente controlla inquadratura e zoom, l'app mostra la posizione dove si trova.
+
+**Fuori scope v1**:
+- Distanza utente → punto più vicino.
+- Bottone "centra sulla mia posizione".
+- Tracciamento storico della posizione (track log).
+
+**Dipendenze**: questa feature **non** ha prerequisiti e non blocca le altre. Procediamo subito dopo aver chiuso le PR aperte (`ai/docs/revisione-documenti` è quella attualmente pendente).
+
+### 2. Export/import viaggio con note e stato "visitato" embedded
 
 **Obiettivo**: quando l'utente esporta un singolo viaggio dal modal Info, il JSON prodotto deve poter includere le **sue annotazioni personali** (le note per ciascun punto + lo stato "visitato"). Al re-import, tali annotazioni vengono ripristinate in IndexedDB. Oggi esiste `esportaBackup()` che produce un dump completo dell'app, ma non c'è un export "per-viaggio" che viaggi con le proprie note.
 
 **Casi d'uso**:
 - **Condividere un viaggio personalizzato**: "Ti mando il mio JSON del Friuli con le note che mi sono appuntato sui posti che ho visto davvero" — il destinatario apre il file e riceve il viaggio *più* le annotazioni di chi l'ha vissuto.
 - **Backup rapido di un singolo viaggio** senza passare dal dump completo dell'app.
-- **Migrazione tra device** in attesa del sync cloud (vedi voce 2): esporti dal desktop, importi sul telefono, ritrovi note e flag.
+- **Migrazione tra device** in attesa del sync cloud (vedi voce 3): esporti dal desktop, importi sul telefono, ritrovi note e flag.
 
 **Scope v1** (slice atomica, `risk:low` — solo estensioni additive):
 - Nuova funzione in `src/utils/store-viaggi.js` tipo `esportaViaggioSingolo(viaggioId, { includiAnnotazioni: boolean })` che produce un JSON conforme allo schema v1.1 (vedi sotto).
@@ -38,9 +57,9 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 }
 ```
 
-**Nota sull'ordine con la voce 2 (login social)**: questa feature è **prerequisito concettuale** del sync cloud — una volta che l'utente potrà avere liste private sincronizzate, il meccanismo di serializzazione di note + visitati serve comunque. Meglio completarlo qui, semplice e portabile, e riusarlo dopo.
+**Nota sull'ordine con la voce 3 (login social)**: questa feature è **prerequisito concettuale** del sync cloud — una volta che l'utente potrà avere liste private sincronizzate, il meccanismo di serializzazione di note + visitati serve comunque. Meglio completarlo qui, semplice e portabile, e riusarlo dopo.
 
-### 2. Gestione utenti con login social
+### 3. Gestione utenti con login social
 
 **Obiettivo**: permettere a ciascun utente di avere una lista **privata e personale** di percorsi, sincronizzata tra i suoi dispositivi (camper, telefono, desktop). Visione: "Carico un viaggio al mattino dal desktop, lo apro la sera dal telefono in camper senza dover ri-importare il JSON".
 
@@ -70,25 +89,53 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ## Media priorità
 
-### 3. Icone PWA reali
+### 4. Icone PWA reali
 
 Sostituire i placeholder SVG in `public/icons/` con PNG 192×192, 512×512, 512×512 maskable (per forma Android adattiva). Aggiornare `manifest.icons` in `vite.config.js`.
 
 Effetto: l'app diventa installabile al 100% su Android senza warning del browser, l'icona sulla home avrà forma coerente.
 
-### 4. Filtri per categoria e tag
+### 5. Precaricamento offline totale al primo import di un viaggio
+
+**Obiettivo**: quando l'utente importa un nuovo viaggio (dal manifest di esempio, da file, da drag & drop, o da URL), il **primo accesso online** deve scaricare tutto ciò che servirà per un'esperienza offline completa — tile delle mappe nell'area dei punti, foto dei punti, routing OSRM — in modo che l'utente possa poi partire in camper e aprire una qualsiasi area senza dover aver *già* visualizzato manualmente ciascuna area o scrollato mappe.
+
+**Scope v1** (`risk:medium`):
+
+1. **Prefetch dei tile**:
+   - Calcolare il bounding box dell'intero viaggio (tutti i punti di tutte le aree) con padding ragionevole.
+   - Per il provider tile **attualmente selezionato** dall'utente, enumerare tutti i tile coprenti il bbox ai livelli di zoom utili (indicativamente 10–14, da rivedere in base al caso d'uso camper).
+   - `fetch()` sequenziale con throttling (max 1–2 richieste parallele, pausa tra lotti) → il service worker Workbox intercetta e salva in cache runtime (`CacheFirst`).
+   - **Rispetto policy dei provider**: OSM standard ha una policy esplicita contro il bulk downloading ([Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/)). Se il provider attivo è OSM, limitare zoom a 10–13 e richiedere conferma esplicita con messaggio sul limite. Per CartoDB / OpenTopoMap usare gli stessi limiti per prudenza, anche se le policy sono meno restrittive.
+   - Opzionalmente: prefetchare solo tile in un bbox *ristretto* attorno a ogni area separatamente, invece di un bbox unico del viaggio, per ridurre il volume.
+
+2. **Prefetch delle foto**:
+   - Per tutti i punti del viaggio, enumerare gli URL in `punto.foto[]` (se presenti).
+   - `fetch()` parallelo (max 3–4) → il service worker le cacha via runtime caching. Va aggiunto un pattern Workbox per URL di foto (`image/*` response o pattern per CDN comuni).
+
+3. **Prefetch del routing**:
+   - Per ogni area, chiamare `ottieniPercorso({ forzaAggiornamento: false })` che già usa OSRM con cache IndexedDB. Questo popola la cache routing per tutte le aree in un colpo solo, invece di aspettare che l'utente apra ciascuna.
+
+4. **UI di progresso**:
+   - Dopo un import, modale "Preparazione offline" con barra di progresso (X / Y tile, Z / W foto, routing in corso).
+   - Annullabile in qualsiasi momento (non blocca l'utente dall'usare l'app, il prefetch continua in background se l'utente chiude il modal).
+   - Preferenza in `ModalInfo`: "Prefetch automatico al primo import" (attivo di default), "Ripeti prefetch per questo viaggio" (azione manuale a posteriori, utile se cambi provider tile).
+
+**Fuori scope v1**:
+- Prefetch di *tutti* i provider tile simultaneamente (solo quello attivo).
+- Prefetch di zoom più profondi (14+) per l'intera area — solo on-demand via pan & zoom utente.
+- Stima dettagliata dello spazio disco prima del prefetch (può superare 100 MB facilmente).
+
+**Rispetto delle policy**: per OSM è **obbligatorio** rispettare il rate limit (max 2 thread, no bulk downloading). Questa implementazione farà del suo meglio per restare sotto soglia, ma **non è un download illimitato** — è un "scarica quello che probabilmente userai, con cautela".
+
+### 6. Filtri per categoria e tag
 
 Dalla v2 delle specifiche ([`SPECIFICHE-APP.md §4.2`](SPECIFICHE-APP.md)). In header o in un drawer laterale: checkbox per categoria (attive di default), ricerca testuale nei punti. Il filtro si applica sia alla lista sia ai marker della mappa.
 
-### 5. Ricerca testuale nei punti
+### 7. Ricerca testuale nei punti
 
 Campo di ricerca che filtra in tempo reale nome/descrizione/tag dei punti. Tollerante a varianti diacritiche (è/e).
 
-### 6. Geolocalizzazione "tu sei qui"
-
-Marker speciale (non numerato) sulla posizione GPS dell'utente, con accuracy circle. Refresh on-demand o ogni N secondi con consenso esplicito. Utile per capire da che punto dell'area si è arrivati.
-
-### 7. Galleria foto a tutto schermo
+### 8. Galleria foto a tutto schermo
 
 Per i punti che hanno `foto: [...]` nel JSON: click su thumbnail → lightbox con swipe, zoom, download.
 
@@ -96,15 +143,15 @@ Per i punti che hanno `foto: [...]` nel JSON: click su thumbnail → lightbox co
 
 ## Bassa priorità / nice-to-have
 
-### 8. Pulsante "naviga al prossimo non visitato"
+### 9. Pulsante "naviga al prossimo non visitato"
 
 Bottone che apre il prossimo punto non marcato come visitato nell'area corrente, centrando la mappa e aprendo il popup.
 
-### 9. Condivisione punto come URL profondo
+### 10. Condivisione punto come URL profondo
 
 `?viaggio=<id>&area=<id>&punto=<n>` → apre l'app focalizzata su quel punto. Utile per condividere un luogo specifico via WhatsApp/email senza dover descrivere dove cercarlo.
 
-### 10. Estensioni schema JSON
+### 11. Estensioni schema JSON
 
 - `giorni`: array opzionale per viaggi suddivisi in giornate (alternativa alle aree).
 - `gpx_url`: traccia GPX sovrapposta al percorso (utile per itinerari pre-esistenti).
