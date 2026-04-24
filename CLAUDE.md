@@ -4,6 +4,35 @@ PWA per consultare itinerari di viaggio da file JSON, online e offline. Caso d'u
 
 > **Questo file contiene solo le regole specifiche del repo Roadbook.** Tutto ciò che non è qui segue il contratto di famiglia `CLAUDE-vue-app.md` nella stessa cartella. Leggere prima quello, poi questo.
 
+## Versione contratto di famiglia
+
+Conforme a [`CLAUDE-vue-app.md`](CLAUDE-vue-app.md) **v1.1.1** (rev 5 del 2026-04-24 — patch sintassi `@copilot review`).
+
+## Lingua del progetto
+
+- **Identificatori** (variabili, funzioni, file, composables): **italiano** sul dominio (`useViaggio`, `aree`, `chiavePunto`, `PuntoCard.vue`), inglese per primitivi Vue/JS universali (`ref`, `computed`, `onMounted`, `fetch`).
+- **UI utente** (testi a schermo, etichette, bottoni, messaggi di errore di validazione): **italiano**.
+- **Commenti e log**: **italiano**.
+- **Descrizioni tool destinate a LLM** (se presenti, es. README dello schema `public/schema/viaggio-1.1.md`): italiano, ma con gli esempi di prompt al LLM mostrati in italiano anch'essi (l'utente parla italiano col suo LLM).
+
+## Performance budget
+
+Valori effettivi in uso al 2026-04-24 (override motivato rispetto ai default di I-13):
+
+- **Bundle JS iniziale**: **≤ 280 KB gzip** (override del default 150 KB). Motivazione: stack include Leaflet (~150 KB gzip) + idb + 5 tile provider registrati + 2 composable PWA — è il prezzo delle feature correnti. Oggi siamo a ~90 KB gzip per il chunk principale + ~2 KB workbox-window, quindi lontani dal tetto.
+- **CSS totale**: **≤ 35 KB gzip** (leggero override del default 30 KB). Oggi ~10 KB gzip.
+- **Score Lighthouse PWA**: **≥ 85** (leggero override del default 90). Motivazione: icone PWA placeholder SVG finché non sostituite con PNG 192/512/maskable (voce in TODO).
+- Regressioni di performance sostanziali (aumento >20% del bundle in una sola slice) richiedono una slice `perf` dedicata.
+
+## Policy aggiornamento Service Worker
+
+**`autoUpdate` + toast utente** (rev 4 del contratto, I-08):
+
+- `registerType: 'autoUpdate'` in `vite.config.js`: il SW nuovo viene scaricato automaticamente in background quando Workbox lo rileva.
+- `virtual:pwa-register/vue` wrappato in `src/composables/useAggiornamentoPwa.js`: espone `aggiornamentoDisponibile` reattivo + `aggiornaOra()`.
+- Toast in `App.vue` mostrato quando `aggiornamentoDisponibile === true`: "✨ Nuova versione disponibile — Aggiorna ora". Click → `updateServiceWorker(true)` = `skipWaiting` + reload.
+- Se l'utente ignora il toast, l'aggiornamento avviene alla prossima chiusura/riapertura tab (comportamento default di `autoUpdate`).
+
 ---
 
 ## Repo & ecosistema
