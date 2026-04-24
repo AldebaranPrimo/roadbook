@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 
 import { useGeolocalizzazione } from '../composables/useGeolocalizzazione.js'
+import { useAggiornamentoPwa } from '../composables/useAggiornamentoPwa.js'
 
 const props = defineProps({
   aperto: { type: Boolean, default: false },
@@ -16,6 +17,15 @@ const categorie = computed(() => Object.entries(props.viaggio?.categorie || {}))
 
 const includiAnnotazioni = ref(true)
 const { stato: statoGeo, errore: erroreGeo, posizione: posizioneUtente, richiedi: richiediGeo } = useGeolocalizzazione()
+const { aggiornamentoDisponibile, aggiornaOra } = useAggiornamentoPwa()
+
+const APP_VERSION = __APP_VERSION__
+const APP_BUILD_SHA = __APP_BUILD_SHA__
+const APP_BUILD_DATE = __APP_BUILD_DATE__
+
+function forzaReload() {
+  window.location.reload()
+}
 
 function percentuale() {
   if (!props.totalePunti) return 0
@@ -114,6 +124,33 @@ function etichettaStatoGeo() {
       </section>
 
       <section>
+        <h3>Versione</h3>
+        <p class="versione-riga">
+          <strong>v{{ APP_VERSION }}</strong>
+          <span class="muted">· build {{ APP_BUILD_SHA }} · {{ APP_BUILD_DATE }}</span>
+        </p>
+        <p v-if="aggiornamentoDisponibile" class="versione-aggiornamento">
+          È disponibile una nuova versione dell'app.
+        </p>
+        <p v-else class="hint">
+          Se dopo un aggiornamento vedi ancora la versione vecchia, forza un reload qui sotto.
+        </p>
+        <div class="azioni">
+          <button
+            v-if="aggiornamentoDisponibile"
+            type="button"
+            class="btn primario"
+            @click="aggiornaOra"
+          >Aggiorna alla nuova versione</button>
+          <button
+            type="button"
+            class="btn"
+            @click="forzaReload"
+          >Forza reload</button>
+        </div>
+      </section>
+
+      <section>
         <h3>Altre azioni</h3>
         <div class="azioni">
           <button type="button" class="btn" @click="emit('stampa')">Stampa viaggio</button>
@@ -194,6 +231,11 @@ function etichettaStatoGeo() {
 
 .hint { font-size: 0.85rem; color: var(--muted); }
 .riga-opzione { display: flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; margin-bottom: 0.5rem; cursor: pointer; }
+.versione-riga { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88rem; }
+.versione-riga .muted { color: var(--muted); margin-left: 0.3rem; }
+.versione-aggiornamento { font-size: 0.88rem; color: var(--accent); font-weight: 600; }
+.btn.primario { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.btn.primario:hover { filter: brightness(1.05); }
 
 .azioni { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .btn {

@@ -5,24 +5,24 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Unreleased]
 
-Questa sezione contiene le modifiche già su `develop` (mergiate via PR) più quelle in PR aperta in attesa di merge. Verranno raggruppate nella prossima versione taggata quando si promuoverà `develop → main`.
+Modifiche su `develop` non ancora rilasciate su `main`. Verranno raggruppate nella prossima versione taggata quando si promuoverà `develop → main`.
 
-### Aggiunte — su `develop`
+### Aggiunte
 
-- **Selettore stile mappa in-app** con 5 provider (OpenStreetMap / CartoDB Voyager / Positron / OpenTopoMap / Dark Matter) via `L.control.layers` nativo di Leaflet, persistito come `preferenze.stileMappa` in IndexedDB. *Commit `b879c32`, mergiato con PR #2 (commit merge `4c04e7e`).*
-- **OpenStreetMap come default** di entrambi i temi (chiaro e scuro) — molto più leggibile di Voyager/Dark Matter. In tema scuro, filtro CSS invertito (`invert(1) hue-rotate(180deg) brightness(1.05) contrast(0.92) saturate(0.95)`) applicato al `.leaflet-tile-pane`: mantiene gli hue (fiumi blu, verde), inverte la luminosità. Marker e polyline restano fuori dal filtro.
-- **Service Worker**: pattern Workbox distinti per `tile.openstreetmap.org` e `tile.opentopomap.org` (cache separate, CacheFirst 30gg × 3000 entries).
-- Regola nel [`CLAUDE.md`](../CLAUDE.md): aggiungere un nuovo tile provider richiede di aggiornare sia `PROVIDERS` in `MappaLeaflet.vue` sia `workbox.runtimeCaching` in `vite.config.js`.
+- **Selettore stile mappa in-app** con 5 provider (OpenStreetMap / CartoDB Voyager / Positron / OpenTopoMap / Dark Matter) via `L.control.layers` nativo di Leaflet, persistito come `preferenze.stileMappa` in IndexedDB. *PR #2.*
+- **OpenStreetMap come default** di entrambi i temi (chiaro e scuro) — molto più leggibile di Voyager/Dark Matter. In tema scuro, filtro CSS invertito (`invert(1) hue-rotate(180deg) brightness(1.05) contrast(0.92) saturate(0.95)`) applicato al `.leaflet-tile-pane`: mantiene gli hue (fiumi blu, verde), inverte la luminosità. Marker e polyline restano fuori dal filtro. *PR #2.*
+- **Service Worker**: pattern Workbox distinti per `tile.openstreetmap.org` e `tile.opentopomap.org` (cache separate, CacheFirst 30gg × 3000 entries). *PR #2.*
+- **Geolocalizzazione "tu sei qui"** sempre attiva sulla mappa. Nuovo composable `src/composables/useGeolocalizzazione.js` con stato condiviso, `watchPosition` singolo, persistenza del consenso negato per evitare re-prompt. Marker cerchietto blu + accuracy circle fuori dal filtro scuro. Sezione "Posizione corrente" in `ModalInfo.vue` con bottone riattiva. *PR #5.*
+- **Schema JSON v1.1 + export/import viaggio con annotazioni embedded**. Nuovo campo root opzionale `annotazioni: { visitati: string[], note: Record<string, string> }` con chiavi nel formato `"<areaId>-<n>"`. Bottone "Esporta viaggio" in `ModalInfo.vue` con checkbox *"Includi le mie note e i punti visitati"*. Conferma a 3 opzioni in `ModalCaricaViaggio.vue` quando il JSON importato contiene annotazioni non vuote (Importa tutto / Solo il viaggio / Annulla). Funzioni `esportaViaggioSingolo` + `ripristinaAnnotazioni` nello store. Retrocompatibile: file v1.0 restano validi. *PR #6.*
+- **Analisi di fattibilità del prefetch offline** — nuovo documento `docs/analisi/prefetch-offline.md` con scomposizione tile/foto/routing/UI, volumi stimati (Friuli: ~595 tile, ~18 MB una tantum), policy OSM, stima 4 file / ~198 righe / 0 nuove dipendenze. **Verdetto: SEMPLICE** a condizione di accorpare il composable di stato dentro l'utility `prefetch-offline.js`. *PR #7.*
+- **Numero di versione visibile**: badge `v{version}` accanto al marchio nell'header (con tooltip "Build <sha>"), sezione "Versione" nel modal Info con semver + SHA commit corto + data build. I valori sono iniettati a build-time da `vite.config.js` tramite `define` + lettura di `package.json` e `git rev-parse --short HEAD`. Ogni deploy ha un SHA diverso, quindi l'utente può sempre verificare a colpo d'occhio se sta vedendo l'ultima build o una cachata.
+- **Auto-update PWA** con `virtual:pwa-register/vue`: quando Workbox scarica un nuovo service worker, compare un piccolo toast in basso a destra *"✨ Nuova versione disponibile"* con bottone **Aggiorna ora** che fa `skipWaiting` + reload. Se l'utente ignora il toast, il refresh avviene comunque alla prossima chiusura/riapertura della tab (comportamento `registerType: 'autoUpdate'` già presente). Nuovo composable `src/composables/useAggiornamentoPwa.js` che espone `aggiornamentoDisponibile` reattivo + `aggiornaOra()`. Dal modal Info è disponibile anche un bottone **Forza reload** per i casi in cui non c'è un nuovo SW ma la cache browser è dispettosa.
 
-### Modifiche — su `develop`
+### Modifiche
 
 - Cache Workbox dei tile CartoDB rinominata da `map-tiles` a `map-tiles-carto` per coerenza con le nuove cache per-provider.
-
-### Aggiunte — in PR aperta, in attesa di merge
-
-- **Geolocalizzazione "tu sei qui"** sempre attiva sulla mappa. Nuovo composable `src/composables/useGeolocalizzazione.js` con stato condiviso, `watchPosition` singolo, persistenza del consenso negato per evitare re-prompt. Marker cerchietto blu + accuracy circle fuori dal filtro scuro. Sezione "Posizione corrente" in `ModalInfo.vue` con bottone riattiva. *Branch: `ai/feat/geolocalizzazione-tu-sei-qui`, commit `bfae06d`.*
-- **Schema JSON v1.1 + export/import viaggio con annotazioni embedded**. Nuovo campo root opzionale `annotazioni: { visitati: string[], note: Record<string, string> }` con chiavi nel formato `"<areaId>-<n>"`. Bottone "Esporta viaggio" in `ModalInfo.vue` con checkbox *"Includi le mie note e i punti visitati"*. Conferma a 3 opzioni in `ModalCaricaViaggio.vue` quando il JSON importato contiene annotazioni non vuote (Importa tutto / Solo il viaggio / Annulla). Funzioni `esportaViaggioSingolo` + `ripristinaAnnotazioni` nello store. Retrocompatibile: file v1.0 restano validi. *Branch: `ai/feat/export-import-annotazioni`, commit `c09e6fb`.*
-- **Analisi di fattibilità del prefetch offline** — nuovo documento `docs/analisi/prefetch-offline.md` con scomposizione tile/foto/routing/UI, volumi stimati (Friuli: ~595 tile, ~18 MB una tantum), policy OSM, stima 4 file / ~198 righe / 0 nuove dipendenze. **Verdetto: SEMPLICE** a condizione di accorpare il composable di stato dentro l'utility `prefetch-offline.js`. *Branch: `ai/analisi/prefetch-offline`, commit `009efb1`.*
+- `package.json.version` allineato da `0.1.0` a `1.1.0` in vista della prossima promozione su `main`. Prima di questo bump il semver del progetto era rimasto dietro rispetto al CHANGELOG (vedere debito tecnico in TODO).
+- Nuovi file `src/globals.d.ts` + `jsconfig.json` per far riconoscere al TS/JS language server le costanti globali iniettate da Vite (`__APP_VERSION__`, `__APP_BUILD_SHA__`, `__APP_BUILD_DATE__`). Zero impatto sulla build — serve solo all'editor.
 
 ---
 

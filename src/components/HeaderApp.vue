@@ -10,6 +10,10 @@ const emit = defineEmits(['apriInfo', 'apriCarica', 'cambiaViaggio'])
 
 const { tema, prossimo } = useTema()
 
+// Iniettati a build-time da vite.config.js
+const APP_VERSION = __APP_VERSION__
+const APP_BUILD_SHA = __APP_BUILD_SHA__
+
 const etichettaTema = computed(() => {
   if (tema.value === 'chiaro') return '☀︎ Chiaro'
   if (tema.value === 'scuro') return '☾ Scuro'
@@ -20,7 +24,10 @@ const etichettaTema = computed(() => {
 <template>
   <header class="app-header">
     <div class="titoli">
-      <h1 class="marchio">Roadbook</h1>
+      <h1 class="marchio">
+        Roadbook
+        <span class="versione" :title="`Build ${APP_BUILD_SHA}`">v{{ APP_VERSION }}</span>
+      </h1>
       <div v-if="viaggio" class="viaggio-info">
         <p class="titolo-viaggio">{{ viaggio.titolo }}</p>
         <p v-if="viaggio.sottotitolo" class="sottotitolo">{{ viaggio.sottotitolo }}</p>
@@ -55,6 +62,18 @@ const etichettaTema = computed(() => {
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--accent);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.versione {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+  opacity: 0.75;
+  cursor: help;
 }
 .titolo-viaggio {
   margin: 0.1rem 0 0;
