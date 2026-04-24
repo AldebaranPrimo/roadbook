@@ -1,12 +1,62 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
+import fs from 'node:fs'
+import path from 'node:path'
 
-// base deve corrispondere al path di GitHub Pages (https://AldebaranPrimo.github.io/roadbook/)
+// Plugin locale: genera public/viaggi/manifest.json con l'elenco dei JSON
+// presenti nella cartella, sia in dev (via middleware) sia in build (via
+// writeBundle). Lo scopo è permettere all'app di scoprire automaticamente
+// il primo viaggio di esempio disponibile senza hardcode nel codice.
+function manifestViaggiEsempio() {
+  const dirPublic = path.resolve('public/viaggi')
+
+  function elenca() {
+    try {
+      return fs
+        .readdirSync(dirPublic)
+        .filter(f => f.endsWith('.json') && f !== 'manifest.json')
+        .sort()
+    } catch {
+      return []
+    }
+  }
+
+  function payload() {
+    return JSON.stringify({ files: elenca() }, null, 2)
+  }
+
+  return {
+    name: 'roadbook-manifest-viaggi',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url && req.url.split('?')[0].endsWith('/viaggi/manifest.json')) {
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+          res.setHeader('Cache-Control', 'no-cache')
+          res.end(payload())
+          return
+        }
+        next()
+      })
+    },
+    configurePreviewServer(server) {
+      // In preview il file statico generato in dist/ viene servito direttamente.
+      // Nulla da fare qui.
+    },
+    writeBundle(options) {
+      const outDir = options.dir || 'dist'
+      const destDir = path.resolve(outDir, 'viaggi')
+      fs.mkdirSync(destDir, { recursive: true })
+      fs.writeFileSync(path.join(destDir, 'manifest.json'), payload())
+    }
+  }
+}
+
 export default defineConfig({
   base: '/roadbook/',
   plugins: [
     vue(),
+    manifestViaggiEsempio(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon.svg', 'viaggi/*.json'],
@@ -58,6 +108,10 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
-    open: true
+    open: false
+  },
+  preview: {
+    port: 4173,
+    open: false
   }
 })

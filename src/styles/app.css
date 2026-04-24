@@ -1,20 +1,43 @@
+/* Variabili tema: default chiaro; scuro via prefers-color-scheme o data-tema="scuro". */
 :root {
   --bg: #ffffff;
   --fg: #111111;
-  --accent: #16a34a;
+  --card-bg: #ffffff;
   --muted: #6b7280;
+  --accent: #16a34a;
   --errore: #dc2626;
   --bordo: #e5e7eb;
+  --hover: #f3f4f6;
+  --btn-bg: #f9fafb;
+  --avvertenza-bg: #fef3c7;
+  --avvertenza-fg: #78350f;
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-tema="chiaro"]) {
     --bg: #0f172a;
     --fg: #f1f5f9;
+    --card-bg: #1e293b;
     --muted: #94a3b8;
-    --bordo: #1e293b;
+    --bordo: #334155;
+    --hover: #273449;
+    --btn-bg: #1e293b;
+    --avvertenza-bg: #422006;
+    --avvertenza-fg: #fde68a;
   }
+}
+
+:root[data-tema="scuro"] {
+  --bg: #0f172a;
+  --fg: #f1f5f9;
+  --card-bg: #1e293b;
+  --muted: #94a3b8;
+  --bordo: #334155;
+  --hover: #273449;
+  --btn-bg: #1e293b;
+  --avvertenza-bg: #422006;
+  --avvertenza-fg: #fde68a;
 }
 
 * { box-sizing: border-box; }
@@ -26,39 +49,36 @@ body {
   background: var(--bg);
   color: var(--fg);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-.app-shell {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
+/* Bottoni fantasma in HeaderApp */
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--bordo);
+  color: var(--fg);
+  border-radius: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
 }
+.btn-ghost:hover { background: var(--hover); }
 
-.app-header {
-  padding: 1rem;
-  border-bottom: 1px solid var(--bordo);
-}
+a { color: var(--accent); }
 
-.app-header h1 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: var(--accent);
-}
+dialog[open] { display: block; }
 
-.sottotitolo {
-  margin: 0.25rem 0 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.app-main {
-  flex: 1;
-  padding: 1rem;
-}
-
-.errore { color: var(--errore); }
-.nota-dev { color: var(--muted); font-size: 0.85rem; margin-top: 1rem; }
-
+/* Stampa: base (i componenti hanno già media print scoped) */
 @media print {
-  .app-header { border: none; }
+  :root {
+    --bg: #ffffff;
+    --fg: #000000;
+    --card-bg: #ffffff;
+    --muted: #374151;
+    --bordo: #9ca3af;
+  }
+  body { background: #fff; color: #000; }
+  @page { margin: 1.5cm; }
 }
