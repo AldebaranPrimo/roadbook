@@ -6,63 +6,7 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ## 🐛 Bug — da correggere asap
 
-### B-1. Header mobile: pulsanti troppo alti, titolo viaggio troncato
-
-**Screenshot**: [`bug-header.png`](bug-header.png) — cattura da mobile con viewport stretto.
-
-**Sintomo**: in mobile i 4 pulsanti "globali" dell'header (`⇄` cambio viaggio, `◐ Auto` tema, `+` carica viaggio, `ⓘ` info viaggio) hanno altezza maggiore del pulsante GitHub (l'unico "corretto" come altezza). La sproporzione delle righe causa due problemi:
-
-1. Il titolo del viaggio risulta **troncato aggressivamente** (es. *"Friuli + Slov…"* invece di *"Friuli + Slovenia in camper"*) insieme al sottotitolo (*"Ponte del 25-26 …"* invece di *"Ponte del 25-26 aprile 2026 · Camper + cane"*).
-2. L'importanza relativa è invertita: il titolo viaggio dovrebbe essere la cosa più visibile, non i bottoni.
-
-**Fase 1 — fix immediato** (`risk:low`, slice `ai/fix/header-altezza-bottoni`):
-
-- Uniformare l'altezza di tutti i `.btn-ghost` al riferimento del pulsante GitHub (padding + `height` fisso + `display: inline-flex; align-items: center; justify-content: center;`). Il link `<a class="btn-ghost">` con SVG 14×14 è la misura da rispettare; i `<button>` con caratteri Unicode (`⇄`, `◐`, `+`, `ⓘ`) oggi crescono più in alto per via del `line-height` del font.
-- **Spostare il pulsante `ⓘ` "Info viaggio"** fuori dal gruppo pulsanti globali e sotto il titolo del viaggio (accanto a titolo/sottotitolo). Razionale: l'info è **contestuale al viaggio corrente**, gli altri pulsanti sono globali (cambio viaggio, tema, carica nuovo, GitHub). Separare visivamente le due classi di azione aiuta il riconoscimento.
-- Il pulsante `⇄` "Cambia viaggio" resta tra i globali (è l'azione "torna alla lista viaggi", non "info sul viaggio corrente").
-
-File toccati: `src/components/HeaderApp.vue` + CSS associato. Scope chirurgico, nessun impatto su logica o altri componenti.
-
-**Fase 2 — da valutare dopo** (non parte del fix asap):
-
-L'utente ha notato che anche dopo il fix fase 1, il gruppo di pulsanti globali può restare affollato (`⇄` cambio + `◐ Auto` tema + `+` carica + `GitHub`), e in particolare la compresenza di `⇄` (cambio viaggio esistente) e `+` (aggiungi un nuovo viaggio) alle estremità del tema potrebbe confondere — entrambi riguardano la gestione viaggi ma fanno cose opposte. Possibili evoluzioni da valutare:
-
-- **Hamburger `☰`** che racchiude tutti i pulsanti globali in un menu a discesa. Pro: header molto pulito, titolo viaggio + sottotitolo hanno tutto lo spazio. Contro: un click in più per azioni comuni.
-- **Raggruppamento visivo** (wrapper con bordo o spaziatura) che isola `⇄` e `+` insieme come "gestione viaggi", separati da tema e GitHub.
-- **Label testuali** sui bottoni icona (accettabile su desktop, meno su mobile stretto).
-
-Questa fase 2 è intenzionalmente non dettagliata qui: va ridiscussa dopo aver visto il risultato della fase 1. Probabilmente diventerà una voce TODO separata in "media priorità" una volta definito lo scope.
-
-### B-2. Popup marker: pulsante "Dettagli →" ridondante
-
-**Sintomo**: cliccando un marker sulla mappa si apre un popup col titolo, categoria, descrizione tronca e un pulsante verde *"Dettagli →"* in fondo. Quel pulsante **non aggiunge nulla** al comportamento già attivato dal click sul marker: la lista a sinistra scrolla già automaticamente alla scheda corrispondente e la evidenzia. L'utente clicca il bottone aspettandosi un effetto e non ne ottiene uno percettibile, generando confusione ("ho sbagliato qualcosa?").
-
-**Analisi comportamento corrente** (vedere `src/components/MappaLeaflet.vue`, funzione `creaMarker`):
-
-- `m.on('click', …)` emette `clickPunto(punto.n)` verso `App.vue`.
-- Il bottone `.btn-vai` dentro il popup, al click, emette **lo stesso** evento `clickPunto(punto.n)`.
-- `App.vue → onClickPuntoDaMappa(n)` in entrambi i casi imposta `puntoEvidenziato.value = n` e fa `scrollIntoView` sulla scheda della lista.
-
-Il bottone è quindi puramente ridondante in ogni caso d'uso (desktop, tablet, mobile).
-
-**Mini-analisi delle 3 risoluzioni possibili**:
-
-- **Opzione A — Rimuovere il bottone** (raccomandata). Il popup resta come pura anteprima (titolo + categoria + descrizione tronca); per le azioni l'utente consulta la scheda nella lista (che è già scrollata in vista). Consistente col principio "meno UI = meglio". Richiede solo togliere le 3 righe del bottone nel template popup + il listener `popupopen` che lo collega.
-- **Opzione B — Trasformare in "Apri in mappa esterna"** (quick action). Il bottone del popup diventa un link diretto al navigatore OS predefinito (Google Maps su Android/Windows, Apple Maps su iOS/Mac) — cioè l'azione più frequente quando uno guarda un punto. Utile per chi vuole partire subito senza scrollare alla lista. Rompe leggermente la ridondanza ma introduce un canale di navigazione nuovo; va valutato se crea asimmetria con la scheda lista che ha 4 bottoni (Google Maps / Waze / Apple Maps / OsmAnd).
-- **Opzione C — Trasformare in "Apri scheda completa"** (dettaglio full-screen). Click → modal dedicata col punto ingrandito: foto gallery, mappa zoomata singola, tutti i link + note modificabili. Richiede un componente nuovo (`ModalDettagliPunto.vue`) e una feature non banale.
-
-**Raccomandazione**: **Opzione A** (rimuovere). È la più coerente con il comportamento attuale dell'app (click → scroll + evidenzia è già sufficiente) e chiude il bug nel modo più semplice. Se in futuro emergesse la necessità di azioni dal popup, opzione B o C restano sul tavolo come feature nuove, non come fix del bug.
-
-**Scope fix** (`risk:low`, slice `ai/fix/popup-bottone-dettagli`):
-
-- In `src/components/MappaLeaflet.vue`:
-  - Rimuovere `<button type="button" class="btn-vai" data-n="…">Dettagli →</button>` dal template popup.
-  - Rimuovere il listener `m.on('popupopen', …)` che collegava il bottone (diventa dead code).
-  - Rimuovere il CSS `.popup-roadbook .btn-vai { … }` dallo stile globale del componente.
-- Nessun cambio ad `App.vue`: `clickPunto` resta, triggerato dal solo `m.on('click', …)`.
-- Smoke: click marker → verifica che popup si apra con solo titolo/categoria/desc, e che la scheda in lista sia scrollata + evidenziata come prima.
-
-File toccati: 1 (`MappaLeaflet.vue`). Righe rimosse: ~8.
+*(nessun bug aperto. B-1 fix fase 1 e B-2 workaround già applicati nel commit corrente — vedere [`CHANGELOG.md`](CHANGELOG.md) e "Completati di recente" in fondo. La fase 2 di B-1 è in valutazione, viene ridiscussa dopo aver visto in uso il risultato della fase 1.)*
 
 ---
 
@@ -136,19 +80,32 @@ Campo di ricerca che filtra in tempo reale nome/descrizione/tag dei punti. Tolle
 
 Per i punti che hanno `foto: [...]` nel JSON: click su thumbnail → lightbox con swipe, zoom, download.
 
+### 8. Scheda dettagliata punto (modal full-screen)
+
+Modal dedicata che mostra un singolo punto in pieno: foto gallery (integra #7), mappa zoomata singola sul punto, tutti i link (Google Maps / Waze / Apple Maps / OsmAnd), nota personale modificabile inline, flag visitato, coordinate copiabili. Componente nuovo suggerito: `src/components/ModalDettagliPunto.vue`.
+
+**Trigger**: riattivare il bottone *"Dettagli →"* nel popup del marker (oggi nascosto con flag `mostraBottoneDettagli = false` in `MappaLeaflet.vue` per via del bug B-2), collegandolo all'apertura di questa modal. Così il bottone riacquista una funzione concreta distinta dal click sul marker (che continua a fare scroll + evidenzia la scheda in lista).
+
+**Scope implementativo** (`risk:medium`):
+- Nuovo `ModalDettagliPunto.vue` con layout mobile-first, chiusura via backdrop / tasto Esc / bottone ✕.
+- In `MappaLeaflet.vue`: flag `mostraBottoneDettagli = true`, listener `popupopen` già presente emette un nuovo evento (es. `apriDettagliPunto`) invece del `clickPunto` ridondante.
+- `App.vue`: wiring che apre la modal sul nuovo evento.
+
+**Dipendenze**: integrabile con #7 (Galleria foto) come sub-feature dello stesso task se le si sviluppa insieme.
+
 ---
 
 ## Bassa priorità / nice-to-have
 
-### 8. Pulsante "naviga al prossimo non visitato"
+### 9. Pulsante "naviga al prossimo non visitato"
 
 Bottone che apre il prossimo punto non marcato come visitato nell'area corrente, centrando la mappa e aprendo il popup.
 
-### 9. Condivisione punto come URL profondo
+### 10. Condivisione punto come URL profondo
 
 `?viaggio=<id>&area=<id>&punto=<n>` → apre l'app focalizzata su quel punto. Utile per condividere un luogo specifico via WhatsApp/email senza dover descrivere dove cercarlo.
 
-### 10. Estensioni schema JSON (v1.2+)
+### 11. Estensioni schema JSON (v1.2+)
 
 Già previste come campi opzionali, da implementare quando emergono esigenze:
 - `giorni`: array opzionale per viaggi suddivisi in giornate (alternativa a `aree`)
@@ -184,3 +141,6 @@ Al 2026-04-24 sono state completate:
 - ✅ Bottone GitHub nell'header dell'app con deep link al repo
 - ✅ Fix sanitizzazione emoji delle categorie nel popup marker (chiusa una minuscola potenziale XSS se un JSON maligno avesse iniettato HTML in `categorie.<k>.icona_emoji`)
 - ✅ Regola "Self-review come PR review" nel contratto `CLAUDE-vue-app.md` (Step 4.5, gate bloccante pre-commit)
+- ✅ B-1 fase 1: fix altezza uniforme pulsanti header mobile + `ⓘ` Info viaggio spostato accanto al titolo (contestuale al viaggio, non globale). Fase 2 (hamburger / raggruppamento / label) resta in valutazione.
+- ✅ B-2 (parziale, opzione C scelta): bottone *"Dettagli →"* nel popup marker temporaneamente nascosto (flag `mostraBottoneDettagli = false` in `MappaLeaflet.vue`). Sarà riattivato con funzione concreta quando verrà implementata la voce #8 "Scheda dettagliata punto (modal full-screen)".
+- ✅ Contratto `CLAUDE-vue-app.md` v1.1.1 — aggiornamento consolidato da critica costruttiva (nuovi invarianti I-13/14/15, ampliamenti I-05/07/08/11/12, sezioni minime CLAUDE.md di repo estese, fix sintassi `@copilot review`)
