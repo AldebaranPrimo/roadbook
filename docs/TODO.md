@@ -6,7 +6,22 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ## 🐛 Bug — da correggere asap
 
-*(nessun bug aperto. B-1 fix fase 1 e B-2 workaround già applicati nel commit corrente — vedere [`CHANGELOG.md`](CHANGELOG.md) e "Completati di recente" in fondo. La fase 2 di B-1 è in valutazione, viene ridiscussa dopo aver visto in uso il risultato della fase 1.)*
+### B-4 — titolo troncato nasconde il bottone ⓘ Info viaggio
+
+**Osservato in v1.1.1** su mobile col viaggio "Friuli + Slovenia in ..." (evidenza in `docs/bug-header-2.png`): il titolo va in overflow, l'ellipsis si attiva e il bottone ⓘ Info — essendo inline dentro il `<p class="titolo-viaggio">` con `overflow: hidden; text-overflow: ellipsis; white-space: nowrap` — **viene tagliato via completamente**. Risultato: l'utente non ha più alcun modo di aprire la modal "Informazioni viaggio" su quei viaggi. Bug di usabilità grave (funzione inaccessibile), introdotto dalla fase 1 di B-1 del 2026-04-24. Il sottotitolo ha lo stesso problema di troncamento, anche se senza conseguenze funzionali.
+
+**Scope del fix** (`risk:low`):
+- **Eliminare del tutto il bottone `ⓘ`** da `HeaderApp.vue`. Via anche la classe `.btn-info-viaggio` e la regola `@media print` associata. Il bottone in quanto icona non ha senso: duplica una funzione che il titolo stesso può portare.
+- **Rendere cliccabile l'intera area titolo + sottotitolo** (il blocco `.viaggio-info` completo) per aprire la modal Informazioni. Click handler `@click="emit('apriInfo')"` sul wrapper, `role="button"`, `tabindex="0"`, `aria-label="Apri informazioni viaggio"`, gestione tasto Invio/Spazio per accessibilità tastiera. Cursor pointer + sottolineatura sottile o hover discreto per segnalare la cliccabilità senza rovinare l'estetica.
+- Eventuale hint visivo su mobile: un chevron `›` minuscolo accanto al titolo, sempre presente, che indica la cliccabilità senza rubare spazio. Da discutere in review.
+
+**Effetto collaterale positivo**: tutto lo spazio del titolo torna disponibile per il testo, l'ellipsis si sposta più a destra (fino al bordo del container), il titolo viene visualizzato per intero nella maggioranza dei casi.
+
+**Nota architetturale**: togliere il bottone ⓘ rende anche obsoleta la voce "contestuale al viaggio vs azioni globali" del commit B-1 fase 1 — il pattern "click sul titolo" è più intuitivo e più standard nelle UI mobile.
+
+---
+
+*B-1 fix fase 1 e B-2 workaround già applicati (vedere [`CHANGELOG.md`](CHANGELOG.md) e "Completati di recente" in fondo). La fase 2 di B-1 (hamburger / raggruppamento / label azioni) resta in valutazione, viene ridiscussa dopo aver visto in uso il risultato di fase 1 + fix B-4.*
 
 ---
 
@@ -116,6 +131,23 @@ Già previste come campi opzionali, da implementare quando emergono esigenze:
 ---
 
 ## Debito tecnico
+
+- **Ristrutturazione branch a tre livelli `main` + `production` + `develop`** (`risk:medium`, task di processo — da NON eseguire finché non pianificato esplicitamente). Decisione presa dall'utente il 2026-04-24 dopo il banner GitHub ricorrente "Compare & pull request" sul branch main. Modello target:
+  - `main` = branch principale di lavoro. Commit diretti ammessi per slice piccole, slice AI-led significative via `ai/{tipo}/{desc}` → merge su main.
+  - `production` = branch di pubblicazione. GitHub Pages deployà **solo** sui push qui. Il promotion avviene via push diretto `main:production` o via PR self-merge `main → production` (scelta da confermare al kickoff).
+  - `develop` = riservato a feature complesse multi-slice. Resta dormiente allineato a main finché non serve.
+
+  **Passi concreti alla partenza del task**:
+  1. Allinea locale: `git pull` su main e develop, cancella eventuali branch slice già mergiati.
+  2. Crea `production` da `origin/main` (snapshot attuale = stato pubblicato).
+  3. Modifica `.github/workflows/deploy.yml`: trigger `branches: [main]` → `branches: [production]`.
+  4. Riscrivi `CLAUDE.md` sezioni "Scale" e "Hosting" con il nuovo flusso a tre branch, rimuovi la regola "commit diretti su main solo per docs-only".
+  5. Bumpa versione (patch).
+  6. Aggiorna `CHANGELOG.md`.
+  7. Commit + push su main + primo push a production (per attivare il nuovo trigger sul deploy corrente).
+  8. Branch protection su production da Settings → Branches (a mano, lato utente).
+
+  **Note di rischio**: dopo il cambio trigger, il prossimo commit su main **non** sarà deployato finché non si fa il primo push a production (passo 7 parte integrante). Il default branch GitHub resta `main` (niente da toccare). Da discutere al kickoff: (a) push diretto vs PR per main → production; (b) tenere `develop` sincronizzato con main o lasciarlo indietro fino all'uso; (c) branch protection stringente o light.
 
 - **Test Vitest** per le utility pure (`valida-schema`, `routing-osrm` decoder, `mappe-esterne`). Non blocca nulla ora, ma crescerà di utilità man mano che le utility si complicano.
 - **Audit WCAG 2.1 AA**: skip link → `#main-content` (mancante), `aria-expanded` sul modal, controllo contrasti in tutti e 5 i provider tile + tema scuro, navigazione tastiera completa.
