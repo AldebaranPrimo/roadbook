@@ -9,13 +9,23 @@
 
 > ⚠ **Versione 1.0 — beta iniziale.** Tutte le funzionalità "must" sono implementate e verificate con test visuali, ma è comunque un primo rilascio destinato all'uso diretto e al feedback. Rotture di schema, piccole regressioni di UI e cambi di formato sono ancora possibili. Segnalare problemi e suggerimenti aprendo una issue.
 
+## 🚀 Provala subito
+
+**→ [https://AldebaranPrimo.github.io/roadbook/](https://AldebaranPrimo.github.io/roadbook/) ←**
+
+Al primo accesso viene caricato automaticamente un viaggio di esempio (ponte 25-26 aprile 2026, Friuli + Slovenia in camper: 7 aree, 30 punti). Da lì puoi esplorare mappa, tab delle aree, popup sui marker, stato "visitato" e note personali. Per caricare un tuo itinerario: bottone **+** nell'header (drag & drop di un JSON, file picker o URL).
+
+Installabile come app su Android e iOS: **Condividi → Aggiungi a schermata Home** (iOS) / **⋮ → Installa app** (Chrome Android).
+
+---
+
 **Roadbook** è una Progressive Web App per consultare itinerari di viaggio da file JSON, online e offline. È pensata per l'uso in viaggio, da telefono, spesso in zone con connessione scarsa o assente.
 
 Caricato un JSON con l'itinerario, l'app mostra:
 
 - le **aree geografiche** come tab navigabili,
 - per ogni area una **mappa interattiva** con marker numerati colorati per categoria e il **percorso reale** calcolato su OSRM,
-- una **lista descrittiva** ricca dei punti (orari, costi, avvertenze, foto, deep link a Google Maps / Waze / Apple Maps),
+- una **lista descrittiva** ricca dei punti (orari, costi, avvertenze, foto, deep link a Google Maps / Waze / Apple Maps / OSMAnd),
 - **note personali** per punto, **stato "visitato"**, **tema chiaro/scuro/auto**,
 - tutto **persistito localmente in IndexedDB**, disponibile **offline dopo la prima apertura**.
 
@@ -29,47 +39,13 @@ Layout a due colonne (lista + mappa), tab delle aree scrollabili, marker numerat
 
 ![Desktop — viaggio caricato](docs/screenshots/desktop-iniziale.png)
 
-### Sincronizzazione mappa ↔ lista
-
-Click su marker → popup con anteprima e scroll automatico alla scheda corrispondente; click sulla scheda → fly-to sulla mappa con popup aperto.
-
-![Desktop — popup e sync mappa/lista](docs/screenshots/desktop-popup.png)
-
-### Tema scuro
-
-Bottone ciclico nell'header: chiaro → scuro → auto (rispetta `prefers-color-scheme`). La mappa commuta automaticamente tra CartoDB Voyager e Dark.
-
-![Desktop — tema scuro](docs/screenshots/desktop-tema-scuro.png)
-
-### Modal informazioni viaggio
-
-Descrizione estesa, partenza/rientro, documenti richiesti, **avanzamento visitati** con barra di progresso, legenda categorie con colori ed emoji.
-
-![Desktop — modal informazioni](docs/screenshots/desktop-modal-info.png)
-
 ### Mobile
 
-Layout responsive: mappa compatta (~40% dell'altezza) sopra, lista scorrevole sotto, tab delle aree scrollabili orizzontalmente.
+Layout responsive: mappa compatta (~40% dell'altezza) sopra, lista scorrevole sotto, tab delle aree scrollabili orizzontalmente. Tema scuro, sync bidirezionale mappa ↔ lista, cache del routing OSRM in IndexedDB e tutti i comportamenti offline sono più facili da vedere dal vivo sul [sito live](https://AldebaranPrimo.github.io/roadbook/).
 
 <p>
   <img src="docs/screenshots/mobile-iniziale.png" alt="Mobile — viaggio caricato" width="280"/>
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/mobile-modal-carica.png" alt="Mobile — modal carica viaggio" width="280"/>
 </p>
-
-### Comportamento offline
-
-Il routing reale calcolato da OSRM viene **memorizzato in IndexedDB** per coppia `(viaggio, area)`. Alla riapertura l'app legge il percorso dalla cache, anche offline e dopo giorni.
-
-Solo alla **primissima apertura** di un'area senza rete appare una polyline retta tratteggiata con un banner esplicativo:
-
-<p>
-  <img src="docs/screenshots/mobile-area3-offline.png" alt="Mobile — area mai cached, offline: banner e polyline retta" width="280"/>
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/mobile-area1-offline-cache.png" alt="Mobile — area cached, offline: percorso reale letto dallo storage" width="280"/>
-</p>
-
-A sinistra un'area mai aperta online: polyline tratteggiata + banner. A destra la stessa sessione offline su un'area già vista: percorso reale letto dalla cache, nessun banner, nessuna chiamata di rete.
 
 ---
 
