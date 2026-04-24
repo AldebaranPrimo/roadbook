@@ -33,6 +33,37 @@ L'utente ha notato che anche dopo il fix fase 1, il gruppo di pulsanti globali p
 
 Questa fase 2 è intenzionalmente non dettagliata qui: va ridiscussa dopo aver visto il risultato della fase 1. Probabilmente diventerà una voce TODO separata in "media priorità" una volta definito lo scope.
 
+### B-2. Popup marker: pulsante "Dettagli →" ridondante
+
+**Sintomo**: cliccando un marker sulla mappa si apre un popup col titolo, categoria, descrizione tronca e un pulsante verde *"Dettagli →"* in fondo. Quel pulsante **non aggiunge nulla** al comportamento già attivato dal click sul marker: la lista a sinistra scrolla già automaticamente alla scheda corrispondente e la evidenzia. L'utente clicca il bottone aspettandosi un effetto e non ne ottiene uno percettibile, generando confusione ("ho sbagliato qualcosa?").
+
+**Analisi comportamento corrente** (vedere `src/components/MappaLeaflet.vue`, funzione `creaMarker`):
+
+- `m.on('click', …)` emette `clickPunto(punto.n)` verso `App.vue`.
+- Il bottone `.btn-vai` dentro il popup, al click, emette **lo stesso** evento `clickPunto(punto.n)`.
+- `App.vue → onClickPuntoDaMappa(n)` in entrambi i casi imposta `puntoEvidenziato.value = n` e fa `scrollIntoView` sulla scheda della lista.
+
+Il bottone è quindi puramente ridondante in ogni caso d'uso (desktop, tablet, mobile).
+
+**Mini-analisi delle 3 risoluzioni possibili**:
+
+- **Opzione A — Rimuovere il bottone** (raccomandata). Il popup resta come pura anteprima (titolo + categoria + descrizione tronca); per le azioni l'utente consulta la scheda nella lista (che è già scrollata in vista). Consistente col principio "meno UI = meglio". Richiede solo togliere le 3 righe del bottone nel template popup + il listener `popupopen` che lo collega.
+- **Opzione B — Trasformare in "Apri in mappa esterna"** (quick action). Il bottone del popup diventa un link diretto al navigatore OS predefinito (Google Maps su Android/Windows, Apple Maps su iOS/Mac) — cioè l'azione più frequente quando uno guarda un punto. Utile per chi vuole partire subito senza scrollare alla lista. Rompe leggermente la ridondanza ma introduce un canale di navigazione nuovo; va valutato se crea asimmetria con la scheda lista che ha 4 bottoni (Google Maps / Waze / Apple Maps / OsmAnd).
+- **Opzione C — Trasformare in "Apri scheda completa"** (dettaglio full-screen). Click → modal dedicata col punto ingrandito: foto gallery, mappa zoomata singola, tutti i link + note modificabili. Richiede un componente nuovo (`ModalDettagliPunto.vue`) e una feature non banale.
+
+**Raccomandazione**: **Opzione A** (rimuovere). È la più coerente con il comportamento attuale dell'app (click → scroll + evidenzia è già sufficiente) e chiude il bug nel modo più semplice. Se in futuro emergesse la necessità di azioni dal popup, opzione B o C restano sul tavolo come feature nuove, non come fix del bug.
+
+**Scope fix** (`risk:low`, slice `ai/fix/popup-bottone-dettagli`):
+
+- In `src/components/MappaLeaflet.vue`:
+  - Rimuovere `<button type="button" class="btn-vai" data-n="…">Dettagli →</button>` dal template popup.
+  - Rimuovere il listener `m.on('popupopen', …)` che collegava il bottone (diventa dead code).
+  - Rimuovere il CSS `.popup-roadbook .btn-vai { … }` dallo stile globale del componente.
+- Nessun cambio ad `App.vue`: `clickPunto` resta, triggerato dal solo `m.on('click', …)`.
+- Smoke: click marker → verifica che popup si apra con solo titolo/categoria/desc, e che la scheda in lista sia scrollata + evidenziata come prima.
+
+File toccati: 1 (`MappaLeaflet.vue`). Righe rimosse: ~8.
+
 ---
 
 ## Alta priorità — prossime slice
