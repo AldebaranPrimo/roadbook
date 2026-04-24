@@ -6,7 +6,41 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ## Alta priorità — prossime slice
 
-### 1. Gestione utenti con login social
+### 1. Export/import viaggio con note e stato "visitato" embedded
+
+**Obiettivo**: quando l'utente esporta un singolo viaggio dal modal Info, il JSON prodotto deve poter includere le **sue annotazioni personali** (le note per ciascun punto + lo stato "visitato"). Al re-import, tali annotazioni vengono ripristinate in IndexedDB. Oggi esiste `esportaBackup()` che produce un dump completo dell'app, ma non c'è un export "per-viaggio" che viaggi con le proprie note.
+
+**Casi d'uso**:
+- **Condividere un viaggio personalizzato**: "Ti mando il mio JSON del Friuli con le note che mi sono appuntato sui posti che ho visto davvero" — il destinatario apre il file e riceve il viaggio *più* le annotazioni di chi l'ha vissuto.
+- **Backup rapido di un singolo viaggio** senza passare dal dump completo dell'app.
+- **Migrazione tra device** in attesa del sync cloud (vedi voce 2): esporti dal desktop, importi sul telefono, ritrovi note e flag.
+
+**Scope v1** (slice atomica, `risk:low` — solo estensioni additive):
+- Nuova funzione in `src/utils/store-viaggi.js` tipo `esportaViaggioSingolo(viaggioId, { includiAnnotazioni: boolean })` che produce un JSON conforme allo schema v1.1 (vedi sotto).
+- Nuovo bottone **"Esporta viaggio"** in `ModalInfo.vue`, accanto all'esistente "Esporta backup". Con checkbox *"includi le mie note e visite"* (default attivo).
+- Download del JSON come `<viaggio.id>.json` (con annotazioni) o `<viaggio.id>-base.json` (senza).
+- Estensione del validatore `valida-schema.js`: accetta `annotazioni` come campo opzionale root, con struttura `{ visitati: string[], note: Record<string, string> }` dove le chiavi sono `${areaId}-${n}`. Errori se struttura non conforme; ignora campi sconosciuti come sempre.
+- Import (`ModalCaricaViaggio.vue`): se il JSON ha `annotazioni` non vuote, mostrare conferma con 3 opzioni — **Importa tutto**, **Solo il viaggio**, **Annulla**. Se "Importa tutto", ripristina le chiavi in IndexedDB sotto il nuovo `viaggioId`.
+- `$schema_version` bumpato da `"1.0"` a `"1.1"` (minor, backward compatibile).
+- Forward-compat: JSON senza `annotazioni` continuano a funzionare esattamente come oggi.
+
+**Schema JSON (v1.1)**:
+```json
+{
+  "$schema_version": "1.1",
+  "viaggio": { ... },
+  "categorie": { ... },
+  "aree": [ ... ],
+  "annotazioni": {
+    "visitati": ["1-2", "3-4"],
+    "note": { "1-5": "testo della mia nota" }
+  }
+}
+```
+
+**Nota sull'ordine con la voce 2 (login social)**: questa feature è **prerequisito concettuale** del sync cloud — una volta che l'utente potrà avere liste private sincronizzate, il meccanismo di serializzazione di note + visitati serve comunque. Meglio completarlo qui, semplice e portabile, e riusarlo dopo.
+
+### 2. Gestione utenti con login social
 
 **Obiettivo**: permettere a ciascun utente di avere una lista **privata e personale** di percorsi, sincronizzata tra i suoi dispositivi (camper, telefono, desktop). Visione: "Carico un viaggio al mattino dal desktop, lo apro la sera dal telefono in camper senza dover ri-importare il JSON".
 
@@ -36,25 +70,25 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ## Media priorità
 
-### 2. Icone PWA reali
+### 3. Icone PWA reali
 
 Sostituire i placeholder SVG in `public/icons/` con PNG 192×192, 512×512, 512×512 maskable (per forma Android adattiva). Aggiornare `manifest.icons` in `vite.config.js`.
 
 Effetto: l'app diventa installabile al 100% su Android senza warning del browser, l'icona sulla home avrà forma coerente.
 
-### 3. Filtri per categoria e tag
+### 4. Filtri per categoria e tag
 
 Dalla v2 delle specifiche ([`SPECIFICHE-APP.md §4.2`](SPECIFICHE-APP.md)). In header o in un drawer laterale: checkbox per categoria (attive di default), ricerca testuale nei punti. Il filtro si applica sia alla lista sia ai marker della mappa.
 
-### 4. Ricerca testuale nei punti
+### 5. Ricerca testuale nei punti
 
 Campo di ricerca che filtra in tempo reale nome/descrizione/tag dei punti. Tollerante a varianti diacritiche (è/e).
 
-### 5. Geolocalizzazione "tu sei qui"
+### 6. Geolocalizzazione "tu sei qui"
 
 Marker speciale (non numerato) sulla posizione GPS dell'utente, con accuracy circle. Refresh on-demand o ogni N secondi con consenso esplicito. Utile per capire da che punto dell'area si è arrivati.
 
-### 6. Galleria foto a tutto schermo
+### 7. Galleria foto a tutto schermo
 
 Per i punti che hanno `foto: [...]` nel JSON: click su thumbnail → lightbox con swipe, zoom, download.
 
@@ -62,15 +96,15 @@ Per i punti che hanno `foto: [...]` nel JSON: click su thumbnail → lightbox co
 
 ## Bassa priorità / nice-to-have
 
-### 7. Pulsante "naviga al prossimo non visitato"
+### 8. Pulsante "naviga al prossimo non visitato"
 
 Bottone che apre il prossimo punto non marcato come visitato nell'area corrente, centrando la mappa e aprendo il popup.
 
-### 8. Condivisione punto come URL profondo
+### 9. Condivisione punto come URL profondo
 
 `?viaggio=<id>&area=<id>&punto=<n>` → apre l'app focalizzata su quel punto. Utile per condividere un luogo specifico via WhatsApp/email senza dover descrivere dove cercarlo.
 
-### 9. Estensioni schema JSON
+### 10. Estensioni schema JSON
 
 - `giorni`: array opzionale per viaggi suddivisi in giornate (alternativa alle aree).
 - `gpx_url`: traccia GPX sovrapposta al percorso (utile per itinerari pre-esistenti).
