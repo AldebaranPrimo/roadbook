@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { useGeolocalizzazione } from '../composables/useGeolocalizzazione.js'
 
 const props = defineProps({
   aperto: { type: Boolean, default: false },
@@ -12,9 +13,21 @@ const emit = defineEmits(['chiudi', 'stampa', 'elimina', 'esportaBackup', 'impor
 const v = computed(() => props.viaggio?.viaggio || null)
 const categorie = computed(() => Object.entries(props.viaggio?.categorie || {}))
 
+const { stato: statoGeo, errore: erroreGeo, posizione: posizioneUtente, richiedi: richiediGeo } = useGeolocalizzazione()
+
 function percentuale() {
   if (!props.totalePunti) return 0
   return Math.round((props.conteggioVisitati / props.totalePunti) * 100)
+}
+
+function etichettaStatoGeo() {
+  switch (statoGeo.value) {
+    case 'attiva': return 'Posizione rilevata in tempo reale.'
+    case 'richiesta': return 'Rilevamento in corso…'
+    case 'negata': return 'Accesso alla posizione negato. Per abilitarlo, concedi il permesso dal browser e riprova.'
+    case 'errore': return `Errore: ${erroreGeo.value || 'sconosciuto'}`
+    default: return 'Geolocalizzazione non attiva.'
+  }
 }
 </script>
 
@@ -56,6 +69,21 @@ function percentuale() {
         <div class="barra">
           <div class="riempimento" :style="{ width: percentuale() + '%' }"></div>
         </div>
+      </section>
+
+      <section>
+        <h3>Posizione corrente</h3>
+        <p>{{ etichettaStatoGeo() }}</p>
+        <p v-if="posizioneUtente" class="coord">
+          {{ posizioneUtente.lat.toFixed(5) }}, {{ posizioneUtente.lon.toFixed(5) }}
+          <span class="muted">(precisione ±{{ Math.round(posizioneUtente.accuracy) }} m)</span>
+        </p>
+        <button
+          v-if="statoGeo !== 'attiva' && statoGeo !== 'richiesta'"
+          type="button"
+          class="btn"
+          @click="richiediGeo"
+        >Attiva posizione corrente</button>
       </section>
 
       <section v-if="categorie.length">
@@ -139,6 +167,9 @@ function percentuale() {
   background: var(--accent);
   transition: width 0.3s;
 }
+
+.coord { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.85rem; }
+.coord .muted { color: var(--muted); font-weight: normal; }
 
 .legenda { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.35rem; }
 .legenda li { display: flex; gap: 0.35rem; align-items: center; font-size: 0.9rem; }
