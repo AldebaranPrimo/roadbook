@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "Vue.volar",
+    "ritwickdey.LiveServer",
+    "EditorConfig.EditorConfig",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint"
+  ]
+}

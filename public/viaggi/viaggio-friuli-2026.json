@@ -1,0 +1,380 @@
+{
+  "$schema_version": "1.0",
+  "viaggio": {
+    "id": "friuli-slovenia-2026-aprile",
+    "titolo": "Friuli + Slovenia in camper",
+    "sottotitolo": "Ponte del 25-26 aprile 2026 · Camper + cane",
+    "descrizione_estesa": "Viaggio in camper di alcuni giorni dal Veneto al Friuli occidentale e poi alla valle dell'Isonzo in Slovenia. Itinerario non suddiviso in giorni: la gestione dei tempi è a discrezione del viaggiatore. Tutti i punti sono dog-friendly al guinzaglio salvo dove diversamente indicato. Quote massime sotto i 600 m, niente strade bianche, niente passi di montagna.",
+    "data_inizio": "2026-04-24",
+    "data_fine": "2026-04-26",
+    "partenza": {
+      "nome": "San Zenone degli Ezzelini (TV)",
+      "lat": 45.7787342,
+      "lon": 11.8404559,
+      "quando": "venerdì sera 24/04/2026"
+    },
+    "rientro": {
+      "nome": "San Zenone degli Ezzelini (TV)",
+      "lat": 45.7787342,
+      "lon": 11.8404559,
+      "descrizione": "Da Gorizia a San Zenone ~180 km / 2h15 via A34 → A4 → A28 → A27 → SS248."
+    },
+    "documenti_richiesti": "CI per le persone, libretto sanitario col microchip e antirabbica per il cane. Vignetta autostradale slovena NON necessaria (l'itinerario resta su statali).",
+    "tags": ["camper", "cane", "primavera", "transfrontaliero", "borghi", "natura", "grande-guerra"],
+    "lingua": "it"
+  },
+
+  "categorie": {
+    "casa":      {"colore": "#7c3aed", "label": "Partenza/rientro", "icona_emoji": "🏠"},
+    "citta":     {"colore": "#2563eb", "label": "Borgo / città",    "icona_emoji": "🏛️"},
+    "castello":  {"colore": "#9333ea", "label": "Castello",         "icona_emoji": "🏰"},
+    "natura":    {"colore": "#16a34a", "label": "Natura / fiumi / animali", "icona_emoji": "🌳"},
+    "chiesa":    {"colore": "#ea580c", "label": "Edificio religioso", "icona_emoji": "⛪"},
+    "wwi":       {"colore": "#ca8a04", "label": "Sito Grande Guerra", "icona_emoji": "🎖️"},
+    "vertigini": {"colore": "#dc2626", "label": "Attenzione vertigini/claustrofobia", "icona_emoji": "⚠️"},
+    "camper":    {"colore": "#475569", "label": "Area sosta camper", "icona_emoji": "🅿️"}
+  },
+
+  "aree": [
+    {
+      "id": 1,
+      "nome": "Spilimbergo e Tagliamento",
+      "intro": "Borgo dei mosaicisti, gole del Tagliamento, grifoni della Riserva di Cornino. La parte iniziale del viaggio: dalla pianura friulana si risale lungo il greto del Tagliamento fino alla zona pedemontana.",
+      "modalita": "auto",
+      "tags": ["pianura", "fiume", "rapaci"],
+      "punti": [
+        {
+          "n": 1,
+          "name": "Spilimbergo - Centro storico",
+          "lat": 46.111223, "lon": 12.901674,
+          "categoria": "citta",
+          "desc": "Duomo gotico-romanico XIII-XIV sec con affreschi giotteschi. Castello col Palazzo Dipinto (facciata cinquecentesca affrescata, tra le più belle del Friuli). Corso Roma e Borgo Vecchio con portici e palazzi affrescati. Macia (colonna dei boia) in piazza Garibaldi. Quartiere ebraico medievale. Scuola Mosaicisti del Friuli, istituzione internazionale dal 1922 - visite guidate il sabato mattina su prenotazione.",
+          "sito_web": "https://www.scuolamosaicistifriuli.it",
+          "tags": ["unesco-affreschi", "centro-storico", "arte"]
+        },
+        {
+          "n": 2,
+          "name": "Area Sosta Camper Spilimbergo",
+          "lat": 46.108044, "lon": 12.9056,
+          "categoria": "camper",
+          "desc": "Via Udine 16. 10 stalli. 250 m dal centro storico. Pagamento solo in monete.",
+          "costo": "5 €/24h con C/S acqua e corrente",
+          "tags": ["sosta-camper", "carico-scarico"]
+        },
+        {
+          "n": 3,
+          "name": "Ponte di Pinzano sul Tagliamento",
+          "lat": 46.184736, "lon": 12.956942,
+          "categoria": "natura",
+          "desc": "Punto panoramico spettacolare sulla stretta del Tagliamento. Da qui si accede a piedi al greto del fiume nei suoi punti più larghi.",
+          "avvertenze": "Segnalati furti su auto in sosta nel parcheggio sterrato laterale, niente oggetti in vista.",
+          "tags": ["panorama", "fiume", "accesso-greto"]
+        },
+        {
+          "n": 4,
+          "name": "Castello di Ragogna",
+          "lat": 46.187667, "lon": 12.960979,
+          "categoria": "wwi",
+          "desc": "Rovine ricostruite parzialmente con vista panoramica sul Tagliamento e le Prealpi. Museo della Grande Guerra dedicato alla difesa del Tagliamento del 1917. Picnic nei pressi delle mura. Punto dall'alto sul fiume senza vertigini.",
+          "orari": "Sabato e domenica 14:30-18:30",
+          "tags": ["museo", "1917", "panorama"]
+        },
+        {
+          "n": 5,
+          "name": "Riserva Lago di Cornino",
+          "lat": 46.22669, "lon": 13.022912,
+          "categoria": "natura",
+          "desc": "Centro Visite Progetto Grifone in Via Sompcornino 81 a Forgaria nel Friuli. Lago carsico color blu cobalto. Oltre 200 grifoni reintrodotti dal 1992, una delle colonie più importanti d'Europa. Mattina presto per vederli volare. Cane obbligatorio al guinzaglio. Da qui accesso facile al greto del Tagliamento.",
+          "orari": "Aprile: martedì e giovedì 9-13; sabato/domenica 9-13 e 14-17",
+          "costo": "Ingresso libero al centro visite",
+          "sito_web": "https://www.riservacornino.it",
+          "tags": ["rapaci", "lago-carsico", "fauna", "mattina-presto"]
+        }
+      ]
+    },
+
+    {
+      "id": 2,
+      "nome": "Pedemontana tra Tagliamento e Cividale",
+      "intro": "Castelli friulani, cicogne di Fagagna, colli orientali. Si percorre la storica strada pedemontana SR356, la 'strada dei castelli', collegamento medievale tra Tarcento e Cividale. Quote massime sui 360 m al Passo di Monte Croce, niente di problematico per il camper.",
+      "modalita": "auto",
+      "tags": ["pedemontana", "castelli", "colli-orientali"],
+      "punti": [
+        {
+          "n": 1,
+          "name": "Oasi dei Quadris (Fagagna)",
+          "lat": 46.129244, "lon": 13.083981,
+          "categoria": "natura",
+          "desc": "Centro europeo di reintroduzione dell'ibis eremita e delle cicogne bianche in semilibertà. Sentieri facili, cane al guinzaglio ammesso.",
+          "orari": "APERTO SOLO LA DOMENICA 10-18",
+          "sito_web": "https://www.oasideiquadris.it",
+          "tags": ["fauna", "famiglia", "facile"]
+        },
+        {
+          "n": 2,
+          "name": "Castello di Villalta (Fagagna)",
+          "lat": 46.105764, "lon": 13.115916,
+          "categoria": "castello",
+          "desc": "Castello privato visibile dall'esterno, uno dei meglio conservati del Friuli. Si gira dietro la chiesa e il cimitero, poi a piedi per il campo 5 minuti per la migliore vista.",
+          "tags": ["medievale", "esterno"]
+        },
+        {
+          "n": 3,
+          "name": "Castello di Colloredo di Monte Albano",
+          "lat": 46.16644, "lon": 13.13848,
+          "categoria": "castello",
+          "desc": "Dimora dove Ippolito Nievo scrisse 'Le Confessioni di un italiano'. Ricostruito parzialmente dopo il terremoto del 1976. Parco e esterni sempre visitabili. Vista panoramica dalla SP49 Osovana.",
+          "tags": ["letteratura", "terremoto-76", "parco"]
+        },
+        {
+          "n": 4,
+          "name": "Cascate di Crosis (Tarcento)",
+          "lat": 46.237251, "lon": 13.229443,
+          "categoria": "natura",
+          "desc": "Via Crosis, frazione Ciseriis. Sentiero ~30 min nella gola con cascata. Acqua freschissima, cane ok.",
+          "avvertenze": "Segnalati ripetuti furti su auto in sosta, non lasciare nulla in vista.",
+          "tags": ["cascata", "gola", "passeggiata-breve"]
+        },
+        {
+          "n": 5,
+          "name": "Castello di Cucagna (Faedis)",
+          "lat": 46.160093, "lon": 13.346125,
+          "categoria": "castello",
+          "desc": "Rovine medievali XI sec nel bosco. Sentiero ad anello tra i ruderi dei castelli di Cucagna, Zucco e Partistagno. Restauro in corso (recinzione), ma esterni e passeggiata nel bosco accessibili. Aperto al pubblico il 25 luglio per la festa di San Giacomo.",
+          "tags": ["rovine", "bosco", "anello-castelli"]
+        },
+        {
+          "n": 6,
+          "name": "Abbazia di Rosazzo (Manzano)",
+          "lat": 46.008204, "lon": 13.421496,
+          "categoria": "chiesa",
+          "desc": "Abbazia romanica XI sec sui Colli Orientali del Friuli, immersa tra vigneti e cipressi. Vista da cartolina sulla pianura friulana fino al mare. Esterno e parco col cane.",
+          "orari": "Tutti i giorni 9-12:30 e 14-17",
+          "tags": ["romanico", "vigneti", "panorama-mare"]
+        }
+      ]
+    },
+
+    {
+      "id": 3,
+      "nome": "Cividale del Friuli (UNESCO longobardo)",
+      "intro": "Centro storico patrimonio UNESCO longobardo, tutto a piedi lungo il Natisone color smeraldo. Tappa imprescindibile per la storia altomedievale italiana. Specialità da assaggiare: Gubana (dolce arrotolato), Strucchi (versione lessata morbida o fritta croccante), Frico (croccante a chips o morbido con patate).",
+      "modalita": "piedi",
+      "tags": ["unesco", "longobardo", "centro-storico", "fiume"],
+      "punti": [
+        {
+          "n": 1,
+          "name": "Ponte del Diavolo",
+          "lat": 46.091829, "lon": 13.431703,
+          "categoria": "citta",
+          "desc": "Arcata centrale di 22 m sul Natisone color smeraldo. Ponte stradale largo con parapetto pieno: nessun problema di vertigini. Vista mozzafiato sulla gola. Si scende alle rive sotto il ponte per la passeggiata fluviale. Leggenda con cane mandato a sostituire l'anima del primo passante.",
+          "tags": ["ponte", "leggenda", "fiume-smeraldo"]
+        },
+        {
+          "n": 2,
+          "name": "Duomo di Santa Maria Assunta",
+          "lat": 46.09311, "lon": 13.43146,
+          "categoria": "chiesa",
+          "desc": "Pala d'argento di Pellegrino II. Annesso il Museo Cristiano e Tesoro del Duomo col Battistero di Callisto e l'Altare di Ratchis (capolavori longobardi).",
+          "orari": "Tutti i giorni 8-19:30",
+          "tags": ["longobardo", "pala-argento", "museo-cristiano"]
+        },
+        {
+          "n": 3,
+          "name": "Ipogeo Celtico",
+          "lat": 46.092343, "lon": 13.431589,
+          "categoria": "citta",
+          "desc": "Via Monastero Maggiore 2. Cavità sotterranea misteriosa scavata nella roccia, con 'maschere' incise. Origine incerta tra celti, romani e longobardi. Visita curiosa e breve.",
+          "note_pratiche": "Chiavi disponibili presso info turistiche in Piazza Diacono Paolo",
+          "tags": ["sotterraneo", "misterioso", "celti"]
+        },
+        {
+          "n": 4,
+          "name": "Tempietto Longobardo (S. Maria in Valle)",
+          "lat": 46.093089, "lon": 13.432483,
+          "categoria": "chiesa",
+          "desc": "VIII secolo, UNESCO, uno dei monumenti altomedievali più importanti d'Europa. Stucchi originali con figure femminili.",
+          "avvertenze": "Cane non ammesso all'interno",
+          "orari": "Tutti i giorni 10-13 e 14-18",
+          "tags": ["unesco", "viii-secolo", "stucchi"]
+        }
+      ]
+    },
+
+    {
+      "id": 4,
+      "nome": "Valli del Natisone",
+      "intro": "Zona di confine sloveno-friulano, dove si parla benecjanska (sloveno arcaico parlato qui da secoli), borghi semispopolati, atmosfera magica. Cane perfetto ovunque. Da Stupizza si valica in Slovenia al confine di Robič (sotto i 300 m, statale facile).",
+      "modalita": "auto",
+      "tags": ["confine", "slavo", "borghi-semispopolati"],
+      "punti": [
+        {
+          "n": 1,
+          "name": "San Pietro al Natisone",
+          "lat": 46.1262064, "lon": 13.4847446,
+          "categoria": "citta",
+          "desc": "Capoluogo delle Valli, chiesa di Santa Maria Assunta affrescata. SMO (Slovensko Multimedialno Okno): museo etnografico interattivo dedicato a paesaggio e cultura locale, molto ben fatto.",
+          "tags": ["museo", "etnografia", "capoluogo"]
+        },
+        {
+          "n": 2,
+          "name": "Vernasso/Barnas - pozze del Natisone",
+          "lat": 46.1238868, "lon": 13.4800594,
+          "categoria": "natura",
+          "desc": "Frazione di San Pietro con accesso al fiume. Spiagge fluviali sassose, pozze d'acqua limpidissima color smeraldo. Punto perfetto per una sosta col cane. Riparo di Biarzo: cavernetta preistorica con scavi dal Paleolitico al Mesolitico. Chiesetta di San Bartolomeo (tardo Quattrocento, gotico sloveno scuola Škofja Loka).",
+          "tags": ["fiume", "pozze", "preistoria", "chiesa-gotica"]
+        },
+        {
+          "n": 3,
+          "name": "Cascata di Kot (San Leonardo)",
+          "lat": 46.1114967, "lon": 13.5416258,
+          "categoria": "natura",
+          "desc": "Sentiero CAI 600 m, dislivello trascurabile, fattibile col cane. Si raggiunge dal primo tornante della strada da San Leonardo verso Altana, piccolo parcheggio. Ultimo tratto leggermente scivoloso vicino alla cascata, scarpe chiuse.",
+          "tags": ["cascata", "sentiero-breve", "facile"]
+        },
+        {
+          "n": 4,
+          "name": "Castello di Ahrensperg (Biacis)",
+          "lat": 46.1489343, "lon": 13.4805442,
+          "categoria": "castello",
+          "desc": "Rovine medievali parzialmente recuperate, breve passeggiata, vista sulla valle. Forma un sistema fortificatorio storico col vicino castello di Antro, controllava l'antica strada Forum Iulii (Cividale)-Norico.",
+          "tags": ["rovine", "panorama"]
+        },
+        {
+          "n": 5,
+          "name": "Grotta di San Giovanni d'Antro",
+          "lat": 46.152396, "lon": 13.477563,
+          "categoria": "vertigini",
+          "desc": "Santuario rupestre nella roccia. La grotta vera è oltre la chiesa, complesso ipogeo che si snoda nel monte Craguonza per chilometri (visita guidata).",
+          "avvertenze": "86 gradini scolpiti nella roccia in galleria per raggiungere la chiesa cinquecentesca dentro la grotta. La scala è in galleria con esposizione esterna limitata: il problema è più di claustrofobia che di vertigini, ma la salita è ripida.",
+          "orari": "Sabato 14-18, domenica 10-18",
+          "costo": "10 € visita guidata, 8 € solo chiesa",
+          "sito_web": "http://www.grottadantro.it",
+          "tags": ["santuario", "grotta", "claustrofobia"]
+        },
+        {
+          "n": 6,
+          "name": "Stupizza - ultimo paese italiano",
+          "lat": 46.2002152, "lon": 13.4711023,
+          "categoria": "citta",
+          "desc": "Ultimo paese italiano sulla statale 54 verso Robič. Ex stazione della ferrovia Cividale-Caporetto (la storica linea che oggi è solo memoria). Ponte sul Natisone.",
+          "tags": ["confine", "ferrovia-storica"]
+        }
+      ]
+    },
+
+    {
+      "id": 5,
+      "nome": "Kobarid (Caporetto) e cascate",
+      "intro": "Sconfinati in Slovenia per il valico di Robič (~10 km da Stupizza), si arriva a Kobarid, sito chiave della Grande Guerra italiana.",
+      "modalita": "piedi",
+      "tags": ["slovenia", "grande-guerra", "caporetto"],
+      "punti": [
+        {
+          "n": 1,
+          "name": "Museo di Kobarid (Kobariški muzej)",
+          "lat": 46.246684, "lon": 13.580892,
+          "categoria": "wwi",
+          "desc": "Tra i migliori musei della Grande Guerra in Europa, premiato dal Consiglio d'Europa, racconta la dodicesima battaglia dell'Isonzo (Caporetto, ottobre 1917).",
+          "avvertenze": "Cane non ammesso all'interno, ci si organizza con turni",
+          "orari": "Tutti i giorni 9-18",
+          "sito_web": "https://www.kobariski-muzej.si",
+          "tags": ["museo-top", "1917", "caporetto"]
+        },
+        {
+          "n": 2,
+          "name": "Ossario italiano di Sant'Antonio",
+          "lat": 46.247066, "lon": 13.583697,
+          "categoria": "wwi",
+          "desc": "Monumento del 1938, riposano 7014 soldati italiani caduti, struttura a tre gironi concentrici. Vista panoramica sulla valle dell'Isonzo. Sentiero in salita dolce dal centro, nessun problema di vertigini, parcheggio in cima. Sempre aperto, gratuito.",
+          "tags": ["ossario", "1938", "panorama"]
+        },
+        {
+          "n": 3,
+          "name": "Cascata Kozjak (Slap Kozjak)",
+          "lat": 46.261077, "lon": 13.591411,
+          "categoria": "vertigini",
+          "desc": "Cascata di 15 m dentro grotta-anfiteatro naturale. Sentiero da Kobarid ~1h andata.",
+          "avvertenze": "Il tratto finale prima della cascata ha PASSERELLE IN LEGNO STRETTE appoggiate alla parete della grotta, sospese sopra il torrente. Si può arrivare al punto panoramico esterno e fermarsi lì, senza fare l'ultima passerella.",
+          "costo": "Ingresso 5 €",
+          "tags": ["cascata", "grotta-anfiteatro", "passerelle"]
+        }
+      ]
+    },
+
+    {
+      "id": 6,
+      "nome": "Valle dell'Isonzo (Soča) e Tolmin",
+      "intro": "L'Isonzo qui ha un colore turchese-smeraldo che sembra finto. Statale 102 panoramica con numerosi punti di accesso al fiume. Si scende verso sud lungo la valle, costeggiando il Parco Nazionale del Triglav.",
+      "modalita": "auto",
+      "tags": ["slovenia", "isonzo", "triglav"],
+      "punti": [
+        {
+          "n": 1,
+          "name": "Tolminska Korita - Gole di Tolmin",
+          "lat": 46.198028, "lon": 13.740154,
+          "categoria": "vertigini",
+          "desc": "Punto più meridionale e più basso del Parco Nazionale del Triglav. Anello di 2 km / 1h30. Cani al guinzaglio ammessi. Punti notevoli: Medvedova glava (masso a forma di testa d'orso), sorgente termale visibile solo con livelli d'acqua bassi. Parcheggio P2 a 2 km gratuito. Trattoria all'ingresso.",
+          "avvertenze": "Parapetti sicuri ma include il Hudičev most (Ponte del Diavolo) a 60 m sopra la gola (parapetto pieno, ponte solido, non oscilla, ma altezza significativa) e un piccolo PONTE TIBETANO OSCILLANTE sulla confluenza (deviazione opzionale che 'non porta da nessuna parte', facilmente evitabile).",
+          "costo": "Ingresso ~8 €",
+          "tags": ["gole", "triglav", "ponte-tibetano"]
+        },
+        {
+          "n": 2,
+          "name": "Most na Soči",
+          "lat": 46.152077, "lon": 13.742995,
+          "categoria": "natura",
+          "desc": "Paese sulla confluenza tra Idrijca e Soča. Lago artificiale color smeraldo, sito archeologico hallstattiano (necropoli preromana del VI-V sec a.C., uno dei più grandi siti hallstattiani d'Europa). Camminate facili lungolago.",
+          "tags": ["lago", "archeologia", "hallstatt"]
+        },
+        {
+          "n": 3,
+          "name": "Kanal ob Soči",
+          "lat": 46.08538, "lon": 13.634308,
+          "categoria": "citta",
+          "desc": "Borgo arroccato sull'Isonzo. Ponte storico in pietra, tradizione dei tuffi dal ponte in estate. Tappa pittoresca lungo la statale verso Gorizia.",
+          "tags": ["borgo", "ponte-storico"]
+        }
+      ]
+    },
+
+    {
+      "id": 7,
+      "nome": "Sabotin e Gorizia",
+      "intro": "Ultima area prima del rientro. Gorizia è Capitale Europea della Cultura 2025 insieme a Nova Gorica.",
+      "modalita": "auto",
+      "tags": ["gorizia", "transfrontaliero", "go2025"],
+      "punti": [
+        {
+          "n": 1,
+          "name": "Sabotin Park Peace - Visitor Centre",
+          "lat": 45.991282, "lon": 13.631562,
+          "categoria": "vertigini",
+          "desc": "Monte Sabotino 609 m. Museo all'aperto della Grande Guerra con gallerie e trincee scavate nella montagna. Vista che spazia da Gorizia all'Adriatico fino alle Dolomiti. Si sta a cavallo tra Italia e Slovenia.",
+          "avvertenze": "Alcune gallerie con feritoie a strapiombo e camminamenti panoramici con vista aperta sulla valle. Portate una torcia per le gallerie.",
+          "orari": "Lunedì e weekend 10-18",
+          "tags": ["museo-aperto", "trincee", "gallerie", "panorama"]
+        },
+        {
+          "n": 2,
+          "name": "Piazza della Transalpina (Trg Evrope)",
+          "lat": 45.955638, "lon": 13.634195,
+          "categoria": "citta",
+          "desc": "La piazza divisa in due dal confine fino al 2004, oggi unificata. Mosaico circolare al centro segna l'ex linea di frontiera. Si sta letteralmente con un piede in Italia e uno in Slovenia. Davanti, la stazione storica della Transalpina (1906, linea Vienna-Trieste).",
+          "tags": ["confine", "simbolico", "stazione-storica"]
+        },
+        {
+          "n": 3,
+          "name": "Castello di Gorizia",
+          "lat": 45.944422, "lon": 13.627918,
+          "categoria": "castello",
+          "desc": "Fortezza medievale dei conti di Gorizia (XI sec), ricostruito dopo la WWI. Vista sui due Paesi. Borgo Castello (quartiere medievale) ai piedi. Nelle vicinanze: Sinagoga (Via Ascoli 19), Cattedrale dei Santi Ilario e Taziano, Piazza della Vittoria con Fontana del Nettuno, Palazzo Coronini Cronberg con parco, Parco Piuma-Isonzo (lungofiume col cane).",
+          "avvertenze": "Cane ammesso al guinzaglio nei cortili e camminamenti, no all'interno del museo",
+          "orari": "Martedì-domenica 10-18, lunedì chiuso",
+          "costo": "Camminamenti esterni gratuiti, museo del Medioevo a pagamento (10 €)",
+          "tags": ["fortezza", "borgo-castello", "panorama-due-paesi"]
+        }
+      ]
+    }
+  ]
+}
