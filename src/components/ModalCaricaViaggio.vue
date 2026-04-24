@@ -109,6 +109,22 @@ function onDragLeave() { dragAttivo.value = false }
 async function scaricaUrl() {
   const u = urlInput.value.trim()
   if (!u) return
+
+  // Ammettiamo solo http:/https: per evitare che l'utente infili accidentalmente
+  // file://, data:, blob: o schemi esotici. Non è un rischio XSS (fetch non esegue
+  // JS), ma protegge da confusion UX e da integrazioni future più permissive.
+  let parsed
+  try {
+    parsed = new URL(u)
+  } catch {
+    errore.value = 'URL non valida. Inserisci un indirizzo http(s) completo.'
+    return
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    errore.value = `Protocollo "${parsed.protocol}" non supportato. Usa http:// o https://.`
+    return
+  }
+
   caricamento.value = true
   errore.value = ''
   try {

@@ -25,6 +25,11 @@ let gruppoMarker = null
 let polyline = null
 let markerPosizione = null
 let cerchioAccuratezza = null
+// Contatore per annullare i disegni precedenti: se l'utente cambia area
+// rapidamente mentre ottieniPercorso() è pendente, la risposta vecchia arriva
+// fuori tempo e sovrascrive la polyline dell'area corrente. Ogni chiamata a
+// disegna() incrementa idDisegno e a fine async controlla che sia ancora "la sua".
+let idDisegno = 0
 const origineRouting = ref(null) // 'cache' | 'osrm' | 'retta'
 
 const { tema } = useTema()
@@ -140,6 +145,7 @@ function troncaDesc(s, max) {
 
 async function disegna() {
   if (!mappa) return
+  const mio = ++idDisegno
 
   if (gruppoMarker) { gruppoMarker.remove(); gruppoMarker = null }
   if (polyline) { polyline.remove(); polyline = null }
@@ -161,6 +167,10 @@ async function disegna() {
     punti,
     modalita
   })
+  // se nel frattempo l'utente ha cambiato area, questa risposta è obsoleta:
+  // scartarla evita che sovrascriva la polyline dell'area corrente
+  if (mio !== idDisegno) return
+
   origineRouting.value = esito.origine
   emit('stato', { origine: esito.origine, punti: punti.length })
 
