@@ -80,11 +80,31 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,json,woff2}'],
         runtimeCaching: [
           {
-            // tile CartoDB (provider raccomandato dalle specifiche §7.1)
+            // tile CartoDB (Voyager, Positron, Dark Matter)
             urlPattern: ({ url }) => url.hostname.endsWith('basemaps.cartocdn.com'),
             handler: 'CacheFirst',
             options: {
-              cacheName: 'map-tiles',
+              cacheName: 'map-tiles-carto',
+              expiration: { maxEntries: 3000, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          },
+          {
+            // tile OpenStreetMap standard
+            urlPattern: ({ url }) => url.hostname.endsWith('tile.openstreetmap.org'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'map-tiles-osm',
+              expiration: { maxEntries: 3000, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          },
+          {
+            // tile OpenTopoMap (topografica, utile in montagna)
+            urlPattern: ({ url }) => url.hostname.endsWith('tile.opentopomap.org'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'map-tiles-topo',
               expiration: { maxEntries: 3000, maxAgeSeconds: 60 * 60 * 24 * 30 },
               cacheableResponse: { statuses: [0, 200] }
             }

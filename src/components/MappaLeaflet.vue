@@ -4,6 +4,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { ottieniPercorso } from '../utils/routing-osrm.js'
 import { useTema } from '../composables/useTema.js'
+import { leggiPreferenza, salvaPreferenza } from '../utils/store-viaggi.js'
 
 const props = defineProps({
   viaggioId: { type: String, required: true },
@@ -16,12 +17,67 @@ const emit = defineEmits(['clickPunto', 'stato'])
 
 const contenitore = ref(null)
 let mappa = null
-let strato = null
+let controlLayers = null
+let layerPerId = {} // id → tileLayer Leaflet
+let layerAttivoId = 'osm'
 let gruppoMarker = null
 let polyline = null
 const origineRouting = ref(null) // 'cache' | 'osrm' | 'retta'
 
 const { tema } = useTema()
+
+// Fornitori tile disponibili. L'id è la chiave salvata in preferenze.
+// filtraScuro: se true, in tema scuro applica un filtro CSS per invertire la
+// luminosità mantenendo gli hue (trucco classico per mappe chiare → versione
+// scura leggibile).
+const PROVIDERS = {
+  osm: {
+    label: 'OpenStreetMap',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    options: {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+      subdomains: 'abc'
+    },
+    filtraScuro: true
+  },
+  voyager: {
+    label: 'CartoDB Voyager',
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    options: {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+      maxZoom: 19,
+      subdomains: 'abcd'
+    }
+  },
+  positron: {
+    label: 'CartoDB Positron',
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    options: {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+      maxZoom: 19,
+      subdomains: 'abcd'
+    }
+  },
+  topo: {
+    label: 'OpenTopoMap',
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    options: {
+      attribution: 'Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, SRTM · Style © <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a> (CC-BY-SA)',
+      maxZoom: 17,
+      subdomains: 'abc'
+    }
+  },
+  dark: {
+    label: 'CartoDB Dark Matter',
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    options: {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+      maxZoom: 19,
+      subdomains: 'abcd'
+    }
+  }
+}
 
 const schemaScuro = computed(() => {
   if (tema.value === 'scuro') return true
@@ -29,12 +85,6 @@ const schemaScuro = computed(() => {
   return typeof window !== 'undefined'
     && window.matchMedia?.('(prefers-color-scheme: dark)').matches
 })
-
-function urlTile() {
-  return schemaScuro.value
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-}
 
 function creaMarker(punto) {
   const cat = props.categorie[punto.categoria] || {}
@@ -92,13 +142,11 @@ async function disegna() {
 
   gruppoMarker = L.layerGroup(punti.map(creaMarker)).addTo(mappa)
 
-  // fit bounds sui punti
   const bounds = L.latLngBounds(punti.map(p => [p.lat, p.lon]))
   if (bounds.isValid()) {
     mappa.fitBounds(bounds, { padding: [30, 30], maxZoom: 13, animate: false })
   }
 
-  // routing: prima cache, poi OSRM, poi retta
   const modalita = props.area.modalita === 'piedi' ? 'piedi' : 'auto'
   const esito = await ottieniPercorso({
     viaggioId: props.viaggioId,
@@ -123,23 +171,58 @@ function evidenziaMarker(n) {
   target.openPopup()
 }
 
-function aggiornaTile() {
+function aggiornaFiltroScuro() {
   if (!mappa) return
-  if (strato) strato.remove()
-  strato = L.tileLayer(urlTile(), {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
-    maxZoom: 19,
-    subdomains: 'abcd'
-  }).addTo(mappa)
+  const provider = PROVIDERS[layerAttivoId]
+  const attivo = !!(provider?.filtraScuro && schemaScuro.value)
+  mappa.getPane('tilePane')?.classList.toggle('tile-scuro-invertito', attivo)
 }
 
-onMounted(() => {
+function applicaLayer(id) {
+  if (!mappa) return
+  const idFinale = PROVIDERS[id] ? id : 'osm'
+  for (const [k, layer] of Object.entries(layerPerId)) {
+    if (k === idFinale) {
+      if (!mappa.hasLayer(layer)) layer.addTo(mappa)
+    } else {
+      if (mappa.hasLayer(layer)) mappa.removeLayer(layer)
+    }
+  }
+  layerAttivoId = idFinale
+  aggiornaFiltroScuro()
+}
+
+onMounted(async () => {
   mappa = L.map(contenitore.value, {
     zoomControl: true,
     attributionControl: true,
     preferCanvas: false
   }).setView([45.7, 12.5], 8)
-  aggiornaTile()
+
+  // pre-creo tutti i tile layer (così il control.layers ha tutti gli ingressi)
+  const mapping = {}
+  for (const [id, p] of Object.entries(PROVIDERS)) {
+    const layer = L.tileLayer(p.url, p.options)
+    layerPerId[id] = layer
+    mapping[p.label] = layer
+  }
+
+  // decido il layer di default: preferenza salvata, altrimenti OSM
+  const salvato = await leggiPreferenza('stileMappa', 'osm')
+  const idIniziale = PROVIDERS[salvato] ? salvato : 'osm'
+  applicaLayer(idIniziale)
+
+  controlLayers = L.control.layers(mapping, null, { collapsed: true, position: 'topright' }).addTo(mappa)
+
+  mappa.on('baselayerchange', (e) => {
+    const id = Object.keys(PROVIDERS).find(k => PROVIDERS[k].label === e.name)
+    if (id) {
+      layerAttivoId = id
+      salvaPreferenza('stileMappa', id).catch(() => {})
+      aggiornaFiltroScuro()
+    }
+  })
+
   disegna()
 })
 
@@ -148,7 +231,7 @@ onBeforeUnmount(() => {
 })
 
 watch(() => props.area, () => disegna())
-watch(schemaScuro, () => aggiornaTile())
+watch(schemaScuro, () => aggiornaFiltroScuro())
 watch(() => props.puntoEvidenziato, (n) => {
   if (n != null) evidenziaMarker(n)
 })
@@ -183,7 +266,7 @@ defineExpose({ evidenziaMarker, ricalcolaRouting: async () => {
 </template>
 
 <style>
-/* Non scoped: Leaflet usa selettori globali nei popup/div icon */
+/* Non scoped: Leaflet usa selettori globali nei popup / divicon / pane */
 .marker-roadbook-wrap { background: transparent; border: none; }
 .marker-roadbook {
   width: 32px;
@@ -208,6 +291,15 @@ defineExpose({ evidenziaMarker, ricalcolaRouting: async () => {
   border-radius: 0.3rem;
   font-size: 0.8rem;
   cursor: pointer;
+}
+
+/* Filtro CSS invertito per rendere leggibile uno stile chiaro (OSM) in tema scuro.
+   Applicato solo al tilePane: marker, polyline e controlli restano come sono.
+   invert(1) + hue-rotate(180deg) preserva gli hue dominanti (blu dei fiumi,
+   verde del verde) invertendo la luminosità. brightness e contrast rifiniscono
+   la resa. */
+.leaflet-tile-pane.tile-scuro-invertito {
+  filter: invert(1) hue-rotate(180deg) brightness(1.05) contrast(0.92) saturate(0.95);
 }
 </style>
 
