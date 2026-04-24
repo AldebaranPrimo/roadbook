@@ -6,7 +6,7 @@ PWA per consultare itinerari di viaggio da file JSON, online e offline. Caso d'u
 
 ## Versione contratto di famiglia
 
-Conforme a [`CLAUDE-vue-app.md`](CLAUDE-vue-app.md) **v1.1.0** (rev 4 del 2026-04-24).
+Conforme a [`CLAUDE-vue-app.md`](CLAUDE-vue-app.md) **v1.1.1** (rev 5 del 2026-04-24 — patch sintassi `@copilot review`).
 
 ## Lingua del progetto
 
