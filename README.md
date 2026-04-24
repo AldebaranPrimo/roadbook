@@ -80,7 +80,7 @@ Stato dettagliato: [`docs/STATO-PROGETTO.md`](docs/STATO-PROGETTO.md). Cronologi
 - ✅ **Backup**: esporta tutto (viaggi + visitati + note + routing cache + preferenze) come JSON, e reimporta
 - ✅ **PWA installabile**: manifest, service worker Workbox, runtime caching tile CartoDB (CacheFirst 30gg, max 3000 tile) e OSRM (NetworkFirst 5s)
 
-Le funzionalità "nice to have" della v2 (filtri per categoria/tag, ricerca testuale, geolocalizzazione, sync cloud per-utente) sono documentate nelle [specifiche](docs/SPECIFICHE-APP.md#42-funzionalità-nice-to-have-v2) e nel [`STATO-PROGETTO.md`](STATO-PROGETTO.md).
+Le funzionalità residue in roadmap sono tracciate nel [`docs/TODO.md`](docs/TODO.md); la cronologia di ciò che è stato rilasciato nel [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
 
 ---
 
@@ -143,7 +143,7 @@ Il JSON è la fonte unica di verità del viaggio: cambia il file, cambia l'app.
 
 Il campo `annotazioni` (v1.1, opzionale) incapsula le note personali e lo stato "visitato" dell'utente dentro il JSON: al re-import le annotazioni vengono proposte per il ripristino. Utile per condividere un viaggio già personalizzato o per migrare tra device senza perdere le proprie annotazioni. File con `$schema_version: "1.0"` senza `annotazioni` restano validi e funzionanti.
 
-Schema completo (tipi, obbligatori/opzionali, estensioni future): [`docs/SPECIFICHE-APP.md §3`](docs/SPECIFICHE-APP.md).
+Schema completo con tutti i campi opzionali, esempi, vincoli e formato annotazioni: [`public/schema/viaggio-1.1.md`](public/schema/viaggio-1.1.md) — pensato per essere copiato-incollato in una chat con un LLM per farsi produrre nuovi viaggi. Accessibile anche come URL statica sul sito live: `https://AldebaranPrimo.github.io/roadbook/schema/viaggio-1.1.md`.
 
 Un esempio reale con 7 aree / 30 punti: [`public/viaggi/viaggio-friuli-2026.json`](public/viaggi/viaggio-friuli-2026.json).
 
@@ -212,7 +212,7 @@ roadbook/
 │   └── styles/
 │       └── app.css                  variabili tema (chiaro/scuro/auto), base print
 ├── docs/
-│   ├── SPECIFICHE-APP.md            specifiche complete (fonte di verità del prodotto)
+│   ├── SPECIFICHE-APP.md            specifiche iniziali storiche (non vivente)
 │   └── screenshots/                 immagini di questo README
 ├── .github/workflows/deploy.yml     build + deploy su GitHub Pages al push su main
 ├── vite.config.js                   + plugin locale per auto-generare viaggi/manifest.json
@@ -250,7 +250,7 @@ Sito live: **https://AldebaranPrimo.github.io/roadbook/**
 | Tile | **CartoDB** (Voyager / Dark) | funziona da qualsiasi origin, dark mode nativa, evita il problema `Referer` di OSM |
 | Storage | **IndexedDB** via [`idb`](https://www.npmjs.com/package/idb) | niente limiti da 5 MB di localStorage, supporto naturale a blob JSON e routing cached |
 
-Per i dettagli sul perché **non** ESRI (problema di proiezione), **non** Alpine (cambio rispetto alla prima versione delle specifiche), e la valutazione degli altri provider: [`docs/SPECIFICHE-APP.md §7`](docs/SPECIFICHE-APP.md).
+Per i dettagli sul perché **non** ESRI (problema di proiezione), **non** Alpine (cambio rispetto al piano iniziale), e la valutazione degli altri provider: [`docs/SPECIFICHE-APP.md §6`](docs/SPECIFICHE-APP.md) (storico iniziale).
 
 ---
 
@@ -259,7 +259,8 @@ Per i dettagli sul perché **non** ESRI (problema di proiezione), **non** Alpine
 - **[`docs/STATO-PROGETTO.md`](docs/STATO-PROGETTO.md)** — snapshot dello stato attuale del sistema
 - **[`docs/CHANGELOG.md`](docs/CHANGELOG.md)** — cronologia sintetica delle modifiche
 - **[`docs/TODO.md`](docs/TODO.md)** — lista delle cose da fare
-- **[`docs/SPECIFICHE-APP.md`](docs/SPECIFICHE-APP.md)** — specifiche complete v1.0 (schema JSON, funzionalità must/nice-to-have, roadmap sprint)
+- **[`docs/SPECIFICHE-APP.md`](docs/SPECIFICHE-APP.md)** — specifiche iniziali storiche (documento non vivente, utile per contesto del giorno zero)
+- **[`public/schema/viaggio-1.1.md`](public/schema/viaggio-1.1.md)** — schema JSON vivente, pensato per essere passato a un LLM per produrre nuovi viaggi
 - **[`CLAUDE.md`](CLAUDE.md)** — contratto AI specifico di questo repo, e [`CLAUDE-vue-app.md`](CLAUDE-vue-app.md) — contratto AI generico per app Vue standalone
 
 ## Licenza

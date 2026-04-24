@@ -108,12 +108,15 @@ function creaMarker(punto) {
   const m = L.marker([punto.lat, punto.lon], { icon: icona, title: punto.name })
   const categoriaLabel = cat.label || punto.categoria
   const emoji = cat.icona_emoji || ''
+  // Tutti i valori derivati dal JSON utente passano da escapeHtml, incluso l'emoji
+  // della categoria (una stringa non controllata dall'app: un JSON maligno potrebbe
+  // mettere HTML lì dentro).
   m.bindPopup(`
     <div class="popup-roadbook">
-      <strong>${punto.n}. ${escapeHtml(punto.name)}</strong>
-      <small>${emoji} ${escapeHtml(categoriaLabel)}</small>
+      <strong>${escapeHtml(String(punto.n))}. ${escapeHtml(punto.name)}</strong>
+      <small>${escapeHtml(emoji)} ${escapeHtml(categoriaLabel)}</small>
       <p>${escapeHtml(troncaDesc(punto.desc, 180))}</p>
-      <button type="button" class="btn-vai" data-n="${punto.n}">Dettagli →</button>
+      <button type="button" class="btn-vai" data-n="${escapeHtml(String(punto.n))}">Dettagli →</button>
     </div>`, { closeButton: true, maxWidth: 260 })
   m.on('click', () => {
     emit('clickPunto', punto.n)
