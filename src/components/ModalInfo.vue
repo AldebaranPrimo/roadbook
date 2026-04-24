@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+
 import { useGeolocalizzazione } from '../composables/useGeolocalizzazione.js'
 
 const props = defineProps({
@@ -8,11 +9,12 @@ const props = defineProps({
   conteggioVisitati: { type: Number, default: 0 },
   totalePunti: { type: Number, default: 0 }
 })
-const emit = defineEmits(['chiudi', 'stampa', 'elimina', 'esportaBackup', 'importaBackup', 'ricalcolaRouting'])
+const emit = defineEmits(['chiudi', 'stampa', 'elimina', 'esportaBackup', 'importaBackup', 'ricalcolaRouting', 'esportaViaggio'])
 
 const v = computed(() => props.viaggio?.viaggio || null)
 const categorie = computed(() => Object.entries(props.viaggio?.categorie || {}))
 
+const includiAnnotazioni = ref(true)
 const { stato: statoGeo, errore: erroreGeo, posizione: posizioneUtente, richiedi: richiediGeo } = useGeolocalizzazione()
 
 function percentuale() {
@@ -98,11 +100,25 @@ function etichettaStatoGeo() {
       </section>
 
       <section>
-        <h3>Azioni</h3>
+        <h3>Esporta viaggio</h3>
+        <p class="hint">Salva il JSON di questo viaggio da ri-importare altrove o condividere.</p>
+        <label class="riga-opzione">
+          <input type="checkbox" v-model="includiAnnotazioni" />
+          <span>Includi le mie note e i punti visitati</span>
+        </label>
+        <button
+          type="button"
+          class="btn"
+          @click="emit('esportaViaggio', { includiAnnotazioni })"
+        >Esporta viaggio</button>
+      </section>
+
+      <section>
+        <h3>Altre azioni</h3>
         <div class="azioni">
           <button type="button" class="btn" @click="emit('stampa')">Stampa viaggio</button>
           <button type="button" class="btn" @click="emit('ricalcolaRouting')">Ricalcola percorso area</button>
-          <button type="button" class="btn" @click="emit('esportaBackup')">Esporta backup</button>
+          <button type="button" class="btn" @click="emit('esportaBackup')">Esporta backup completo</button>
           <label class="btn">
             Importa backup
             <input type="file" accept="application/json,.json" hidden @change="emit('importaBackup', $event)" />
@@ -175,6 +191,9 @@ function etichettaStatoGeo() {
 .legenda li { display: flex; gap: 0.35rem; align-items: center; font-size: 0.9rem; }
 .pallino { width: 0.85rem; height: 0.85rem; border-radius: 50%; flex-shrink: 0; }
 .emoji { font-size: 1rem; }
+
+.hint { font-size: 0.85rem; color: var(--muted); }
+.riga-opzione { display: flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; margin-bottom: 0.5rem; cursor: pointer; }
 
 .azioni { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .btn {

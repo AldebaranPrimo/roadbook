@@ -15,7 +15,13 @@ import { useVisitati } from './composables/useVisitati.js'
 import { useNote } from './composables/useNote.js'
 import { primoEsempio } from './utils/esempi.js'
 import { validaViaggio } from './utils/valida-schema.js'
-import { esportaBackup as dumpBackup, importaBackup as loadBackup, leggiViaggio } from './utils/store-viaggi.js'
+import {
+  esportaBackup as dumpBackup,
+  importaBackup as loadBackup,
+  leggiViaggio,
+  esportaViaggioSingolo,
+  ripristinaAnnotazioni
+} from './utils/store-viaggi.js'
 
 const {
   viaggio, aree, categorie, areaCorrente, areaCorrenteId,
@@ -104,7 +110,7 @@ async function avvio() {
 
 onMounted(avvio)
 
-async function onImportaDaModal({ json, origine, avvisi }) {
+async function onImportaDaModal({ json, origine, avvisi, includiAnnotazioni }) {
   try {
     const id = json.viaggio.id
     const giaPresente = await esiste(id)
@@ -113,10 +119,17 @@ async function onImportaDaModal({ json, origine, avvisi }) {
       if (!ok) return
     }
     const { record } = await importa(json, origine)
+    if (includiAnnotazioni && json.annotazioni) {
+      await ripristinaAnnotazioni(record.id, json.annotazioni)
+    }
     mostraCarica.value = false
     await caricaViaggio(record.id)
     mostraSelettore.value = false
-    if (avvisi?.length) {
+    if (includiAnnotazioni && json.annotazioni) {
+      const nV = (json.annotazioni.visitati?.length ?? 0)
+      const nN = Object.keys(json.annotazioni.note || {}).length
+      messaggio.value = `Ripristinate ${nV} visite e ${nN} note dal JSON.`
+    } else if (avvisi?.length) {
       messaggio.value = 'Avvisi di validazione:\n• ' + avvisi.join('\n• ')
     }
   } catch (e) {
@@ -194,6 +207,27 @@ async function onEsportaBackup() {
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(a.href)
+}
+
+async function onEsportaViaggio({ includiAnnotazioni }) {
+  if (!viaggio.value) return
+  try {
+    const id = viaggio.value.viaggio.id
+    const json = await esportaViaggioSingolo(id, { includiAnnotazioni })
+    const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = includiAnnotazioni ? `${id}.json` : `${id}-base.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(a.href)
+    messaggio.value = includiAnnotazioni
+      ? 'Viaggio esportato con note e visitati.'
+      : 'Viaggio esportato (senza annotazioni personali).'
+  } catch (e) {
+    alert(`Errore durante l'esportazione:\n${e.message}`)
+  }
 }
 
 async function onImportaBackup(ev) {
@@ -305,6 +339,7 @@ function chiudiMessaggio() { messaggio.value = '' }
       @stampa="() => { mostraInfo = false; setTimeout(stampa, 200) }"
       @elimina="onEliminaCorrente"
       @esporta-backup="onEsportaBackup"
+      @esporta-viaggio="onEsportaViaggio"
       @importa-backup="onImportaBackup"
       @ricalcola-routing="() => { mostraInfo = false; setTimeout(onRicalcolaRouting, 200) }"
     />

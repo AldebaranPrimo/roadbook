@@ -110,7 +110,7 @@ Il JSON è la fonte unica di verità del viaggio: cambia il file, cambia l'app.
 
 ```json
 {
-  "$schema_version": "1.0",
+  "$schema_version": "1.1",
   "viaggio": { "id": "slug-univoco", "titolo": "…", "sottotitolo": "…", "descrizione_estesa": "…" },
   "categorie": {
     "natura":   { "colore": "#16a34a", "label": "Natura", "icona_emoji": "🌳" },
@@ -133,9 +133,15 @@ Il JSON è la fonte unica di verità del viaggio: cambia il file, cambia l'app.
         }
       ]
     }
-  ]
+  ],
+  "annotazioni": {
+    "visitati": ["1-1"],
+    "note": { "1-1": "Fantastica la Scuola Mosaicisti, pianificare visita guidata sabato." }
+  }
 }
 ```
+
+Il campo `annotazioni` (v1.1, opzionale) incapsula le note personali e lo stato "visitato" dell'utente dentro il JSON: al re-import le annotazioni vengono proposte per il ripristino. Utile per condividere un viaggio già personalizzato o per migrare tra device senza perdere le proprie annotazioni. File con `$schema_version: "1.0"` senza `annotazioni` restano validi e funzionanti.
 
 Schema completo (tipi, obbligatori/opzionali, estensioni future): [`docs/SPECIFICHE-APP.md §3`](docs/SPECIFICHE-APP.md).
 

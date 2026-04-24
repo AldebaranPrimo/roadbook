@@ -20,7 +20,7 @@ L'app deve essere **riutilizzabile per qualsiasi viaggio**: cambia il JSON, camb
 - **Vincolo dimensionale**: il viaggio tipico ha 5-10 aree, ciascuna con 3-8 punti. Niente migliaia di marker.
 - **No multi-utente, no cloud sync**: tutto locale al dispositivo.
 
-## 3. Schema JSON (versione 1.0)
+## 3. Schema JSON (versione 1.1)
 
 Il file JSON è la fonte unica di verità del viaggio. Struttura completa:
 
@@ -28,14 +28,17 @@ Il file JSON è la fonte unica di verità del viaggio. Struttura completa:
 
 ```json
 {
-  "$schema_version": "1.0",
+  "$schema_version": "1.1",
   "viaggio": { ... },
   "categorie": { ... },
-  "aree": [ ... ]
+  "aree": [ ... ],
+  "annotazioni": { ... }
 }
 ```
 
-`$schema_version` è obbligatorio e verrà usato in futuro per gestire migrazioni di schema.
+`$schema_version` è obbligatorio e verrà usato in futuro per gestire migrazioni di schema. Per la v1.1 il valore accettato è `"1.1"`; file con `"1.0"` restano validi (nessun campo nuovo è obbligatorio).
+
+`annotazioni` è **opzionale** e contiene le annotazioni personali dell'utente (note per punto + stato "visitato") portabili con il JSON. Dettagli in [§3.6](#36-oggetto-annotazioni-v11-opzionale).
 
 ### 3.2 Oggetto `viaggio`
 
@@ -115,9 +118,34 @@ Cuore del JSON. Ogni punto ha campi obbligatori e molti opzionali.
 | `foto` | array di string URL | no | Immagini del luogo. |
 | `tags` | array string | no | Tag liberi del punto, usabili per filtri. |
 
-### 3.6 Estensioni future già previste
+### 3.6 Oggetto `annotazioni` (v1.1, opzionale)
 
-Lo schema 1.0 NON include i seguenti, ma 1.x potrà aggiungerli:
+Contiene le annotazioni personali di chi ha esportato il JSON, in modo che al re-import vengano ripristinate nel dispositivo di destinazione senza doverle ricreare a mano. Il campo è **opzionale**: la sua assenza produce un viaggio "pulito", senza alcuna preimpostazione.
+
+```json
+"annotazioni": {
+  "visitati": ["1-2", "3-4"],
+  "note": {
+    "1-5": "Testo della mia nota per il punto 5 dell'area 1",
+    "2-1": "Altro appunto"
+  }
+}
+```
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `visitati` | array di string | Elenco dei punti marcati "visitato". Ogni elemento è nel formato `"<areaId>-<n>"`. |
+| `note` | object | Mappa `"<areaId>-<n>" → testo`. Le chiavi hanno lo stesso formato di `visitati`. |
+
+Entrambi i sotto-campi sono opzionali: si può avere solo `visitati` oppure solo `note`.
+
+**Comportamento all'import**: quando l'app rileva `annotazioni` non vuote nel JSON importato, chiede conferma all'utente con 3 opzioni — *Importa tutto*, *Solo il viaggio* (scarta le annotazioni), *Annulla*. Se sceglie *Importa tutto*, le annotazioni esistenti sul dispositivo per quel `viaggio.id` vengono **sostituite integralmente** dal contenuto del JSON.
+
+**Comportamento all'export**: il modal Info ha un bottone "Esporta viaggio" con checkbox *"Includi le mie note e i punti visitati"* (attiva di default). Quando attiva, l'app produce un JSON arricchito con `annotazioni`; altrimenti produce un JSON "base" identico a come il viaggio è stato originariamente caricato.
+
+### 3.7 Estensioni future già previste
+
+Lo schema 1.1 NON include i seguenti, ma 1.x potrà aggiungerli:
 - `giorni`: array opzionale per viaggi suddivisi in giornate (alternativa a `aree`)
 - `gpx_url`: traccia GPX da sovrapporre al percorso
 - `bookings`: collegamenti a prenotazioni (hotel, ristoranti)
