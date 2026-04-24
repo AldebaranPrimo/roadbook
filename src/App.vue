@@ -13,9 +13,16 @@ import { useViaggio } from './composables/useViaggio.js'
 import { useViaggiLista } from './composables/useViaggiLista.js'
 import { useVisitati } from './composables/useVisitati.js'
 import { useNote } from './composables/useNote.js'
+import { useAggiornamentoPwa } from './composables/useAggiornamentoPwa.js'
 import { primoEsempio } from './utils/esempi.js'
 import { validaViaggio } from './utils/valida-schema.js'
-import { esportaBackup as dumpBackup, importaBackup as loadBackup, leggiViaggio } from './utils/store-viaggi.js'
+import {
+  esportaBackup as dumpBackup,
+  importaBackup as loadBackup,
+  leggiViaggio,
+  esportaViaggioSingolo,
+  ripristinaAnnotazioni
+} from './utils/store-viaggi.js'
 
 const {
   viaggio, aree, categorie, areaCorrente, areaCorrenteId,
@@ -27,6 +34,7 @@ const { viaggi, caricato: listaCaricata, importa, rimuovi, esiste } = useViaggiL
 const viaggioIdCorrente = computed(() => viaggio.value?.viaggio?.id || null)
 const { eVisitato, toggle: toggleVisitato, conteggio } = useVisitati(viaggioIdCorrente)
 const { leggi: leggiNota, scrivi: scriviNota } = useNote(viaggioIdCorrente)
+const { aggiornamentoDisponibile, aggiornaOra } = useAggiornamentoPwa()
 
 const puntoEvidenziato = ref(null)
 const mappaRef = ref(null)
@@ -104,7 +112,7 @@ async function avvio() {
 
 onMounted(avvio)
 
-async function onImportaDaModal({ json, origine, avvisi }) {
+async function onImportaDaModal({ json, origine, avvisi, includiAnnotazioni }) {
   try {
     const id = json.viaggio.id
     const giaPresente = await esiste(id)
@@ -113,10 +121,17 @@ async function onImportaDaModal({ json, origine, avvisi }) {
       if (!ok) return
     }
     const { record } = await importa(json, origine)
+    if (includiAnnotazioni && json.annotazioni) {
+      await ripristinaAnnotazioni(record.id, json.annotazioni)
+    }
     mostraCarica.value = false
     await caricaViaggio(record.id)
     mostraSelettore.value = false
-    if (avvisi?.length) {
+    if (includiAnnotazioni && json.annotazioni) {
+      const nV = (json.annotazioni.visitati?.length ?? 0)
+      const nN = Object.keys(json.annotazioni.note || {}).length
+      messaggio.value = `Ripristinate ${nV} visite e ${nN} note dal JSON.`
+    } else if (avvisi?.length) {
       messaggio.value = 'Avvisi di validazione:\n• ' + avvisi.join('\n• ')
     }
   } catch (e) {
@@ -196,6 +211,27 @@ async function onEsportaBackup() {
   URL.revokeObjectURL(a.href)
 }
 
+async function onEsportaViaggio({ includiAnnotazioni }) {
+  if (!viaggio.value) return
+  try {
+    const id = viaggio.value.viaggio.id
+    const json = await esportaViaggioSingolo(id, { includiAnnotazioni })
+    const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = includiAnnotazioni ? `${id}.json` : `${id}-base.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(a.href)
+    messaggio.value = includiAnnotazioni
+      ? 'Viaggio esportato con note e visitati.'
+      : 'Viaggio esportato (senza annotazioni personali).'
+  } catch (e) {
+    alert(`Errore durante l'esportazione:\n${e.message}`)
+  }
+}
+
 async function onImportaBackup(ev) {
   const f = ev.target.files?.[0]
   if (!f) return
@@ -237,6 +273,11 @@ function chiudiMessaggio() { messaggio.value = '' }
     />
 
     <div v-if="messaggio" class="toast" role="status" @click="chiudiMessaggio">{{ messaggio }} <small>(clicca per chiudere)</small></div>
+
+    <div v-if="aggiornamentoDisponibile" class="toast-aggiorna" role="status">
+      <span class="etichetta">✨ Nuova versione disponibile</span>
+      <button type="button" class="btn-aggiorna" @click="aggiornaOra">Aggiorna ora</button>
+    </div>
 
     <template v-if="viaggio">
       <AreaTabs
@@ -305,6 +346,7 @@ function chiudiMessaggio() { messaggio.value = '' }
       @stampa="() => { mostraInfo = false; setTimeout(stampa, 200) }"
       @elimina="onEliminaCorrente"
       @esporta-backup="onEsportaBackup"
+      @esporta-viaggio="onEsportaViaggio"
       @importa-backup="onImportaBackup"
       @ricalcola-routing="() => { mostraInfo = false; setTimeout(onRicalcolaRouting, 200) }"
     />
@@ -368,6 +410,41 @@ function chiudiMessaggio() { messaggio.value = '' }
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
+.toast-aggiorna {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.55rem 0.55rem 0.9rem;
+  background: var(--card-bg);
+  color: var(--fg);
+  border: 1px solid var(--accent);
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  z-index: 950;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  max-width: 90vw;
+}
+.toast-aggiorna .etichetta { white-space: nowrap; }
+.toast-aggiorna .btn-aggiorna {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.toast-aggiorna .btn-aggiorna:hover { filter: brightness(1.05); }
+@media (max-width: 520px) {
+  .toast-aggiorna { left: 0.5rem; right: 0.5rem; justify-content: space-between; }
+}
+
 @media print {
   .app-shell { min-height: 0; }
   .app-main {
@@ -376,6 +453,6 @@ function chiudiMessaggio() { messaggio.value = '' }
   }
   .pannello-mappa { display: none; }
   .pannello-lista { overflow: visible; }
-  .toast { display: none; }
+  .toast, .toast-aggiorna { display: none; }
 }
 </style>

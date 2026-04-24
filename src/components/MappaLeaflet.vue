@@ -4,6 +4,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { ottieniPercorso } from '../utils/routing-osrm.js'
 import { useTema } from '../composables/useTema.js'
+import { useGeolocalizzazione } from '../composables/useGeolocalizzazione.js'
 import { leggiPreferenza, salvaPreferenza } from '../utils/store-viaggi.js'
 
 const props = defineProps({
@@ -22,9 +23,17 @@ let layerPerId = {} // id → tileLayer Leaflet
 let layerAttivoId = 'osm'
 let gruppoMarker = null
 let polyline = null
+let markerPosizione = null
+let cerchioAccuratezza = null
+// Contatore per annullare i disegni precedenti: se l'utente cambia area
+// rapidamente mentre ottieniPercorso() è pendente, la risposta vecchia arriva
+// fuori tempo e sovrascrive la polyline dell'area corrente. Ogni chiamata a
+// disegna() incrementa idDisegno e a fine async controlla che sia ancora "la sua".
+let idDisegno = 0
 const origineRouting = ref(null) // 'cache' | 'osrm' | 'retta'
 
 const { tema } = useTema()
+const { posizione: posizioneUtente, stato: statoGeo, richiedi: richiediGeo } = useGeolocalizzazione()
 
 // Fornitori tile disponibili. L'id è la chiave salvata in preferenze.
 // filtraScuro: se true, in tema scuro applica un filtro CSS per invertire la
@@ -104,12 +113,15 @@ function creaMarker(punto) {
   const m = L.marker([punto.lat, punto.lon], { icon: icona, title: punto.name })
   const categoriaLabel = cat.label || punto.categoria
   const emoji = cat.icona_emoji || ''
+  // Tutti i valori derivati dal JSON utente passano da escapeHtml, incluso l'emoji
+  // della categoria (una stringa non controllata dall'app: un JSON maligno potrebbe
+  // mettere HTML lì dentro).
   m.bindPopup(`
     <div class="popup-roadbook">
-      <strong>${punto.n}. ${escapeHtml(punto.name)}</strong>
-      <small>${emoji} ${escapeHtml(categoriaLabel)}</small>
+      <strong>${escapeHtml(String(punto.n))}. ${escapeHtml(punto.name)}</strong>
+      <small>${escapeHtml(emoji)} ${escapeHtml(categoriaLabel)}</small>
       <p>${escapeHtml(troncaDesc(punto.desc, 180))}</p>
-      <button type="button" class="btn-vai" data-n="${punto.n}">Dettagli →</button>
+      <button type="button" class="btn-vai" data-n="${escapeHtml(String(punto.n))}">Dettagli →</button>
     </div>`, { closeButton: true, maxWidth: 260 })
   m.on('click', () => {
     emit('clickPunto', punto.n)
@@ -133,6 +145,7 @@ function troncaDesc(s, max) {
 
 async function disegna() {
   if (!mappa) return
+  const mio = ++idDisegno
 
   if (gruppoMarker) { gruppoMarker.remove(); gruppoMarker = null }
   if (polyline) { polyline.remove(); polyline = null }
@@ -154,6 +167,10 @@ async function disegna() {
     punti,
     modalita
   })
+  // se nel frattempo l'utente ha cambiato area, questa risposta è obsoleta:
+  // scartarla evita che sovrascriva la polyline dell'area corrente
+  if (mio !== idDisegno) return
+
   origineRouting.value = esito.origine
   emit('stato', { origine: esito.origine, punti: punti.length })
 
@@ -224,6 +241,14 @@ onMounted(async () => {
   })
 
   disegna()
+
+  // Chiede il consenso alla geolocalizzazione al primo rendering di una mappa,
+  // ma solo se l'utente non l'aveva esplicitamente negato in una sessione precedente
+  // (preferenza.geolocalizzazione = 'negata'). Nessun re-prompt automatico in quel
+  // caso: l'utente può riattivare dal modal Info.
+  if (statoGeo.value !== 'negata') {
+    richiediGeo()
+  }
 })
 
 onBeforeUnmount(() => {
@@ -234,6 +259,48 @@ watch(() => props.area, () => disegna())
 watch(schemaScuro, () => aggiornaFiltroScuro())
 watch(() => props.puntoEvidenziato, (n) => {
   if (n != null) evidenziaMarker(n)
+})
+
+// Marker "tu sei qui": layer dedicato fuori dal tilePane (quindi non viene
+// invertito dal filtro CSS del tema scuro). Niente auto-centering: l'utente
+// controlla inquadratura e zoom.
+watch(posizioneUtente, (p) => {
+  if (!mappa) return
+  if (!p) {
+    if (markerPosizione) { markerPosizione.remove(); markerPosizione = null }
+    if (cerchioAccuratezza) { cerchioAccuratezza.remove(); cerchioAccuratezza = null }
+    return
+  }
+  const latlng = [p.lat, p.lon]
+  if (!markerPosizione) {
+    const icona = L.divIcon({
+      className: 'marker-posizione-wrap',
+      html: '<div class="marker-posizione"></div>',
+      iconSize: [18, 18],
+      iconAnchor: [9, 9]
+    })
+    markerPosizione = L.marker(latlng, {
+      icon: icona,
+      interactive: false,
+      keyboard: false,
+      zIndexOffset: 1000,
+      alt: 'La tua posizione'
+    }).addTo(mappa)
+  } else {
+    markerPosizione.setLatLng(latlng)
+  }
+  if (!cerchioAccuratezza) {
+    cerchioAccuratezza = L.circle(latlng, {
+      radius: p.accuracy,
+      color: '#2563eb',
+      fillColor: '#2563eb',
+      fillOpacity: 0.1,
+      weight: 1,
+      interactive: false
+    }).addTo(mappa)
+  } else {
+    cerchioAccuratezza.setLatLng(latlng).setRadius(p.accuracy)
+  }
 })
 
 defineExpose({ evidenziaMarker, ricalcolaRouting: async () => {
@@ -291,6 +358,19 @@ defineExpose({ evidenziaMarker, ricalcolaRouting: async () => {
   border-radius: 0.3rem;
   font-size: 0.8rem;
   cursor: pointer;
+}
+
+/* Marker "tu sei qui": cerchietto blu vivido con bordo bianco.
+   Non è dentro il tilePane, quindi non viene invertito dal filtro scuro. */
+.marker-posizione-wrap { background: transparent; border: none; }
+.marker-posizione {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.5), 0 1px 4px rgba(0, 0, 0, 0.4);
+  margin: 2px;
 }
 
 /* Filtro CSS invertito per rendere leggibile uno stile chiaro (OSM) in tema scuro.

@@ -1,4 +1,6 @@
-// Validatore leggero dello schema JSON del viaggio (v1.0)
+// Validatore leggero dello schema JSON del viaggio (v1.0 + v1.1).
+// v1.1 aggiunge il campo opzionale root `annotazioni` per incapsulare le
+// note utente e i punti visitati dentro il JSON esportato (vedi ai/feat/export-import-annotazioni).
 // Ritorna { valido: boolean, errori: string[], avvisi: string[] }
 // I campi non riconosciuti vengono ignorati silenziosamente (forward-compat).
 
@@ -116,5 +118,52 @@ export function validaViaggio(dato) {
     })
   }
 
+  // annotazioni (v1.1, opzionale) — contengono note utente e punti visitati
+  // portabili nel JSON. Schema: { visitati: string[], note: Record<string, string> }
+  // dove le chiavi sono nel formato "<areaId>-<n>".
+  if (dato.annotazioni !== undefined && dato.annotazioni !== null) {
+    const ann = dato.annotazioni
+    if (typeof ann !== 'object' || Array.isArray(ann)) {
+      errori.push('Campo "annotazioni" presente ma non è un oggetto.')
+    } else {
+      if (ann.visitati !== undefined && ann.visitati !== null) {
+        if (!Array.isArray(ann.visitati)) {
+          errori.push('"annotazioni.visitati" deve essere un array di stringhe.')
+        } else {
+          ann.visitati.forEach((k, i) => {
+            if (typeof k !== 'string' || !/^\d+-\d+$/.test(k)) {
+              avvisi.push(`"annotazioni.visitati[${i}]" non è nel formato "<areaId>-<n>": "${k}"`)
+            }
+          })
+        }
+      }
+      if (ann.note !== undefined && ann.note !== null) {
+        if (typeof ann.note !== 'object' || Array.isArray(ann.note)) {
+          errori.push('"annotazioni.note" deve essere un oggetto con chiavi "<areaId>-<n>" e valori stringa.')
+        } else {
+          for (const [k, val] of Object.entries(ann.note)) {
+            if (!/^\d+-\d+$/.test(k)) {
+              avvisi.push(`Chiave nota "${k}" non è nel formato "<areaId>-<n>".`)
+            }
+            if (typeof val !== 'string') {
+              errori.push(`"annotazioni.note.${k}" deve essere una stringa.`)
+            }
+          }
+        }
+      }
+    }
+  }
+
   return { valido: errori.length === 0, errori, avvisi }
+}
+
+// Ritorna `true` se il JSON ha annotazioni non vuote (visitati[] con elementi
+// o note{} con chiavi). Utile alla UI di import per decidere se mostrare il
+// prompt di conferma a 3 opzioni.
+export function haAnnotazioniNonVuote(dato) {
+  const ann = dato?.annotazioni
+  if (!ann || typeof ann !== 'object') return false
+  const nVisitati = Array.isArray(ann.visitati) ? ann.visitati.length : 0
+  const nNote = ann.note && typeof ann.note === 'object' ? Object.keys(ann.note).length : 0
+  return nVisitati > 0 || nNote > 0
 }

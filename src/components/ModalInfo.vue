@@ -1,5 +1,8 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+
+import { useGeolocalizzazione } from '../composables/useGeolocalizzazione.js'
+import { useAggiornamentoPwa } from '../composables/useAggiornamentoPwa.js'
 
 const props = defineProps({
   aperto: { type: Boolean, default: false },
@@ -7,14 +10,36 @@ const props = defineProps({
   conteggioVisitati: { type: Number, default: 0 },
   totalePunti: { type: Number, default: 0 }
 })
-const emit = defineEmits(['chiudi', 'stampa', 'elimina', 'esportaBackup', 'importaBackup', 'ricalcolaRouting'])
+const emit = defineEmits(['chiudi', 'stampa', 'elimina', 'esportaBackup', 'importaBackup', 'ricalcolaRouting', 'esportaViaggio'])
 
 const v = computed(() => props.viaggio?.viaggio || null)
 const categorie = computed(() => Object.entries(props.viaggio?.categorie || {}))
 
+const includiAnnotazioni = ref(true)
+const { stato: statoGeo, errore: erroreGeo, posizione: posizioneUtente, richiedi: richiediGeo } = useGeolocalizzazione()
+const { aggiornamentoDisponibile, aggiornaOra } = useAggiornamentoPwa()
+
+const APP_VERSION = __APP_VERSION__
+const APP_BUILD_SHA = __APP_BUILD_SHA__
+const APP_BUILD_DATE = __APP_BUILD_DATE__
+
+function forzaReload() {
+  window.location.reload()
+}
+
 function percentuale() {
   if (!props.totalePunti) return 0
   return Math.round((props.conteggioVisitati / props.totalePunti) * 100)
+}
+
+function etichettaStatoGeo() {
+  switch (statoGeo.value) {
+    case 'attiva': return 'Posizione rilevata in tempo reale.'
+    case 'richiesta': return 'Rilevamento in corso…'
+    case 'negata': return 'Accesso alla posizione negato. Per abilitarlo, concedi il permesso dal browser e riprova.'
+    case 'errore': return `Errore: ${erroreGeo.value || 'sconosciuto'}`
+    default: return 'Geolocalizzazione non attiva.'
+  }
 }
 </script>
 
@@ -58,6 +83,21 @@ function percentuale() {
         </div>
       </section>
 
+      <section>
+        <h3>Posizione corrente</h3>
+        <p>{{ etichettaStatoGeo() }}</p>
+        <p v-if="posizioneUtente" class="coord">
+          {{ posizioneUtente.lat.toFixed(5) }}, {{ posizioneUtente.lon.toFixed(5) }}
+          <span class="muted">(precisione ±{{ Math.round(posizioneUtente.accuracy) }} m)</span>
+        </p>
+        <button
+          v-if="statoGeo !== 'attiva' && statoGeo !== 'richiesta'"
+          type="button"
+          class="btn"
+          @click="richiediGeo"
+        >Attiva posizione corrente</button>
+      </section>
+
       <section v-if="categorie.length">
         <h3>Legenda categorie</h3>
         <ul class="legenda">
@@ -70,11 +110,52 @@ function percentuale() {
       </section>
 
       <section>
-        <h3>Azioni</h3>
+        <h3>Esporta viaggio</h3>
+        <p class="hint">Salva il JSON di questo viaggio da ri-importare altrove o condividere.</p>
+        <label class="riga-opzione">
+          <input type="checkbox" v-model="includiAnnotazioni" />
+          <span>Includi le mie note e i punti visitati</span>
+        </label>
+        <button
+          type="button"
+          class="btn"
+          @click="emit('esportaViaggio', { includiAnnotazioni })"
+        >Esporta viaggio</button>
+      </section>
+
+      <section>
+        <h3>Versione</h3>
+        <p class="versione-riga">
+          <strong>v{{ APP_VERSION }}</strong>
+          <span class="muted">· build {{ APP_BUILD_SHA }} · {{ APP_BUILD_DATE }}</span>
+        </p>
+        <p v-if="aggiornamentoDisponibile" class="versione-aggiornamento">
+          È disponibile una nuova versione dell'app.
+        </p>
+        <p v-else class="hint">
+          Se dopo un aggiornamento vedi ancora la versione vecchia, forza un reload qui sotto.
+        </p>
+        <div class="azioni">
+          <button
+            v-if="aggiornamentoDisponibile"
+            type="button"
+            class="btn primario"
+            @click="aggiornaOra"
+          >Aggiorna alla nuova versione</button>
+          <button
+            type="button"
+            class="btn"
+            @click="forzaReload"
+          >Forza reload</button>
+        </div>
+      </section>
+
+      <section>
+        <h3>Altre azioni</h3>
         <div class="azioni">
           <button type="button" class="btn" @click="emit('stampa')">Stampa viaggio</button>
           <button type="button" class="btn" @click="emit('ricalcolaRouting')">Ricalcola percorso area</button>
-          <button type="button" class="btn" @click="emit('esportaBackup')">Esporta backup</button>
+          <button type="button" class="btn" @click="emit('esportaBackup')">Esporta backup completo</button>
           <label class="btn">
             Importa backup
             <input type="file" accept="application/json,.json" hidden @change="emit('importaBackup', $event)" />
@@ -140,10 +221,21 @@ function percentuale() {
   transition: width 0.3s;
 }
 
+.coord { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.85rem; }
+.coord .muted { color: var(--muted); font-weight: normal; }
+
 .legenda { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.35rem; }
 .legenda li { display: flex; gap: 0.35rem; align-items: center; font-size: 0.9rem; }
 .pallino { width: 0.85rem; height: 0.85rem; border-radius: 50%; flex-shrink: 0; }
 .emoji { font-size: 1rem; }
+
+.hint { font-size: 0.85rem; color: var(--muted); }
+.riga-opzione { display: flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; margin-bottom: 0.5rem; cursor: pointer; }
+.versione-riga { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88rem; }
+.versione-riga .muted { color: var(--muted); margin-left: 0.3rem; }
+.versione-aggiornamento { font-size: 0.88rem; color: var(--accent); font-weight: 600; }
+.btn.primario { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.btn.primario:hover { filter: brightness(1.05); }
 
 .azioni { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .btn {
