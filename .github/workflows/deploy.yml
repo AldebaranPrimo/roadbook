@@ -14,28 +14,19 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
-# Abilito Node.js 24 per le JavaScript actions, evitando il warning di deprecazione
-# di Node 20 che sarà forzato a giugno 2026.
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: 'npm'
       - run: npm ci
       - run: npm run build
       - uses: actions/configure-pages@v5
-        # enablement: true abilita automaticamente Pages se non lo è ancora,
-        # evitando il 404 "Get Pages site failed" al primissimo deploy.
-        with:
-          enablement: true
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: dist
 
