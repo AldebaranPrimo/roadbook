@@ -13,12 +13,22 @@ PWA per consultare itinerari di viaggio da file JSON, online e offline. Caso d'u
 
 - **Sito live**: https://AldebaranPrimo.github.io/roadbook/
 - **Repo**: https://github.com/AldebaranPrimo/roadbook
-- **Specifiche funzionali**: [`SPECIFICHE-APP.md`](SPECIFICHE-APP.md) (fonte di verità prodotto)
-- **Contratto di sviluppo AI**: [`../CLAUDE.md`](../CLAUDE.md) (specifico) + [`../CLAUDE-vue-app.md`](../CLAUDE-vue-app.md) (generico per app Vue standalone)
+- **Specifiche storiche iniziali**: [`SPECIFICHE-APP.md`](SPECIFICHE-APP.md) — punto di partenza del progetto, **non aggiornato** in corso d'opera (il prodotto si è evoluto, le scelte correnti vivono in questo file e nel CHANGELOG).
+- **Contratto di sviluppo AI**: [`../CLAUDE.md`](../CLAUDE.md) (specifico) + [`../CLAUDE-vue-app.md`](../CLAUDE-vue-app.md) (generico per app Vue standalone).
 
 ## Versione
 
-**1.0.1 — beta** (live). La feature branch `ai/feat/stile-mappa-selettore` è in PR verso `develop` e porterà alla 1.1.0.
+**In produzione (main, deployata su Pages)**: `1.0.1 — beta`.
+
+**In `develop`**: selettore stile mappa con 5 provider + OSM default con filtro scuro invertito + runtime caching esteso. Queste modifiche formeranno la `1.1.0` alla prossima promozione su main.
+
+**In PR verso `develop` (in attesa di merge)**:
+
+| PR / branch | Contenuto | Commit |
+|---|---|---|
+| `ai/feat/geolocalizzazione-tu-sei-qui` | Marker "tu sei qui" live via `watchPosition`, consenso al primo rendering mappa, gestione negazione senza re-prompt, sezione "Posizione corrente" in modal Info | `bfae06d` |
+| `ai/feat/export-import-annotazioni` | Schema JSON v1.1 con campo root opzionale `annotazioni` (visitati + note portabili), bottone "Esporta viaggio" con checkbox, conferma import a 3 opzioni | `c09e6fb` |
+| `ai/analisi/prefetch-offline` | Analisi di fattibilità del prefetch offline totale. Verdetto: SEMPLICE (4 file, ~198 righe stimate, 0 nuove dipendenze) | `009efb1` |
 
 ## Stack
 
@@ -27,7 +37,7 @@ PWA per consultare itinerari di viaggio da file JSON, online e offline. Caso d'u
 - **Leaflet 1.9** (mappa + marker DivIcon)
 - **idb 8** (wrapper IndexedDB)
 - **@vueuse/core 11** (utility reattive)
-- Build: ~256 KB JS / ~31 KB CSS (gzip ~84 / ~10 KB), SW precacha ~302 KB
+- Build: ~259 KB JS / ~31 KB CSS (gzip ~84 / ~10 KB), SW precacha ~306 KB
 - Node locale: 22+; JS actions CI su Node 24
 
 ## Architettura
@@ -42,7 +52,20 @@ Tutto persistito in IndexedDB, database `roadbook` schema v1, dietro il wrapper 
 | `visitati` | `${viaggioId}:${areaId}-${n}` | flag "visitato" per punto |
 | `note` | `${viaggioId}:${areaId}-${n}` | testo libero note personali |
 | `routing` | `${viaggioId}:${areaId}` | geometria polyline encoded OSRM + modalità, **senza scadenza applicativa** |
-| `preferenze` | chiave semantica (`tema`, `stileMappa`) | valore |
+| `preferenze` | chiave semantica (`tema`, `stileMappa`, `geolocalizzazione`) | valore |
+
+### Schema JSON del viaggio
+
+Versione corrente: **v1.1** (retrocompatibile con v1.0). Documento di riferimento vivente: [`../README.md`](../README.md) sezione "Schema del JSON di viaggio".
+
+Campi root:
+- `$schema_version` (string, obbligatorio) — `"1.0"` o `"1.1"`
+- `viaggio` (object, obbligatorio) — id/titolo/sottotitolo/descrizione + partenza/rientro
+- `categorie` (object, obbligatorio) — mappa chiave → `{ colore, label, icona_emoji? }`
+- `aree` (array, obbligatorio) — blocchi geografici con `punti[]`
+- `annotazioni` (object, opzionale, v1.1) — `{ visitati: string[], note: Record<string, string> }` con chiavi `"<areaId>-<n>"`
+
+Campi sconosciuti vengono ignorati silenziosamente (forward-compat per estensioni future: `giorni`, `gpx_url`, `bookings`, `meteo_link`).
 
 ### Flusso di avvio
 
@@ -53,13 +76,14 @@ Tutto persistito in IndexedDB, database `roadbook` schema v1, dietro il wrapper 
 
 ### Mappa e routing
 
-- 5 tile provider selezionabili dall'utente (`L.control.layers` in alto a destra): **OpenStreetMap** (default), CartoDB Voyager, CartoDB Positron, **OpenTopoMap** (utile per camper in montagna), CartoDB Dark Matter. Scelta persistita come `preferenze.stileMappa`.
+- **5 tile provider** selezionabili dall'utente (`L.control.layers` in alto a destra): **OpenStreetMap** (default), CartoDB Voyager, CartoDB Positron, **OpenTopoMap** (utile per camper in montagna), CartoDB Dark Matter. Scelta persistita come `preferenze.stileMappa`.
 - In **tema scuro** con OSM attivo, il `.leaflet-tile-pane` ottiene la classe `tile-scuro-invertito` che applica `filter: invert(1) hue-rotate(180deg) brightness(1.05) contrast(0.92) saturate(0.95)` — inverte la luminosità preservando gli hue (fiumi restano blu, verde resta verde). Marker e polyline restano fuori dal filtro perché vivono in pane separati.
 - **Routing OSRM** via `src/utils/routing-osrm.js → ottieniPercorso()`:
   1. legge cache IndexedDB per `(viaggio, area)` → se presente, rendering immediato (funziona offline indefinitamente)
   2. altrimenti chiama `router.project-osrm.org` con timeout 5s → salva la geometria in cache
   3. se OSRM fallisce → polyline retta tratteggiata + banner "Percorso non ancora calcolato"
 - Bottone "Ricalcola percorso area" nel modal Info forza un nuovo fetch OSRM.
+- **Geolocalizzazione** (in PR): marker cerchietto blu sulla posizione GPS dell'utente, fuori dal filtro scuro, aggiornato via `watchPosition`.
 
 ### Struttura repo
 
@@ -76,9 +100,9 @@ roadbook/
 │   │   ├── AreaTabs.vue           tab aree scrollabili
 │   │   ├── AreaPanel.vue          intro + lista PuntoCard
 │   │   ├── PuntoCard.vue          scheda punto + deep link (Google Maps/Waze/Apple Maps/OsmAnd)
-│   │   ├── MappaLeaflet.vue       mappa + 5 provider + layer control + routing cached + sync
-│   │   ├── ModalInfo.vue          info viaggio + avanzamento + legenda + azioni
-│   │   ├── ModalCaricaViaggio.vue file picker + drag&drop + URL
+│   │   ├── MappaLeaflet.vue       mappa + 5 provider + layer control + routing cached + sync + marker "tu sei qui"
+│   │   ├── ModalInfo.vue          info viaggio + avanzamento + legenda + "Esporta viaggio" + azioni
+│   │   ├── ModalCaricaViaggio.vue file picker + drag&drop + URL + conferma annotazioni
 │   │   ├── OnboardingVuoto.vue    primo avvio senza viaggi
 │   │   └── SelettoreViaggio.vue   scelta tra viaggi multipli
 │   ├── composables/
@@ -86,20 +110,23 @@ roadbook/
 │   │   ├── useViaggio.js          viaggio + area correnti
 │   │   ├── useViaggiLista.js      lista viaggi + import/remove
 │   │   ├── useVisitati.js         stato visitato per punto
-│   │   └── useNote.js             note personali per punto
+│   │   ├── useNote.js             note personali per punto
+│   │   └── useGeolocalizzazione.js   posizione corrente utente (watchPosition condiviso)
 │   ├── utils/
-│   │   ├── store-viaggi.js        wrapper IndexedDB (CRUD + backup/restore)
-│   │   ├── valida-schema.js       validatore schema v1.0 (errori/avvisi in italiano)
+│   │   ├── store-viaggi.js        wrapper IndexedDB (CRUD + backup/restore + export/restore annotazioni)
+│   │   ├── valida-schema.js       validatore schema v1.0 / v1.1 (errori/avvisi in italiano)
 │   │   ├── routing-osrm.js        OSRM + decoder polyline5 + cache + fallback
 │   │   ├── mappe-esterne.js       deep link Google/Waze/Apple/OsmAnd
 │   │   └── esempi.js              auto-discovery primo esempio via manifest
 │   └── styles/
 │       └── app.css                variabili tema chiaro/scuro/auto + base print
 ├── docs/
-│   ├── SPECIFICHE-APP.md          fonte di verità prodotto
 │   ├── STATO-PROGETTO.md          questo file (snapshot corrente)
 │   ├── CHANGELOG.md               cronologia modifiche
 │   ├── TODO.md                    lista cose future
+│   ├── SPECIFICHE-APP.md          specifiche storiche iniziali (non vivente)
+│   ├── analisi/                   documenti di design di slice complesse
+│   │   └── prefetch-offline.md    analisi di fattibilità prefetch offline (verdetto SEMPLICE)
 │   └── screenshots/               immagini del README
 ├── .github/workflows/deploy.yml   build + deploy su Pages
 ├── vite.config.js                 + plugin locale per viaggi/manifest.json
@@ -118,10 +145,11 @@ GitHub Pages via `.github/workflows/deploy.yml` a ogni push su `main`. Build Nod
 ## Scelte di prodotto non negoziabili
 
 - **Nessun viaggio hardcoded nel codice**: i viaggi vivono sempre in IndexedDB. Il Friuli in `public/viaggi/` è solo un file di esempio scopribile via manifest, eliminabile dall'utente, trattato come qualsiasi altro viaggio.
-- **Forward-compat del JSON**: campi sconosciuti (`giorni`, `gpx_url`, `bookings`, `meteo_link` e futuri) vanno ignorati silenziosamente. Il validatore segnala solo errori sui campi v1.0.
+- **Forward-compat del JSON**: campi sconosciuti (`giorni`, `gpx_url`, `bookings`, `meteo_link` e futuri) vanno ignorati silenziosamente. Il validatore segnala solo errori sui campi v1.0/v1.1 conosciuti.
 - **Cache routing senza scadenza applicativa**: il percorso reale deve essere disponibile offline indefinitamente dopo il primo fetch riuscito. Solo l'utente può invalidarla via "Ricalcola percorso".
 - **Percorsi sempre relativi**: `import.meta.env.BASE_URL` ovunque serva un path dinamico (manifest, fetch viaggi). `base: '/roadbook/'` in `vite.config.js` è fisso.
-- **Tile ESRI vietate** senza `esri-leaflet` (problema di proiezione documentato in [SPECIFICHE-APP.md §7.2](SPECIFICHE-APP.md)).
+- **Tile ESRI vietate** senza `esri-leaflet` (problema di proiezione documentato nelle specifiche storiche).
+- **Annotazioni portabili nel JSON**: le note utente e i flag visitato sono parte opzionale dello schema v1.1, così un viaggio esportato con annotazioni è riattivabile su un altro device o condivisibile con le proprie annotazioni.
 
 ## Limiti attuali
 
@@ -130,6 +158,7 @@ GitHub Pages via `.github/workflows/deploy.yml` a ogni push su `main`. Build Nod
 - **Nessun meccanismo di sync cloud**: tutto locale al dispositivo. Il refactor per supportarlo sarà guidato dall'astrazione già presente in `store-viaggi.js`.
 - **WCAG AA non completamente auditato** in v1.0. Obbligatorio sulle modifiche future.
 - **Test automatici assenti**: backstop con smoke Playwright manuale su `npm run preview` (vedere [`CLAUDE.md`](../CLAUDE.md) sezione Test).
+- **Prefetch offline** dei tile/foto/routing non ancora implementato — oggi i dati cartografici si cachanno solo via navigazione attiva dell'utente. L'analisi è pronta in [`docs/analisi/prefetch-offline.md`](analisi/prefetch-offline.md), verdetto SEMPLICE.
 
 ## Comandi utili
 
