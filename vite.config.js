@@ -3,6 +3,24 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import fs from 'node:fs'
 import path from 'node:path'
+import { execSync } from 'node:child_process'
+
+// Metadata iniettati come costanti a build-time così l'app può mostrare la
+// versione corrente e il commit SHA, utile per distinguere a colpo d'occhio
+// se si sta guardando l'ultima build o una versione cachata.
+const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
+
+function getGitSha() {
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    return 'dev'
+  }
+}
+
+const APP_VERSION = pkg.version
+const APP_BUILD_SHA = getGitSha()
+const APP_BUILD_DATE = new Date().toISOString().slice(0, 10)
 
 // Plugin locale: genera public/viaggi/manifest.json con l'elenco dei JSON
 // presenti nella cartella, sia in dev (via middleware) sia in build (via
@@ -54,6 +72,11 @@ function manifestViaggiEsempio() {
 
 export default defineConfig({
   base: '/roadbook/',
+  define: {
+    __APP_VERSION__: JSON.stringify(APP_VERSION),
+    __APP_BUILD_SHA__: JSON.stringify(APP_BUILD_SHA),
+    __APP_BUILD_DATE__: JSON.stringify(APP_BUILD_DATE)
+  },
   plugins: [
     vue(),
     manifestViaggiEsempio(),

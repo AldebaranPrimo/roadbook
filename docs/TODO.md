@@ -119,7 +119,7 @@ Già previste come campi opzionali, da implementare quando emergono esigenze:
 - **ESLint + Prettier** configurati. Al momento non c'è lint step — un semplice `eslint-config` Vue 3 con regole blande coprirebbe già i casi critici (unused imports, var drift).
 - **TypeScript**: eventuale migrazione JS → TS. Scope contenuto (~15 file), beneficio concreto su `store-viaggi.js` e `valida-schema.js` che oggi ricostruiscono tipi "a mano" nei commenti. Da valutare quando la codebase cresce.
 - **Hook Claude Code** (`.claude/settings.json`): PostToolUse per auto-build su edit + SessionStart briefing. Utile soprattutto quando la codebase cresce o passiamo a `piccolo-team`.
-- **Versioning effettivo**: oggi `package.json` resta a `0.1.0` mentre il CHANGELOG dichiara `1.0.1`. Allineare al primo bump "vero" post-sync main.
+- ~~**Versioning effettivo**: oggi `package.json` resta a `0.1.0` mentre il CHANGELOG dichiara `1.0.1`. Allineare al primo bump "vero" post-sync main.~~ **Fatto** — allineato a `1.1.0` nella slice `versione-visibile-e-auto-update`.
 
 ---
 
@@ -127,9 +127,10 @@ Già previste come campi opzionali, da implementare quando emergono esigenze:
 
 Rimossi da questo elenco e spostati su [`CHANGELOG.md`](CHANGELOG.md) — di solito nella sezione `[Unreleased]` finché non si promuove a `main`.
 
-Al 2026-04-24 sono state completate (in `develop` o in PR aperta):
+Al 2026-04-24 sono state completate (tutte mergiate su `develop`, da rilasciare con la prossima promozione su `main`):
 
-- ✅ Selettore stile mappa in-app con 5 provider + default OSM leggibile (mergiato in develop)
-- ✅ Geolocalizzazione "tu sei qui" sulla mappa (in PR)
-- ✅ Export/import viaggio con note e stato "visitato" embedded nello schema v1.1 (in PR)
-- ✅ Analisi di fattibilità del prefetch offline con verdetto (in PR — il prefetto implementativo resta in TODO come voce #3)
+- ✅ Selettore stile mappa in-app con 5 provider + default OSM leggibile
+- ✅ Geolocalizzazione "tu sei qui" sulla mappa
+- ✅ Export/import viaggio con note e stato "visitato" embedded nello schema v1.1
+- ✅ Analisi di fattibilità del prefetch offline con verdetto (il prefetch implementativo resta in TODO come voce #3)
+- ✅ Numero di versione visibile nell'app + auto-update PWA con toast "Aggiorna ora"

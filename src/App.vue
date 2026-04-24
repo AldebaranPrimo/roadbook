@@ -13,6 +13,7 @@ import { useViaggio } from './composables/useViaggio.js'
 import { useViaggiLista } from './composables/useViaggiLista.js'
 import { useVisitati } from './composables/useVisitati.js'
 import { useNote } from './composables/useNote.js'
+import { useAggiornamentoPwa } from './composables/useAggiornamentoPwa.js'
 import { primoEsempio } from './utils/esempi.js'
 import { validaViaggio } from './utils/valida-schema.js'
 import {
@@ -33,6 +34,7 @@ const { viaggi, caricato: listaCaricata, importa, rimuovi, esiste } = useViaggiL
 const viaggioIdCorrente = computed(() => viaggio.value?.viaggio?.id || null)
 const { eVisitato, toggle: toggleVisitato, conteggio } = useVisitati(viaggioIdCorrente)
 const { leggi: leggiNota, scrivi: scriviNota } = useNote(viaggioIdCorrente)
+const { aggiornamentoDisponibile, aggiornaOra } = useAggiornamentoPwa()
 
 const puntoEvidenziato = ref(null)
 const mappaRef = ref(null)
@@ -272,6 +274,11 @@ function chiudiMessaggio() { messaggio.value = '' }
 
     <div v-if="messaggio" class="toast" role="status" @click="chiudiMessaggio">{{ messaggio }} <small>(clicca per chiudere)</small></div>
 
+    <div v-if="aggiornamentoDisponibile" class="toast-aggiorna" role="status">
+      <span class="etichetta">✨ Nuova versione disponibile</span>
+      <button type="button" class="btn-aggiorna" @click="aggiornaOra">Aggiorna ora</button>
+    </div>
+
     <template v-if="viaggio">
       <AreaTabs
         :aree="aree"
@@ -403,6 +410,41 @@ function chiudiMessaggio() { messaggio.value = '' }
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
+.toast-aggiorna {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.55rem 0.55rem 0.9rem;
+  background: var(--card-bg);
+  color: var(--fg);
+  border: 1px solid var(--accent);
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  z-index: 950;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  max-width: 90vw;
+}
+.toast-aggiorna .etichetta { white-space: nowrap; }
+.toast-aggiorna .btn-aggiorna {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.toast-aggiorna .btn-aggiorna:hover { filter: brightness(1.05); }
+@media (max-width: 520px) {
+  .toast-aggiorna { left: 0.5rem; right: 0.5rem; justify-content: space-between; }
+}
+
 @media print {
   .app-shell { min-height: 0; }
   .app-main {
@@ -411,6 +453,6 @@ function chiudiMessaggio() { messaggio.value = '' }
   }
   .pannello-mappa { display: none; }
   .pannello-lista { overflow: visible; }
-  .toast { display: none; }
+  .toast, .toast-aggiorna { display: none; }
 }
 </style>
