@@ -18,3 +18,8 @@ pnpm-debug.log*
 
 # Directory di lavoro temporanea usata da Playwright durante i test manuali
 .playwright-mcp/
+# Screenshot di verifica generati nella root durante gli smoke Playwright
+# (quelli citati dai README / docs vivono sotto docs/screenshots/ e sono tracciati)
+/slice-*.png
+/desktop-*.png
+/mobile-*.png

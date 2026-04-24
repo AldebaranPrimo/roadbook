@@ -60,7 +60,7 @@ Questo è il primo rilascio pubblico: è *funzionalmente* completo rispetto al p
 - **Nessun meccanismo di sync cloud** ancora: tutto è locale al dispositivo (IndexedDB). È in roadmap per la v2.
 - Le **icone PWA** sono ancora placeholder SVG; per installabilità Android al 100% vanno sostituite con PNG 192/512/maskable.
 
-Stato dettagliato, decisioni prese e migliorie rinviate: [`STATO-PROGETTO.md`](STATO-PROGETTO.md).
+Stato dettagliato: [`docs/STATO-PROGETTO.md`](docs/STATO-PROGETTO.md). Cronologia modifiche: [`docs/CHANGELOG.md`](docs/CHANGELOG.md). Cose da fare: [`docs/TODO.md`](docs/TODO.md).
 
 ## Funzionalità v1
 
@@ -250,8 +250,11 @@ Per i dettagli sul perché **non** ESRI (problema di proiezione), **non** Alpine
 
 ## Documenti correlati
 
-- **[`STATO-PROGETTO.md`](STATO-PROGETTO.md)** — handover tecnico, cose fatte, cose rimandate, gotcha
+- **[`docs/STATO-PROGETTO.md`](docs/STATO-PROGETTO.md)** — snapshot dello stato attuale del sistema
+- **[`docs/CHANGELOG.md`](docs/CHANGELOG.md)** — cronologia sintetica delle modifiche
+- **[`docs/TODO.md`](docs/TODO.md)** — lista delle cose da fare
 - **[`docs/SPECIFICHE-APP.md`](docs/SPECIFICHE-APP.md)** — specifiche complete v1.0 (schema JSON, funzionalità must/nice-to-have, roadmap sprint)
+- **[`CLAUDE.md`](CLAUDE.md)** — contratto AI specifico di questo repo, e [`CLAUDE-vue-app.md`](CLAUDE-vue-app.md) — contratto AI generico per app Vue standalone
 
 ## Licenza
 

@@ -12,7 +12,9 @@ PWA per consultare itinerari di viaggio da file JSON, online e offline. Caso d'u
 - Path locale: `D:\_RedBones\Tomita\roadbook`
 - Sito live: **https://AldebaranPrimo.github.io/roadbook/**
 - Specifiche funzionali: [`docs/SPECIFICHE-APP.md`](docs/SPECIFICHE-APP.md) (fonte di verità prodotto)
-- Handover tecnico: [`STATO-PROGETTO.md`](STATO-PROGETTO.md)
+- Stato attuale del sistema: [`docs/STATO-PROGETTO.md`](docs/STATO-PROGETTO.md)
+- Cronologia modifiche: [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
+- Cose da fare: [`docs/TODO.md`](docs/TODO.md)
 
 Nessun ecosistema multi-repo. Roadbook è un progetto standalone, non comunica con backend propri.
 
