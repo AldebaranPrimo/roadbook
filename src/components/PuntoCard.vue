@@ -1,8 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import {
-  linkGoogleMaps, linkWaze, linkAppleMaps,
-  linkNavigaPredefinito, etichettaMappaPredefinita
+  linkGoogleMaps, linkWaze, linkAppleMaps, linkOsmand
 } from '../utils/mappe-esterne.js'
 
 const props = defineProps({
@@ -14,8 +13,6 @@ const props = defineProps({
   evidenziato: { type: Boolean, default: false }
 })
 const emit = defineEmits(['toggleVisitato', 'cambiaNota', 'focus'])
-
-const etichettaMappa = etichettaMappaPredefinita()
 
 const colore = computed(() => props.categoria.colore || '#888')
 const labelCategoria = computed(() => props.categoria.label || props.punto.categoria)
@@ -81,10 +78,10 @@ function onBlurNota(e) {
     </div>
 
     <div class="azioni" @click.stop>
-      <a class="btn" :href="linkNavigaPredefinito(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">{{ etichettaMappa }}</a>
+      <a class="btn" :href="linkGoogleMaps(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">Google Maps</a>
       <a class="btn" :href="linkWaze(punto.lat, punto.lon)" target="_blank" rel="noopener">Waze</a>
-      <a class="btn" :href="linkGoogleMaps(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">Google</a>
-      <a class="btn" :href="linkAppleMaps(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">Apple</a>
+      <a class="btn" :href="linkAppleMaps(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">Apple Maps</a>
+      <a class="btn" :href="linkOsmand(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">OsmAnd</a>
     </div>
 
     <details class="blocco-nota" @click.stop>

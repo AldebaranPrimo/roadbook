@@ -1,13 +1,8 @@
-// Deep link a navigatori esterni con rilevamento OS lato client.
-
-function rilevaPiattaforma() {
-  if (typeof navigator === 'undefined') return 'altro'
-  const ua = (navigator.userAgent || '').toLowerCase()
-  if (/iphone|ipad|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 'ios'
-  if (/android/.test(ua)) return 'android'
-  if (/mac/.test(ua)) return 'mac'
-  return 'altro'
-}
+// Deep link a navigatori esterni.
+// Ogni helper ritorna un URL esplicito per un provider specifico; il chiamante
+// sceglie quali bottoni mostrare. Niente auto-detect: su Android i bottoni
+// "Apple" e "Google" producono URL distinte — è il sistema operativo o
+// l'utente a decidere con quale app aprire il deep link.
 
 export function linkGoogleMaps(lat, lon, nome = '') {
   const q = nome ? `${lat},${lon}(${encodeURIComponent(nome)})` : `${lat},${lon}`
@@ -23,15 +18,15 @@ export function linkAppleMaps(lat, lon, nome = '') {
   return nome ? `${base}&q=${encodeURIComponent(nome)}` : base
 }
 
-// Link primario "apri in mappe" sensato in base all'OS.
-export function linkNavigaPredefinito(lat, lon, nome = '') {
-  const p = rilevaPiattaforma()
-  if (p === 'ios' || p === 'mac') return linkAppleMaps(lat, lon, nome)
-  return linkGoogleMaps(lat, lon, nome)
-}
-
-export function etichettaMappaPredefinita() {
-  const p = rilevaPiattaforma()
-  if (p === 'ios' || p === 'mac') return 'Mappe'
-  return 'Google Maps'
+// OSMAnd: deep link ufficiale. Apre l'app se installata (Android/iOS),
+// altrimenti mostra la pagina web con il punto evidenziato.
+// Riferimento: https://osmand.net/docs/technical/deep-linking/
+export function linkOsmand(lat, lon, nome = '') {
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lon: String(lon),
+    z: '17'
+  })
+  if (nome) params.set('title', nome)
+  return `https://osmand.net/go?${params.toString()}`
 }
