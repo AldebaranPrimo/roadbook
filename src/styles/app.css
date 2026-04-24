@@ -52,17 +52,25 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Bottoni fantasma in HeaderApp */
+/* Bottoni fantasma in HeaderApp — altezza uniforme tra button (caratteri Unicode)
+   e link con SVG (GitHub). L'altezza fissa + flex centering impediscono che il
+   line-height dei caratteri spinga i button a crescere più degli <a>. */
 .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
   background: transparent;
   border: 1px solid var(--bordo);
   color: var(--fg);
   border-radius: 0.35rem;
-  padding: 0.35rem 0.5rem;
+  padding: 0 0.5rem;
   font: inherit;
   font-size: 0.78rem;
+  line-height: 1;
   cursor: pointer;
   white-space: nowrap;
+  text-decoration: none;
 }
 .btn-ghost:hover { background: var(--hover); }
 

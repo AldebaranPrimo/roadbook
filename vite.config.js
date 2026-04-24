@@ -81,7 +81,15 @@ export default defineConfig({
     vue(),
     manifestViaggiEsempio(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' e non 'autoUpdate': vogliamo il controllo esplicito via toast
+      // "Aggiorna ora" (vedere src/composables/useAggiornamentoPwa.js +
+      // App.vue). Con 'autoUpdate' Workbox imposta skipWaiting + clientsClaim
+      // e il SW nuovo si attiva in silenzio, ma la UI già caricata in memoria
+      // resta vecchia finché non si fa reload — problema reale su PWA
+      // installata su Android con tab sempre aperta. Con 'prompt' il SW resta
+      // "waiting", needRefresh diventa true, il toast chiede all'utente di
+      // cliccare "Aggiorna ora" che fa skipWaiting + reload sincronizzati.
+      registerType: 'prompt',
       includeAssets: ['icons/icon.svg', 'viaggi/*.json'],
       manifest: {
         name: 'Roadbook',

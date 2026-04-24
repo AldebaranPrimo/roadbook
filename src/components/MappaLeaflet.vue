@@ -113,6 +113,15 @@ function creaMarker(punto) {
   const m = L.marker([punto.lat, punto.lon], { icon: icona, title: punto.name })
   const categoriaLabel = cat.label || punto.categoria
   const emoji = cat.icona_emoji || ''
+  // Il bottone "Dettagli →" è temporaneamente nascosto: oggi sarebbe ridondante
+  // (il click sul marker già scrolla + evidenzia la scheda in lista) e generava
+  // confusione nell'utente. Sarà riattivato quando implementeremo la "scheda
+  // dettagliata punto full-screen" (voce TODO in media priorità), che gli darà
+  // una funzione concreta (aprire una modal col dettaglio completo del punto).
+  const mostraBottoneDettagli = false
+  const bottoneHtml = mostraBottoneDettagli
+    ? `<button type="button" class="btn-vai" data-n="${escapeHtml(String(punto.n))}">Dettagli →</button>`
+    : ''
   // Tutti i valori derivati dal JSON utente passano da escapeHtml, incluso l'emoji
   // della categoria (una stringa non controllata dall'app: un JSON maligno potrebbe
   // mettere HTML lì dentro).
@@ -121,7 +130,7 @@ function creaMarker(punto) {
       <strong>${escapeHtml(String(punto.n))}. ${escapeHtml(punto.name)}</strong>
       <small>${escapeHtml(emoji)} ${escapeHtml(categoriaLabel)}</small>
       <p>${escapeHtml(troncaDesc(punto.desc, 180))}</p>
-      <button type="button" class="btn-vai" data-n="${escapeHtml(String(punto.n))}">Dettagli →</button>
+      ${bottoneHtml}
     </div>`, { closeButton: true, maxWidth: 260 })
   m.on('click', () => {
     emit('clickPunto', punto.n)
