@@ -6,7 +6,7 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ## 🐛 Bug — da correggere asap
 
-*(nessun bug aperto. B-1 fix fase 1 e B-2 workaround già applicati nel commit corrente — vedere [`CHANGELOG.md`](CHANGELOG.md) e "Completati di recente" in fondo. La fase 2 di B-1 è in valutazione, viene ridiscussa dopo aver visto in uso il risultato della fase 1.)*
+*(nessun bug aperto. B-1 fix fase 1, B-2 workaround, B-3 fix PWA, B-4 e B-5 palliativo già applicati — vedere [`CHANGELOG.md`](CHANGELOG.md). La fase 2 di B-1 (hamburger / raggruppamento / label azioni) e il fix definitivo B-5 con deep link nativi restano in valutazione: per B-5 il task è tracciato come voce backlog #12 in media priorità.)*
 
 ---
 
@@ -93,6 +93,28 @@ Modal dedicata che mostra un singolo punto in pieno: foto gallery (integra #7), 
 
 **Dipendenze**: integrabile con #7 (Galleria foto) come sub-feature dello stesso task se le si sviluppa insieme.
 
+### 12. Riattivare bottoni navigazione esterna su mobile con deep link nativi
+
+**Origine**: residuo del bug B-5. Su mobile abbiamo nascosto Google Maps / Waze / Apple Maps (vedere CHANGELOG quando la slice di fix viene rilasciata) perché le URL web in uso oggi perdono la destinazione nello switch verso l'app installata. Il workaround attuale priva l'utente camper di alternative a OsmAnd. Il fix vero è cambiare i formati URL.
+
+**Scope** (`risk:medium`, da affrontare quando l'utente ha tempo per testarlo sul device reale):
+
+- **Google Maps**: passare da `https://www.google.com/maps/search/?api=1&query=lat,lon(nome)` a `https://www.google.com/maps/dir/?api=1&destination=lat,lon[&travelmode=driving]`. Documentazione Google indica il formato `dir/?api=1&destination=` come "Universal cross-platform URL" che apre l'app installata mantenendo la destinazione.
+- **Waze**: oggi `https://www.waze.com/ul?ll=lat,lon&navigate=yes`. Provare schema custom `waze://?ll=lat,lon&navigate=yes` con UA-detect Android (o `try` su `window.location` con fallback all'URL web). Documentazione Waze descrive entrambe le forme.
+- **Apple Maps**: passare da `?ll=lat,lon&q=nome` a `?daddr=lat,lon`. Il parametro `daddr` triggera il flusso direzioni e ha handoff documentato verso l'app iOS. Su Android Apple Maps non esiste come app — il bottone va comunque tenuto nascosto su mobile non-iOS (UA-detect minimo per discriminare iOS da altri).
+
+**Test plan** (obbligatorio prima del merge):
+- Android Chrome con app installate: Google Maps, Waze, OsmAnd (Apple Maps non si applica). Cliccare ogni bottone, verificare che l'app si apra **con la destinazione corretta**, non sulla posizione corrente o sulla home.
+- iOS Safari (se accessibile): verificare Apple Maps + Google Maps.
+- Desktop (Chrome / Firefox): comportamento web invariato.
+
+**Riferimenti vendor**:
+- Google Maps URL scheme: https://developers.google.com/maps/documentation/urls/get-started
+- Waze deep links: https://developers.google.com/waze/deeplinks
+- Apple Maps URL scheme: https://developer.apple.com/library/archive/featuredarticles/iPhoneURLScheme_Reference/MapLinks/MapLinks.html
+
+Una volta validato il fix, rimuovere la regola CSS `.nascondi-mobile` (o equivalente) dal componente `PuntoCard.vue` e ripristinare la visibilità mobile dei 3 bottoni.
+
 ---
 
 ## Bassa priorità / nice-to-have
@@ -116,6 +138,23 @@ Già previste come campi opzionali, da implementare quando emergono esigenze:
 ---
 
 ## Debito tecnico
+
+- **Ristrutturazione branch a tre livelli `main` + `production` + `develop`** (`risk:medium`, task di processo — da NON eseguire finché non pianificato esplicitamente). Decisione presa dall'utente il 2026-04-24 dopo il banner GitHub ricorrente "Compare & pull request" sul branch main. Modello target:
+  - `main` = branch principale di lavoro. Commit diretti ammessi per slice piccole, slice AI-led significative via `ai/{tipo}/{desc}` → merge su main.
+  - `production` = branch di pubblicazione. GitHub Pages deployà **solo** sui push qui. Il promotion avviene via push diretto `main:production` o via PR self-merge `main → production` (scelta da confermare al kickoff).
+  - `develop` = riservato a feature complesse multi-slice. Resta dormiente allineato a main finché non serve.
+
+  **Passi concreti alla partenza del task**:
+  1. Allinea locale: `git pull` su main e develop, cancella eventuali branch slice già mergiati.
+  2. Crea `production` da `origin/main` (snapshot attuale = stato pubblicato).
+  3. Modifica `.github/workflows/deploy.yml`: trigger `branches: [main]` → `branches: [production]`.
+  4. Riscrivi `CLAUDE.md` sezioni "Scale" e "Hosting" con il nuovo flusso a tre branch, rimuovi la regola "commit diretti su main solo per docs-only".
+  5. Bumpa versione (patch).
+  6. Aggiorna `CHANGELOG.md`.
+  7. Commit + push su main + primo push a production (per attivare il nuovo trigger sul deploy corrente).
+  8. Branch protection su production da Settings → Branches (a mano, lato utente).
+
+  **Note di rischio**: dopo il cambio trigger, il prossimo commit su main **non** sarà deployato finché non si fa il primo push a production (passo 7 parte integrante). Il default branch GitHub resta `main` (niente da toccare). Da discutere al kickoff: (a) push diretto vs PR per main → production; (b) tenere `develop` sincronizzato con main o lasciarlo indietro fino all'uso; (c) branch protection stringente o light.
 
 - **Test Vitest** per le utility pure (`valida-schema`, `routing-osrm` decoder, `mappe-esterne`). Non blocca nulla ora, ma crescerà di utilità man mano che le utility si complicano.
 - **Audit WCAG 2.1 AA**: skip link → `#main-content` (mancante), `aria-expanded` sul modal, controllo contrasti in tutti e 5 i provider tile + tema scuro, navigazione tastiera completa.
