@@ -13,7 +13,7 @@
 
 ## In due righe
 
-**Roadbook è un visualizzatore di itinerari di viaggio in formato JSON**, distribuito come PWA installabile e funzionante offline. Non pianifica viaggi e non genera contenuti: cura un solo lavoro, mostrare in modo navigabile (mappa, percorsi reali, note, stato visitato, deep link a navigatori esterni) un itinerario già definito altrove.
+**Roadbook è un visualizzatore di itinerari di viaggio in formato JSON**, distribuito come PWA installabile e funzionante offline. Non pianifica viaggi e non genera contenuti: ha un solo scopo, mostrare in modo navigabile (mappa, percorsi reali, note, stato visitato, deep link a navigatori esterni) un itinerario già definito altrove.
 
 Il formato JSON usato è specifico di questo progetto, non uno standard esterno. La produzione del file è pensata per essere delegata a un LLM.
 
