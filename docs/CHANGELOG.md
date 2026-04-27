@@ -28,6 +28,7 @@ Modifiche su `develop` non ancora rilasciate su `main`. Verranno raggruppate nel
 - **Help sostanzioso nella modal "Carica un viaggio"** (`ModalCaricaViaggio.vue`): sezione collassabile `<details>` "Cos'è un file viaggio e come ottenerlo?" in testa, con due percorsi (partire dall'esempio Friuli scaricabile o passare lo schema a un LLM) e link diretti alle due risorse. Non ruba spazio a chi sa già cos'è un viaggio.
 - **Bottone GitHub nell'header** (`HeaderApp.vue`): link `<a>` con icona SVG inline del logo GitHub, aria-label, `rel="noopener"`, target `_blank`. Porta al repo `AldebaranPrimo/roadbook`.
 - **Fix sanitizzazione emoji** (`MappaLeaflet.vue`): il popup marker ora passa da `escapeHtml` anche l'`icona_emoji` della categoria (prima era inserita raw) e il `punto.n`. Chiusa una minuscola XSS potenziale su JSON maligni.
+- **Riscrittura intro `README.md`**: aggiunte due sezioni iniziali — "In due righe" (Roadbook è un visualizzatore di itinerari in formato JSON, non pianifica e non genera contenuti) e "Flusso d'uso tipico" (1. pianificazione del viaggio in conversazione con un LLM, 2. esportazione in formato JSON Roadbook chiedendola allo stesso LLM e passandogli lo schema, 3. caricamento nel visualizzatore). Il riferimento allo schema vivente in `public/schema/viaggio-1.1.md` è ora citato come prompt dichiarativo per LLM fin dall'introduzione, non solo nella sezione tecnica più in basso.
 
 ### Correzioni
 

@@ -9,6 +9,22 @@
 
 > ⚠ **Versione 1.0 — beta iniziale.** Tutte le funzionalità "must" sono implementate e verificate con test visuali, ma è comunque un primo rilascio destinato all'uso diretto e al feedback. Rotture di schema, piccole regressioni di UI e cambi di formato sono ancora possibili. Segnalare problemi e suggerimenti aprendo una issue.
 
+---
+
+## In due righe
+
+**Roadbook è un visualizzatore di itinerari di viaggio in formato JSON**, distribuito come PWA installabile e funzionante offline. Non pianifica viaggi e non genera contenuti: cura un solo lavoro, mostrare in modo navigabile (mappa, percorsi reali, note, stato visitato, deep link a navigatori esterni) un itinerario già definito altrove.
+
+Il formato JSON usato è specifico di questo progetto, non uno standard esterno. La produzione del file è pensata per essere delegata a un LLM.
+
+## Flusso d'uso tipico
+
+1. **Pianificare il viaggio in conversazione con un'AI generativa qualsiasi** (ChatGPT, Claude, Gemini, ecc.): mete, soste, tempi, vincoli (mezzo di trasporto, accompagnatori, stagione, ecc.). Conversazione libera, senza vincoli di formato.
+2. Una volta messo a punto l'itinerario, **chiedere alla stessa AI di esportarlo nel formato JSON Roadbook**, passandole come riferimento lo schema [`public/schema/viaggio-1.1.md`](public/schema/viaggio-1.1.md). Lo schema è scritto pensando proprio a questo uso: struttura, vincoli ed esempi sono formulati per essere passati come prompt dichiarativo a un LLM.
+3. **Caricare il JSON risultante in Roadbook** (drag & drop, file picker o parametro URL `?viaggio=https://…`) e consultare il viaggio dal browser o dalla PWA installata, anche in zone con connessione scarsa o assente.
+
+Lo schema è accessibile anche come URL statica sul sito live: `https://AldebaranPrimo.github.io/roadbook/schema/viaggio-1.1.md`. Si copia, si incolla in chat e si chiede all'LLM di produrre un viaggio conforme oppure di convertire un itinerario già discusso.
+
 ## 🚀 Provala subito
 
 **→ [https://AldebaranPrimo.github.io/roadbook/](https://AldebaranPrimo.github.io/roadbook/) ←**
@@ -18,8 +34,6 @@ Al primo accesso viene caricato automaticamente un viaggio di esempio (ponte 25-
 Installabile come app su Android e iOS: **Condividi → Aggiungi a schermata Home** (iOS) / **⋮ → Installa app** (Chrome Android).
 
 ---
-
-**Roadbook** è una Progressive Web App per consultare itinerari di viaggio da file JSON, online e offline. È pensata per l'uso in viaggio, da telefono, spesso in zone con connessione scarsa o assente.
 
 Caricato un JSON con l'itinerario, l'app mostra:
 
