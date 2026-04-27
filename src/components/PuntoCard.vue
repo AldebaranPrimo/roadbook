@@ -77,10 +77,14 @@ function onBlurNota(e) {
       </a>
     </div>
 
+    <!-- Su mobile (< 900px) i link Google/Waze/Apple sono nascosti: le loro URL
+         web perdono la destinazione nel handoff verso l'app nativa installata
+         (B-5, palliativo). Resta solo OsmAnd, l'unico che funziona davvero
+         grazie al deep link ufficiale. Fix definitivo: TODO #12. -->
     <div class="azioni" @click.stop>
-      <a class="btn" :href="linkGoogleMaps(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">Google Maps</a>
-      <a class="btn" :href="linkWaze(punto.lat, punto.lon)" target="_blank" rel="noopener">Waze</a>
-      <a class="btn" :href="linkAppleMaps(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">Apple Maps</a>
+      <a class="btn solo-desktop" :href="linkGoogleMaps(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">Google Maps</a>
+      <a class="btn solo-desktop" :href="linkWaze(punto.lat, punto.lon)" target="_blank" rel="noopener">Waze</a>
+      <a class="btn solo-desktop" :href="linkAppleMaps(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">Apple Maps</a>
       <a class="btn" :href="linkOsmand(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">OsmAnd</a>
     </div>
 
@@ -225,6 +229,14 @@ function onBlurNota(e) {
   white-space: nowrap;
 }
 .btn:hover { background: var(--hover); }
+
+/* B-5 palliativo: su mobile nasconde i link a Google/Waze/Apple Maps perché
+   le loro URL web perdono la destinazione nello switch verso l'app nativa.
+   OsmAnd resta visibile. Breakpoint coerente con il layout split di App.vue
+   (mobile < 900px, desktop ≥ 900px). */
+@media (max-width: 899.98px) {
+  .azioni .solo-desktop { display: none; }
+}
 
 .blocco-nota summary {
   font-size: 0.8rem;
