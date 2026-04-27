@@ -28,18 +28,21 @@ const etichettaTema = computed(() => {
         Roadbook
         <span class="versione" :title="`Build ${APP_BUILD_SHA}`">v{{ APP_VERSION }}</span>
       </h1>
-      <div v-if="viaggio" class="viaggio-info">
-        <p class="titolo-viaggio">
-          {{ viaggio.titolo }}
-          <!-- Info è contestuale al viaggio corrente: vive vicino al titolo, non tra le azioni globali. -->
-          <button
-            type="button"
-            class="btn-info-viaggio"
-            title="Informazioni viaggio"
-            aria-label="Apri informazioni viaggio"
-            @click="emit('apriInfo')"
-          >ⓘ</button>
-        </p>
+      <!-- L'intera area titolo+sottotitolo apre la modal Informazioni viaggio.
+           Pattern "tap sul titolo" più robusto del bottone ⓘ inline, che veniva
+           tagliato dall'ellipsis quando il titolo andava in overflow (B-4). -->
+      <div
+        v-if="viaggio"
+        class="viaggio-info"
+        role="button"
+        tabindex="0"
+        title="Informazioni viaggio"
+        aria-label="Apri informazioni viaggio"
+        @click="emit('apriInfo')"
+        @keydown.enter.prevent="emit('apriInfo')"
+        @keydown.space.prevent="emit('apriInfo')"
+      >
+        <p class="titolo-viaggio">{{ viaggio.titolo }}</p>
         <p v-if="viaggio.sottotitolo" class="sottotitolo">{{ viaggio.sottotitolo }}</p>
       </div>
     </div>
@@ -112,26 +115,19 @@ const etichettaTema = computed(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: color 0.15s;
 }
-/* Bottone info viaggio inline col titolo: piccolo, senza bordo, in tono muted.
-   Distinto dai btn-ghost globali perché contestuale al viaggio corrente. */
-.btn-info-viaggio {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 0.3rem;
-  padding: 0 0.1rem;
-  background: transparent;
-  border: none;
-  color: var(--muted);
-  font: inherit;
-  font-size: 1rem;
-  line-height: 1;
+/* L'intera area viaggio-info è cliccabile: hover/focus segnalati senza chevron
+   per restare sobri (B-4). */
+.viaggio-info {
   cursor: pointer;
-  vertical-align: middle;
-  opacity: 0.8;
+  border-radius: 4px;
 }
-.btn-info-viaggio:hover { opacity: 1; color: var(--accent); }
+.viaggio-info:hover .titolo-viaggio { color: var(--accent); }
+.viaggio-info:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .sottotitolo {
   margin: 0.1rem 0 0;
   font-size: 0.78rem;
@@ -148,9 +144,10 @@ const etichettaTema = computed(() => {
   align-items: center;
 }
 @media print {
-  .azioni, .btn-info-viaggio { display: none; }
+  .azioni { display: none; }
   .app-header { position: static; border: none; padding: 0 0 0.5rem; }
   .marchio { display: none; }
+  .viaggio-info { cursor: default; }
   .titolo-viaggio { font-size: 1.4rem; white-space: normal; }
   .sottotitolo { white-space: normal; }
 }

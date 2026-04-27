@@ -6,19 +6,6 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ## 🐛 Bug — da correggere asap
 
-### B-4 — titolo troncato nasconde il bottone ⓘ Info viaggio
-
-**Osservato in v1.1.1** su mobile col viaggio "Friuli + Slovenia in ..." (evidenza in `docs/bug-header-2.png`): il titolo va in overflow, l'ellipsis si attiva e il bottone ⓘ Info — essendo inline dentro il `<p class="titolo-viaggio">` con `overflow: hidden; text-overflow: ellipsis; white-space: nowrap` — **viene tagliato via completamente**. Risultato: l'utente non ha più alcun modo di aprire la modal "Informazioni viaggio" su quei viaggi. Bug di usabilità grave (funzione inaccessibile), introdotto dalla fase 1 di B-1 del 2026-04-24. Il sottotitolo ha lo stesso problema di troncamento, anche se senza conseguenze funzionali.
-
-**Scope del fix** (`risk:low`):
-- **Eliminare del tutto il bottone `ⓘ`** da `HeaderApp.vue`. Via anche la classe `.btn-info-viaggio` e la regola `@media print` associata. Il bottone in quanto icona non ha senso: duplica una funzione che il titolo stesso può portare.
-- **Rendere cliccabile l'intera area titolo + sottotitolo** (il blocco `.viaggio-info` completo) per aprire la modal Informazioni. Click handler `@click="emit('apriInfo')"` sul wrapper, `role="button"`, `tabindex="0"`, `aria-label="Apri informazioni viaggio"`, gestione tasto Invio/Spazio per accessibilità tastiera. Cursor pointer + sottolineatura sottile o hover discreto per segnalare la cliccabilità senza rovinare l'estetica.
-- Eventuale hint visivo su mobile: un chevron `›` minuscolo accanto al titolo, sempre presente, che indica la cliccabilità senza rubare spazio. Da discutere in review.
-
-**Effetto collaterale positivo**: tutto lo spazio del titolo torna disponibile per il testo, l'ellipsis si sposta più a destra (fino al bordo del container), il titolo viene visualizzato per intero nella maggioranza dei casi.
-
-**Nota architetturale**: togliere il bottone ⓘ rende anche obsoleta la voce "contestuale al viaggio vs azioni globali" del commit B-1 fase 1 — il pattern "click sul titolo" è più intuitivo e più standard nelle UI mobile.
-
 ### B-5 — link a navigatori esterni perdono la destinazione nello switch web→app
 
 **Osservato in v1.1.2** su Android: i bottoni "Apri in Google Maps", "Apri in Waze" e "Apri in Apple Maps" puntano alle URL web dei rispettivi provider (vedere [`src/utils/mappe-esterne.js`](../src/utils/mappe-esterne.js)). Le pagine web implementano un redirect/handoff verso l'app nativa quando installata, ma **sistematicamente in quel passaggio si perdono le coordinate / il nome del punto**, e l'utente atterra sull'app aperta sulla propria posizione corrente o sulla home, senza la destinazione impostata. **OsmAnd è l'unico che funziona correttamente** perché usa il deep link ufficiale `https://osmand.net/go?...` documentato dal vendor.
