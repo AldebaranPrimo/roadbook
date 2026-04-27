@@ -30,3 +30,31 @@ export function linkOsmand(lat, lon, nome = '') {
   if (nome) params.set('title', nome)
   return `https://osmand.net/go?${params.toString()}`
 }
+
+// Bottone unificato per mobile: lascia al sistema operativo la scelta dell'app.
+//
+// Android: schema URI `geo:` standard (RFC 5870 + estensione Google).
+//   `geo:lat,lon?q=lat,lon(nome)` apre il dialog "Apri con" tra le app di
+//   mappe installate (Google Maps, Waze, OsmAnd, Maps.me, ecc.). L'utente
+//   sceglie una volta o per sempre.
+//   Riferimento: https://developer.android.com/guide/components/intents-common#Maps
+//
+// iOS: lo schema `geo:` non è supportato dal sistema. La forma documentata
+//   è `maps://?daddr=lat,lon`, che apre Apple Maps direttamente in modalità
+//   direzioni con destinazione preimpostata. iOS non offre un selettore
+//   globale di app di mappe — l'utente che ne preferisce un'altra deve
+//   aprirla manualmente.
+//   Riferimento: https://developer.apple.com/library/archive/featuredarticles/iPhoneURLScheme_Reference/MapLinks/MapLinks.html
+//
+// Desktop e altri ambienti: fallback sull'URL web di Google Maps, che è
+//   universale e non richiede alcuna app.
+export function linkMappeMobile(lat, lon, nome = '', ua = (typeof navigator !== 'undefined' ? navigator.userAgent : '')) {
+  if (/android/i.test(ua)) {
+    const q = nome ? `${lat},${lon}(${encodeURIComponent(nome)})` : `${lat},${lon}`
+    return `geo:${lat},${lon}?q=${q}`
+  }
+  if (/iphone|ipad|ipod/i.test(ua)) {
+    return `maps://?daddr=${lat},${lon}`
+  }
+  return linkGoogleMaps(lat, lon, nome)
+}
