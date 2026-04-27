@@ -6,23 +6,7 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ## 🐛 Bug — da correggere asap
 
-### B-5 — link a navigatori esterni perdono la destinazione nello switch web→app
-
-**Osservato in v1.1.2** su Android: i bottoni "Apri in Google Maps", "Apri in Waze" e "Apri in Apple Maps" puntano alle URL web dei rispettivi provider (vedere [`src/utils/mappe-esterne.js`](../src/utils/mappe-esterne.js)). Le pagine web implementano un redirect/handoff verso l'app nativa quando installata, ma **sistematicamente in quel passaggio si perdono le coordinate / il nome del punto**, e l'utente atterra sull'app aperta sulla propria posizione corrente o sulla home, senza la destinazione impostata. **OsmAnd è l'unico che funziona correttamente** perché usa il deep link ufficiale `https://osmand.net/go?...` documentato dal vendor.
-
-Conseguenza: dei 4 bottoni di navigazione previsti, 3 sono di fatto inutilizzabili nello scenario d'uso primario (camper, Android, app installate), che è esattamente il flusso per cui esistono. L'utente è costretto a copiare manualmente le coordinate.
-
-**Scope del fix** (`risk:low`, scelta del 2026-04-27):
-- **Su mobile (breakpoint < 900px)**: nascondere i 3 bottoni rotti (Google Maps, Waze, Apple Maps). Restare con il solo bottone OsmAnd, che funziona davvero.
-- **Su desktop (≥ 900px)**: lasciare invariati tutti e 4 i bottoni. Da desktop l'utente non è in camper e i link aprono le rispettive app web nel browser senza l'handoff app rotto, quindi il bug non si manifesta.
-- Implementazione CSS-only via media query, niente UA-detect.
-- Helper in [`src/utils/mappe-esterne.js`](../src/utils/mappe-esterne.js) restano invariati: continuano a essere usati su desktop. Niente codice morto da rimuovere ora — tornerà tutto utile nella voce di backlog #12 (sotto).
-
-**Razionale della scelta palliativa**: meglio non offrire una funzione rotta che lascia l'utente disorientato in zona montana senza connessione. Per lo scenario primario (Android in camper) OsmAnd copre l'intero use case di navigazione offline, quindi la perdita di Google/Waze/Apple sul mobile è accettabile come stato intermedio. Il fix definitivo con deep link nativi corretti è tracciato in [#12](#12-riattivare-bottoni-navigazione-esterna-su-mobile-con-deep-link-nativi).
-
----
-
-*B-1 fix fase 1 e B-2 workaround già applicati (vedere [`CHANGELOG.md`](CHANGELOG.md) e "Completati di recente" in fondo). La fase 2 di B-1 (hamburger / raggruppamento / label azioni) resta in valutazione, viene ridiscussa dopo aver visto in uso il risultato di fase 1 + fix B-4.*
+*(nessun bug aperto. B-1 fix fase 1, B-2 workaround, B-3 fix PWA, B-4 e B-5 palliativo già applicati — vedere [`CHANGELOG.md`](CHANGELOG.md). La fase 2 di B-1 (hamburger / raggruppamento / label azioni) e il fix definitivo B-5 con deep link nativi restano in valutazione: per B-5 il task è tracciato come voce backlog #12 in media priorità.)*
 
 ---
 
