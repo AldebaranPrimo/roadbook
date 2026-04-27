@@ -93,28 +93,6 @@ Modal dedicata che mostra un singolo punto in pieno: foto gallery (integra #7), 
 
 **Dipendenze**: integrabile con #7 (Galleria foto) come sub-feature dello stesso task se le si sviluppa insieme.
 
-### 12. Riattivare bottoni navigazione esterna su mobile con deep link nativi
-
-**Origine**: residuo del bug B-5. Su mobile abbiamo nascosto Google Maps / Waze / Apple Maps (vedere CHANGELOG quando la slice di fix viene rilasciata) perché le URL web in uso oggi perdono la destinazione nello switch verso l'app installata. Il workaround attuale priva l'utente camper di alternative a OsmAnd. Il fix vero è cambiare i formati URL.
-
-**Scope** (`risk:medium`, da affrontare quando l'utente ha tempo per testarlo sul device reale):
-
-- **Google Maps**: passare da `https://www.google.com/maps/search/?api=1&query=lat,lon(nome)` a `https://www.google.com/maps/dir/?api=1&destination=lat,lon[&travelmode=driving]`. Documentazione Google indica il formato `dir/?api=1&destination=` come "Universal cross-platform URL" che apre l'app installata mantenendo la destinazione.
-- **Waze**: oggi `https://www.waze.com/ul?ll=lat,lon&navigate=yes`. Provare schema custom `waze://?ll=lat,lon&navigate=yes` con UA-detect Android (o `try` su `window.location` con fallback all'URL web). Documentazione Waze descrive entrambe le forme.
-- **Apple Maps**: passare da `?ll=lat,lon&q=nome` a `?daddr=lat,lon`. Il parametro `daddr` triggera il flusso direzioni e ha handoff documentato verso l'app iOS. Su Android Apple Maps non esiste come app — il bottone va comunque tenuto nascosto su mobile non-iOS (UA-detect minimo per discriminare iOS da altri).
-
-**Test plan** (obbligatorio prima del merge):
-- Android Chrome con app installate: Google Maps, Waze, OsmAnd (Apple Maps non si applica). Cliccare ogni bottone, verificare che l'app si apra **con la destinazione corretta**, non sulla posizione corrente o sulla home.
-- iOS Safari (se accessibile): verificare Apple Maps + Google Maps.
-- Desktop (Chrome / Firefox): comportamento web invariato.
-
-**Riferimenti vendor**:
-- Google Maps URL scheme: https://developers.google.com/maps/documentation/urls/get-started
-- Waze deep links: https://developers.google.com/waze/deeplinks
-- Apple Maps URL scheme: https://developer.apple.com/library/archive/featuredarticles/iPhoneURLScheme_Reference/MapLinks/MapLinks.html
-
-Una volta validato il fix, rimuovere la regola CSS `.nascondi-mobile` (o equivalente) dal componente `PuntoCard.vue` e ripristinare la visibilità mobile dei 3 bottoni.
-
 ---
 
 ## Bassa priorità / nice-to-have

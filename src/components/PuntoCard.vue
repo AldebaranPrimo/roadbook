@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import {
-  linkGoogleMaps, linkWaze, linkAppleMaps, linkOsmand
+  linkGoogleMaps, linkWaze, linkAppleMaps, linkOsmand, linkMappeMobile
 } from '../utils/mappe-esterne.js'
 
 const props = defineProps({
@@ -77,15 +77,19 @@ function onBlurNota(e) {
       </a>
     </div>
 
-    <!-- Su mobile (< 900px) i link Google/Waze/Apple sono nascosti: le loro URL
-         web perdono la destinazione nel handoff verso l'app nativa installata
-         (B-5, palliativo). Resta solo OsmAnd, l'unico che funziona davvero
-         grazie al deep link ufficiale. Fix definitivo: TODO #12. -->
+    <!-- Su mobile (< 900 px): un singolo bottone "Apri in mappe" che usa lo
+         schema URI scelto in base al sistema operativo (geo: su Android lancia
+         il selettore di app installate; maps://?daddr= su iOS apre Apple Maps;
+         fallback URL web Google Maps).
+         Su desktop (>= 900 px): i quattro bottoni separati, ognuno con la sua
+         URL web — sul browser desktop l'handoff verso un'app nativa non si
+         manifesta. (B-5 fase 2) -->
     <div class="azioni" @click.stop>
+      <a class="btn solo-mobile" :href="linkMappeMobile(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">📍 Apri in mappe</a>
       <a class="btn solo-desktop" :href="linkGoogleMaps(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">Google Maps</a>
       <a class="btn solo-desktop" :href="linkWaze(punto.lat, punto.lon)" target="_blank" rel="noopener">Waze</a>
       <a class="btn solo-desktop" :href="linkAppleMaps(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">Apple Maps</a>
-      <a class="btn" :href="linkOsmand(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">OsmAnd</a>
+      <a class="btn solo-desktop" :href="linkOsmand(punto.lat, punto.lon, punto.name)" target="_blank" rel="noopener">OsmAnd</a>
     </div>
 
     <details class="blocco-nota" @click.stop>
@@ -230,12 +234,17 @@ function onBlurNota(e) {
 }
 .btn:hover { background: var(--hover); }
 
-/* B-5 palliativo: su mobile nasconde i link a Google/Waze/Apple Maps perché
-   le loro URL web perdono la destinazione nello switch verso l'app nativa.
-   OsmAnd resta visibile. Breakpoint coerente con il layout split di App.vue
-   (mobile < 900px, desktop ≥ 900px). */
+/* Mobile (< 900 px): mostra solo il bottone unificato "Apri in mappe" che
+   delega al sistema operativo la scelta dell'app (selettore Android via geo:,
+   Apple Maps su iOS via maps://?daddr=, fallback Google Maps web altrove).
+   Desktop (>= 900 px): mostra i quattro bottoni separati con URL web dei
+   rispettivi provider. Breakpoint coerente con il layout split di App.vue.
+   (B-5 fase 2) */
 @media (max-width: 899.98px) {
   .azioni .solo-desktop { display: none; }
+}
+@media (min-width: 900px) {
+  .azioni .solo-mobile { display: none; }
 }
 
 .blocco-nota summary {
