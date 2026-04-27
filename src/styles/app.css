@@ -54,19 +54,21 @@ body {
 
 /* Bottoni fantasma in HeaderApp — altezza uniforme tra button (caratteri Unicode)
    e link con SVG (GitHub). L'altezza fissa + flex centering impediscono che il
-   line-height dei caratteri spinga i button a crescere più degli <a>. */
+   line-height dei caratteri spinga i button a crescere più degli <a>.
+   Altezza 24 px (B-4 fase 2): permette ai pulsanti di stare sulla stessa riga
+   del marchio "Roadbook v{version}" senza espandere l'header in altezza. */
 .btn-ghost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 28px;
+  height: 24px;
   background: transparent;
   border: 1px solid var(--bordo);
   color: var(--fg);
   border-radius: 0.35rem;
-  padding: 0 0.5rem;
+  padding: 0 0.45rem;
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   line-height: 1;
   cursor: pointer;
   white-space: nowrap;
