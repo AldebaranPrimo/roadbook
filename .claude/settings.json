@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "timeout": 30,
+            "statusMessage": "Verifica MCP Playwright...",
+            "command": "$ErrorActionPreference='SilentlyContinue'; try { $o = & claude mcp list 2>$null | Out-String } catch { $o = '' }; if ($o -notmatch 'playwright.*Connected') { '{\"systemMessage\":\"⚠️ MCP Playwright non risulta attivo nella sessione corrente. Avvisa subito l''utente prima di accettare task che richiedono smoke test UI (i tool mcp__plugin_playwright_playwright__* potrebbero non essere disponibili). Verifica con: claude mcp list\"}' }"
+          }
+        ]
+      }
+    ]
+  }
+}
