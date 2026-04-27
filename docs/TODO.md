@@ -19,6 +19,20 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 **Nota architetturale**: togliere il bottone ⓘ rende anche obsoleta la voce "contestuale al viaggio vs azioni globali" del commit B-1 fase 1 — il pattern "click sul titolo" è più intuitivo e più standard nelle UI mobile.
 
+### B-5 — link a navigatori esterni perdono la destinazione nello switch web→app
+
+**Osservato in v1.1.2** su Android: i bottoni "Apri in Google Maps", "Apri in Waze" e "Apri in Apple Maps" puntano alle URL web dei rispettivi provider (vedere [`src/utils/mappe-esterne.js`](../src/utils/mappe-esterne.js)). Le pagine web implementano un redirect/handoff verso l'app nativa quando installata, ma **sistematicamente in quel passaggio si perdono le coordinate / il nome del punto**, e l'utente atterra sull'app aperta sulla propria posizione corrente o sulla home, senza la destinazione impostata. **OsmAnd è l'unico che funziona correttamente** perché usa il deep link ufficiale `https://osmand.net/go?...` documentato dal vendor.
+
+Conseguenza: dei 4 bottoni di navigazione previsti, 3 sono di fatto inutilizzabili nello scenario d'uso primario (camper, Android, app installate), che è esattamente il flusso per cui esistono. L'utente è costretto a copiare manualmente le coordinate.
+
+**Scope del fix** (`risk:low`, scelta del 2026-04-27):
+- **Su mobile (breakpoint < 900px)**: nascondere i 3 bottoni rotti (Google Maps, Waze, Apple Maps). Restare con il solo bottone OsmAnd, che funziona davvero.
+- **Su desktop (≥ 900px)**: lasciare invariati tutti e 4 i bottoni. Da desktop l'utente non è in camper e i link aprono le rispettive app web nel browser senza l'handoff app rotto, quindi il bug non si manifesta.
+- Implementazione CSS-only via media query, niente UA-detect.
+- Helper in [`src/utils/mappe-esterne.js`](../src/utils/mappe-esterne.js) restano invariati: continuano a essere usati su desktop. Niente codice morto da rimuovere ora — tornerà tutto utile nella voce di backlog #12 (sotto).
+
+**Razionale della scelta palliativa**: meglio non offrire una funzione rotta che lascia l'utente disorientato in zona montana senza connessione. Per lo scenario primario (Android in camper) OsmAnd copre l'intero use case di navigazione offline, quindi la perdita di Google/Waze/Apple sul mobile è accettabile come stato intermedio. Il fix definitivo con deep link nativi corretti è tracciato in [#12](#12-riattivare-bottoni-navigazione-esterna-su-mobile-con-deep-link-nativi).
+
 ---
 
 *B-1 fix fase 1 e B-2 workaround già applicati (vedere [`CHANGELOG.md`](CHANGELOG.md) e "Completati di recente" in fondo). La fase 2 di B-1 (hamburger / raggruppamento / label azioni) resta in valutazione, viene ridiscussa dopo aver visto in uso il risultato di fase 1 + fix B-4.*
@@ -107,6 +121,28 @@ Modal dedicata che mostra un singolo punto in pieno: foto gallery (integra #7), 
 - `App.vue`: wiring che apre la modal sul nuovo evento.
 
 **Dipendenze**: integrabile con #7 (Galleria foto) come sub-feature dello stesso task se le si sviluppa insieme.
+
+### 12. Riattivare bottoni navigazione esterna su mobile con deep link nativi
+
+**Origine**: residuo del bug B-5. Su mobile abbiamo nascosto Google Maps / Waze / Apple Maps (vedere CHANGELOG quando la slice di fix viene rilasciata) perché le URL web in uso oggi perdono la destinazione nello switch verso l'app installata. Il workaround attuale priva l'utente camper di alternative a OsmAnd. Il fix vero è cambiare i formati URL.
+
+**Scope** (`risk:medium`, da affrontare quando l'utente ha tempo per testarlo sul device reale):
+
+- **Google Maps**: passare da `https://www.google.com/maps/search/?api=1&query=lat,lon(nome)` a `https://www.google.com/maps/dir/?api=1&destination=lat,lon[&travelmode=driving]`. Documentazione Google indica il formato `dir/?api=1&destination=` come "Universal cross-platform URL" che apre l'app installata mantenendo la destinazione.
+- **Waze**: oggi `https://www.waze.com/ul?ll=lat,lon&navigate=yes`. Provare schema custom `waze://?ll=lat,lon&navigate=yes` con UA-detect Android (o `try` su `window.location` con fallback all'URL web). Documentazione Waze descrive entrambe le forme.
+- **Apple Maps**: passare da `?ll=lat,lon&q=nome` a `?daddr=lat,lon`. Il parametro `daddr` triggera il flusso direzioni e ha handoff documentato verso l'app iOS. Su Android Apple Maps non esiste come app — il bottone va comunque tenuto nascosto su mobile non-iOS (UA-detect minimo per discriminare iOS da altri).
+
+**Test plan** (obbligatorio prima del merge):
+- Android Chrome con app installate: Google Maps, Waze, OsmAnd (Apple Maps non si applica). Cliccare ogni bottone, verificare che l'app si apra **con la destinazione corretta**, non sulla posizione corrente o sulla home.
+- iOS Safari (se accessibile): verificare Apple Maps + Google Maps.
+- Desktop (Chrome / Firefox): comportamento web invariato.
+
+**Riferimenti vendor**:
+- Google Maps URL scheme: https://developers.google.com/maps/documentation/urls/get-started
+- Waze deep links: https://developers.google.com/waze/deeplinks
+- Apple Maps URL scheme: https://developer.apple.com/library/archive/featuredarticles/iPhoneURLScheme_Reference/MapLinks/MapLinks.html
+
+Una volta validato il fix, rimuovere la regola CSS `.nascondi-mobile` (o equivalente) dal componente `PuntoCard.vue` e ripristinare la visibilità mobile dei 3 bottoni.
 
 ---
 
