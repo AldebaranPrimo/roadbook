@@ -6,7 +6,36 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ## 🐛 Bug — da correggere asap
 
-*(nessun bug aperto. B-1 fix fase 1 e B-2 workaround già applicati nel commit corrente — vedere [`CHANGELOG.md`](CHANGELOG.md) e "Completati di recente" in fondo. La fase 2 di B-1 è in valutazione, viene ridiscussa dopo aver visto in uso il risultato della fase 1.)*
+### B-4 — titolo troncato nasconde il bottone ⓘ Info viaggio
+
+**Osservato in v1.1.1** su mobile col viaggio "Friuli + Slovenia in ..." (evidenza in `docs/bug-header-2.png`): il titolo va in overflow, l'ellipsis si attiva e il bottone ⓘ Info — essendo inline dentro il `<p class="titolo-viaggio">` con `overflow: hidden; text-overflow: ellipsis; white-space: nowrap` — **viene tagliato via completamente**. Risultato: l'utente non ha più alcun modo di aprire la modal "Informazioni viaggio" su quei viaggi. Bug di usabilità grave (funzione inaccessibile), introdotto dalla fase 1 di B-1 del 2026-04-24. Il sottotitolo ha lo stesso problema di troncamento, anche se senza conseguenze funzionali.
+
+**Scope del fix** (`risk:low`):
+- **Eliminare del tutto il bottone `ⓘ`** da `HeaderApp.vue`. Via anche la classe `.btn-info-viaggio` e la regola `@media print` associata. Il bottone in quanto icona non ha senso: duplica una funzione che il titolo stesso può portare.
+- **Rendere cliccabile l'intera area titolo + sottotitolo** (il blocco `.viaggio-info` completo) per aprire la modal Informazioni. Click handler `@click="emit('apriInfo')"` sul wrapper, `role="button"`, `tabindex="0"`, `aria-label="Apri informazioni viaggio"`, gestione tasto Invio/Spazio per accessibilità tastiera. Cursor pointer + sottolineatura sottile o hover discreto per segnalare la cliccabilità senza rovinare l'estetica.
+- Eventuale hint visivo su mobile: un chevron `›` minuscolo accanto al titolo, sempre presente, che indica la cliccabilità senza rubare spazio. Da discutere in review.
+
+**Effetto collaterale positivo**: tutto lo spazio del titolo torna disponibile per il testo, l'ellipsis si sposta più a destra (fino al bordo del container), il titolo viene visualizzato per intero nella maggioranza dei casi.
+
+**Nota architetturale**: togliere il bottone ⓘ rende anche obsoleta la voce "contestuale al viaggio vs azioni globali" del commit B-1 fase 1 — il pattern "click sul titolo" è più intuitivo e più standard nelle UI mobile.
+
+### B-5 — link a navigatori esterni perdono la destinazione nello switch web→app
+
+**Osservato in v1.1.2** su Android: i bottoni "Apri in Google Maps", "Apri in Waze" e "Apri in Apple Maps" puntano alle URL web dei rispettivi provider (vedere [`src/utils/mappe-esterne.js`](../src/utils/mappe-esterne.js)). Le pagine web implementano un redirect/handoff verso l'app nativa quando installata, ma **sistematicamente in quel passaggio si perdono le coordinate / il nome del punto**, e l'utente atterra sull'app aperta sulla propria posizione corrente o sulla home, senza la destinazione impostata. **OsmAnd è l'unico che funziona correttamente** perché usa il deep link ufficiale `https://osmand.net/go?...` documentato dal vendor.
+
+Conseguenza: dei 4 bottoni di navigazione previsti, 3 sono di fatto inutilizzabili nello scenario d'uso primario (camper, Android, app installate), che è esattamente il flusso per cui esistono. L'utente è costretto a copiare manualmente le coordinate.
+
+**Scope del fix** (`risk:low`, scelta del 2026-04-27):
+- **Su mobile (breakpoint < 900px)**: nascondere i 3 bottoni rotti (Google Maps, Waze, Apple Maps). Restare con il solo bottone OsmAnd, che funziona davvero.
+- **Su desktop (≥ 900px)**: lasciare invariati tutti e 4 i bottoni. Da desktop l'utente non è in camper e i link aprono le rispettive app web nel browser senza l'handoff app rotto, quindi il bug non si manifesta.
+- Implementazione CSS-only via media query, niente UA-detect.
+- Helper in [`src/utils/mappe-esterne.js`](../src/utils/mappe-esterne.js) restano invariati: continuano a essere usati su desktop. Niente codice morto da rimuovere ora — tornerà tutto utile nella voce di backlog #12 (sotto).
+
+**Razionale della scelta palliativa**: meglio non offrire una funzione rotta che lascia l'utente disorientato in zona montana senza connessione. Per lo scenario primario (Android in camper) OsmAnd copre l'intero use case di navigazione offline, quindi la perdita di Google/Waze/Apple sul mobile è accettabile come stato intermedio. Il fix definitivo con deep link nativi corretti è tracciato in [#12](#12-riattivare-bottoni-navigazione-esterna-su-mobile-con-deep-link-nativi).
+
+---
+
+*B-1 fix fase 1 e B-2 workaround già applicati (vedere [`CHANGELOG.md`](CHANGELOG.md) e "Completati di recente" in fondo). La fase 2 di B-1 (hamburger / raggruppamento / label azioni) resta in valutazione, viene ridiscussa dopo aver visto in uso il risultato di fase 1 + fix B-4.*
 
 ---
 
@@ -93,6 +122,28 @@ Modal dedicata che mostra un singolo punto in pieno: foto gallery (integra #7), 
 
 **Dipendenze**: integrabile con #7 (Galleria foto) come sub-feature dello stesso task se le si sviluppa insieme.
 
+### 12. Riattivare bottoni navigazione esterna su mobile con deep link nativi
+
+**Origine**: residuo del bug B-5. Su mobile abbiamo nascosto Google Maps / Waze / Apple Maps (vedere CHANGELOG quando la slice di fix viene rilasciata) perché le URL web in uso oggi perdono la destinazione nello switch verso l'app installata. Il workaround attuale priva l'utente camper di alternative a OsmAnd. Il fix vero è cambiare i formati URL.
+
+**Scope** (`risk:medium`, da affrontare quando l'utente ha tempo per testarlo sul device reale):
+
+- **Google Maps**: passare da `https://www.google.com/maps/search/?api=1&query=lat,lon(nome)` a `https://www.google.com/maps/dir/?api=1&destination=lat,lon[&travelmode=driving]`. Documentazione Google indica il formato `dir/?api=1&destination=` come "Universal cross-platform URL" che apre l'app installata mantenendo la destinazione.
+- **Waze**: oggi `https://www.waze.com/ul?ll=lat,lon&navigate=yes`. Provare schema custom `waze://?ll=lat,lon&navigate=yes` con UA-detect Android (o `try` su `window.location` con fallback all'URL web). Documentazione Waze descrive entrambe le forme.
+- **Apple Maps**: passare da `?ll=lat,lon&q=nome` a `?daddr=lat,lon`. Il parametro `daddr` triggera il flusso direzioni e ha handoff documentato verso l'app iOS. Su Android Apple Maps non esiste come app — il bottone va comunque tenuto nascosto su mobile non-iOS (UA-detect minimo per discriminare iOS da altri).
+
+**Test plan** (obbligatorio prima del merge):
+- Android Chrome con app installate: Google Maps, Waze, OsmAnd (Apple Maps non si applica). Cliccare ogni bottone, verificare che l'app si apra **con la destinazione corretta**, non sulla posizione corrente o sulla home.
+- iOS Safari (se accessibile): verificare Apple Maps + Google Maps.
+- Desktop (Chrome / Firefox): comportamento web invariato.
+
+**Riferimenti vendor**:
+- Google Maps URL scheme: https://developers.google.com/maps/documentation/urls/get-started
+- Waze deep links: https://developers.google.com/waze/deeplinks
+- Apple Maps URL scheme: https://developer.apple.com/library/archive/featuredarticles/iPhoneURLScheme_Reference/MapLinks/MapLinks.html
+
+Una volta validato il fix, rimuovere la regola CSS `.nascondi-mobile` (o equivalente) dal componente `PuntoCard.vue` e ripristinare la visibilità mobile dei 3 bottoni.
+
 ---
 
 ## Bassa priorità / nice-to-have
@@ -116,6 +167,23 @@ Già previste come campi opzionali, da implementare quando emergono esigenze:
 ---
 
 ## Debito tecnico
+
+- **Ristrutturazione branch a tre livelli `main` + `production` + `develop`** (`risk:medium`, task di processo — da NON eseguire finché non pianificato esplicitamente). Decisione presa dall'utente il 2026-04-24 dopo il banner GitHub ricorrente "Compare & pull request" sul branch main. Modello target:
+  - `main` = branch principale di lavoro. Commit diretti ammessi per slice piccole, slice AI-led significative via `ai/{tipo}/{desc}` → merge su main.
+  - `production` = branch di pubblicazione. GitHub Pages deployà **solo** sui push qui. Il promotion avviene via push diretto `main:production` o via PR self-merge `main → production` (scelta da confermare al kickoff).
+  - `develop` = riservato a feature complesse multi-slice. Resta dormiente allineato a main finché non serve.
+
+  **Passi concreti alla partenza del task**:
+  1. Allinea locale: `git pull` su main e develop, cancella eventuali branch slice già mergiati.
+  2. Crea `production` da `origin/main` (snapshot attuale = stato pubblicato).
+  3. Modifica `.github/workflows/deploy.yml`: trigger `branches: [main]` → `branches: [production]`.
+  4. Riscrivi `CLAUDE.md` sezioni "Scale" e "Hosting" con il nuovo flusso a tre branch, rimuovi la regola "commit diretti su main solo per docs-only".
+  5. Bumpa versione (patch).
+  6. Aggiorna `CHANGELOG.md`.
+  7. Commit + push su main + primo push a production (per attivare il nuovo trigger sul deploy corrente).
+  8. Branch protection su production da Settings → Branches (a mano, lato utente).
+
+  **Note di rischio**: dopo il cambio trigger, il prossimo commit su main **non** sarà deployato finché non si fa il primo push a production (passo 7 parte integrante). Il default branch GitHub resta `main` (niente da toccare). Da discutere al kickoff: (a) push diretto vs PR per main → production; (b) tenere `develop` sincronizzato con main o lasciarlo indietro fino all'uso; (c) branch protection stringente o light.
 
 - **Test Vitest** per le utility pure (`valida-schema`, `routing-osrm` decoder, `mappe-esterne`). Non blocca nulla ora, ma crescerà di utilità man mano che le utility si complicano.
 - **Audit WCAG 2.1 AA**: skip link → `#main-content` (mancante), `aria-expanded` sul modal, controllo contrasti in tutti e 5 i provider tile + tema scuro, navigazione tastiera completa.
