@@ -48,15 +48,25 @@ Raccomandazioni dall'analisi: zoom default 12, zoom 13 solo su conferma esplicit
 
 ### 3. MCP server Roadbook per integrazione con Claude (nuovo repo `roadbook-mcp`)
 
-**Obiettivo**: permettere a un utente che sta lavorando a un itinerario con Claude (Desktop o Web) di **vedere in anteprima** il viaggio nella PWA Roadbook via un link cliccabile generato da una tool MCP. Il payload JSON viaggia nell'URL (parametro `?viaggio_data=<base64url>`), nessun server intermedio, nessuno storage cloud.
+**Obiettivo**: permettere a un utente che sta lavorando a un itinerario con Claude (Desktop o Web) di **vedere in anteprima** il viaggio Roadbook via una tool MCP, sfruttando il viaggio JSON come fonte unica di verità.
 
-**Design completo** nel documento di progetto: [`analisi/mcp-roadbook-v1.md`](analisi/mcp-roadbook-v1.md). Contiene: flusso utente, architettura end-to-end, stack proposto, struttura del nuovo repo `roadbook-mcp`, specifica della tool `visualizza_itinerario`, validazione lightweight lato MCP (la PWA ha già il validatore completo), soglie URL (ok <16 KB, warn 16-30, rifiuto >60), modifiche alla PWA Roadbook (gestione nuovo parametro `?viaggio_data` in `App.vue`, additiva), test plan, domande aperte, roadmap v1.1+.
+**Design alternativi disponibili — scelta di scope ancora aperta**:
 
-**Scope su questo repo**: una slice `feat` additiva che aggiunge la gestione `?viaggio_data` in `App.vue` (decodifica base64url → validatore esistente → import in IndexedDB → pulizia URL). Risk: medium (input nuovo dall'esterno, ma riusa il flusso esistente). Preceduta dal nuovo repo `roadbook-mcp` che produce il parametro.
+- **Opzione A — URL-payload + tab esterna** ([`analisi/mcp-roadbook-v1.md`](analisi/mcp-roadbook-v1.md), pianificata in dettaglio): server MCP stdio, tool `visualizza_itinerario` che ritorna URL `?viaggio_data=<base64url>` cliccabile. La PWA Roadbook aperta in nuova tab decodifica e importa. Nessun hosting, costo zero, ~1 settimana di lavoro.
+- **Opzione B — MCP App con UI bundled inline** (estensione MCP Apps recente, riferimento [Microsoft, 8 aprile 2026](https://techcommunity.microsoft.com/blog/appsonazureblog/build-and-host-mcp-apps-on-azure-app-service/4509705)): server MCP HTTP che espone una risorsa UI (HTML+JS+CSS bundled) renderizzata in iframe sandbox direttamente nella chat Claude / VS Code Copilot / ChatGPT. Anteprima inline, niente cambio di contesto. Richiede hosting (Cloudflare Workers / Azure / altro) e bundle UI dedicato. ~1.5-2 settimane.
+- **Opzione C — Ibrida**: A + B come due tool dello stesso server MCP (`anteprima_itinerario` per consultazione inline + `apri_in_roadbook` per salvataggio definitivo nella PWA dell'utente). ~3 settimane.
 
-**Prerequisito concettuale**: la voce #2 "Gestione utenti con login social" è **fortemente raccomandata prima**. Con utente anonimo la feature funziona comunque (il JSON è persistente nel browser come qualsiasi altro import), ma il valore pieno emerge quando un utente può editare un viaggio in Claude e ritrovarlo *automaticamente* sul suo device Roadbook via sync — senza bisogno di passare dall'URL-payload. Finché non c'è login, il MCP resta un comodo "copia-incolla via link" piuttosto che un'integrazione vera.
+**Analisi di fattibilità dettagliata** delle tre opzioni: [`analisi/mcp-apps-roadbook-fattibilita.md`](analisi/mcp-apps-roadbook-fattibilita.md). Contiene confronto su costo, dipendenze (hosting, supporto host MCP Apps), vincoli iframe sandbox, raggiungibilità tile mappa, raccomandazione sintetica e roadmap proposte.
 
-**Rischio di slice**: `risk:medium` sul lato Roadbook (modifica additiva ma su input esterno, richiede validazione + escape). Sul lato `roadbook-mcp` repo è nuovo quindi risk classification da rifare al kickoff.
+**Raccomandazione attuale**: opzione A come v1.0 (status quo già pianificato), opzione B in backlog per v1.1 dopo POC di verifica. Decisione finale rimandata al kickoff del task quando l'utente sceglie roadmap conservativa o aggressiva (vedere ultima sezione del documento di fattibilità).
+
+**Scope su questo repo (Roadbook PWA), opzione A**: una slice `feat` additiva che aggiunge la gestione `?viaggio_data` in `App.vue` (decodifica base64url → validatore esistente → import in IndexedDB → pulizia URL). Risk: medium (input nuovo dall'esterno, ma riusa il flusso esistente). Preceduta dal nuovo repo `roadbook-mcp` che produce il parametro.
+
+**Scope su questo repo, opzione B**: nessuna modifica alla PWA. Il bundle MCP App vive nel repo `roadbook-mcp` e riusa selettivamente codice del frontend Roadbook (componenti `MappaLeaflet`, `AreaPanel`, `PuntoCard`, validatore) come pacchetto interno o link git submodule.
+
+**Prerequisito concettuale**: la voce #2 "Gestione utenti con login social" è **fortemente raccomandata prima** (per opzione A e C). Con utente anonimo la feature funziona ma il viaggio modificato in chat va re-importato a mano nella PWA del device. Con login, sync automatico tra chat e PWA.
+
+**Rischio di slice**: `risk:medium` sul lato Roadbook PWA (modifica additiva ma su input esterno, richiede validazione + escape). Sul lato `roadbook-mcp` repo è nuovo, risk classification da rifare al kickoff in base all'opzione scelta.
 
 ---
 
