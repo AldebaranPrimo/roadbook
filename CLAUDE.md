@@ -6,7 +6,7 @@ PWA per consultare itinerari di viaggio da file JSON, online e offline. Caso d'u
 
 ## Allineamento col contratto di famiglia
 
-**Data ultima sincronizzazione**: 2026-05-13 (rev 8 del 2026-05-12 — capitolo *Code documentation standard*, header obbligatori).
+**Data ultima sincronizzazione**: 2026-05-13 (rev 8 + estensioni 2026-05-13: *Scope discipline* nell'intro e *Tech debt & issue tracker* capability-gated nel capitolo Documentation Layout).
 
 Il contratto di famiglia non si versiona più con semver (vedi rev 6 di `CLAUDE-vue-app.md`): l'allineamento avviene per data esplicita di sincronizzazione, attraverso sessioni guidate di review. Questo repo è valido sulla rev del 2026-05-12 finché non si fa la prossima sincronizzazione.
 
@@ -23,6 +23,16 @@ L'unico file dichiarato legacy ai sensi del capitolo *Documentation Layout & Lif
 - [`docs/SPECIFICHE-APP.md`](docs/SPECIFICHE-APP.md) — Specifiche iniziali del 24/4/2026. Alleggerito al 24/4 a documento storico del giorno zero. Contiene contesto iniziale e §6 "Problemi noti e lezioni apprese" ancora valido. Non consultare per scelte correnti.
 
 Tutti gli altri file in `docs/` sono **doc viva** (`TODO.md`, `CHANGELOG.md`, `STATO-PROGETTO.md`, `tech-debt.md`) o **ADR** (`docs/decisions/*.md`), nessun altro legacy.
+
+## Issue tracker
+
+`github` (CLI `gh` autenticata come AldebaranPrimo — vedi memoria progetto `reference_account_github`).
+
+**Politica corrente sulle voci `docs/tech-debt.md`: tutte file-only.** Le voci `TD-001..TD-006` aperte al 2026-05-13 sono note di compilazione, configurazione e tooling a uso interno dell'autore — non rivolte a utenti esterni, non funzionali, non bisognose di label / comment / assignment / input di terzi. Non significative ai sensi del capitolo *Tech debt & issue tracker (capability-gated)* del contratto di famiglia, quindi nessuna issue GitHub corrispondente.
+
+Se in futuro emergerà una voce TD significativa (es. che richiede input di un tester o di un secondo dev, che ha contorni decisionali aperti, che beneficia di tracking visibile), si aprirà la corrispondente issue GitHub con cross-link `→ issue #N` nella voce. La policy resta `github`, l'applicazione è graduata caso per caso.
+
+Le issue oggi aperte (#30 estensione modalità, #31 multimodalità intra-area) sono **feature/enhancement utenti-rilevanti**, non voci di tech-debt — sono tracciate dove devono essere, su GitHub Issues, non in `tech-debt.md`.
 
 ## Lingua del progetto
 
