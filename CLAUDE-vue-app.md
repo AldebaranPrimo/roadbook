@@ -404,9 +404,22 @@ When the corresponding inline marker exists in code (e.g. `TODO(td-001):`), it m
 
 ### Tech debt & issue tracker (capability-gated)
 
-When the platform issue tracker CLI is available and authenticated (`gh` / `az repos` / `glab`), significant `tech-debt.md` entries **must** also exist as issues. The file is source-of-truth for **AI context** (aggregate, always readable locally); the issue is source-of-truth for **humans** (comments, labels, assignment, stable ID, external input). Cross-link in each significant entry: `→ issue #N`.
+When the platform issue tracker CLI is available and authenticated (`gh` / `az repos` / `glab`), entries of `tech-debt.md` that the user deems worth tracking **also** exist as issues. File = source-of-truth for **AI context** (aggregate, always readable locally); issue = source-of-truth for **humans** (comments, labels, assignment, stable ID, external input). Cross-link `→ issue #N` in the file. **The user decides which entries warrant an issue** — no significance threshold prescribed; AI proposes, user picks.
 
-The AI **reads** issue comments to surface external feedback (client, contributor, beta tester) but **never auto-acts** on them without user confirmation.
+The AI **reads** issue comments to surface external feedback but **never auto-acts** without user confirmation.
+
+**Issue conventions** (when tracker is active):
+
+- **Language**: Italian by default; per-repo `CLAUDE.md` may declare an alternative.
+- **Tone**: technical, succinct. No essays.
+- **Branch ↔ issue linkage** (for code-change issues): branch name encodes the ID with pattern `<slice-type>/<issue-id>-<slug>` (e.g. `ai/feat/42-new-export` on GitHub/GitLab; `ai/feat/AB1234-new-export` on Azure DevOps). Commit messages reference the issue (`feat: foo (#42)` on GitHub/GitLab; `feat: foo AB#1234` on Azure DevOps). PR/MR uses the platform auto-close keyword (`Closes #42` / `Fixes #42` on GitHub/GitLab; "Related work items" on Azure DevOps).
+- **Blast radius label** on every code-change issue:
+  - `blast:low` — single file/component; `git revert` suffices, no persistent state touched.
+  - `blast:medium` — multi-file bounded to a feature/module; revert OK with regression check.
+  - `blast:high` — cross-cutting (schema, API surface, shared utility, major dependency upgrade); needs migration plan.
+  - `blast:critical` — production state change (DB migration, hard delete, infra); irreversible without backup.
+
+  Assigned by the user (AI proposes). Drives review depth, PR/MR process, rollback plan. On GitLab use the scoped form `blast::<level>` to ensure exclusivity per issue.
 
 If no platform CLI is available/authenticated (local-only repo, unauthenticated tooling, no issue tracker by design): file-only is sufficient. The per-repo `CLAUDE.md` declares the active policy (`issue tracker: github / azure / gitlab / none`).
 
