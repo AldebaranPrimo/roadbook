@@ -1,16 +1,84 @@
-# MCP Apps — Analisi di fattibilità per Roadbook
+# Decisione — Scope di roadbook-mcp: A vs B vs C (analisi di fattibilità MCP Apps)
 
-**Data**: 2026-04-28
-**Stato**: bozza, in attesa di decisione di scope per la voce TODO #3 (MCP server `roadbook-mcp`).
-**Autore**: analisi tecnica preparatoria, non un piano implementativo definitivo.
-**Riferimenti**:
-- [`mcp-roadbook-v1.md`](mcp-roadbook-v1.md) — analisi precedente del task #3 (MCP stdio + URL-payload).
-- Microsoft Tech Community, *Build and Host MCP Apps on Azure App Service*, 8 aprile 2026 ([URL](https://techcommunity.microsoft.com/blog/appsonazureblog/build-and-host-mcp-apps-on-azure-app-service/4509705)).
-- [Specifica MCP Apps](https://modelcontextprotocol.io/extensions/apps/overview) (estensione di Model Context Protocol).
-- [`@modelcontextprotocol/ext-apps`](https://github.com/modelcontextprotocol/ext-apps) — SDK lato frontend.
-- Esempio di riferimento: [`seligj95/app-service-mcp-app-sample`](https://github.com/seligj95/app-service-mcp-app-sample).
+> **Data**: 2026-04-28
+> **Stato**: aperta — bozza preparatoria, in attesa di scelta di scope esplicita dell'utente.
+> **Slice referente**: voce TODO #3 "MCP server Roadbook per integrazione con Claude (nuovo repo `roadbook-mcp`)".
 
 ---
+
+## Stato
+
+**aperta**. Il documento confronta tre opzioni di design per `roadbook-mcp`. La raccomandazione corrente è l'**opzione A come v1.0** ([`2026-04-24-mcp-server-roadbook-scope-v1.md`](2026-04-24-mcp-server-roadbook-scope-v1.md)) con opzione B in backlog per v1.1 dopo POC. La decisione finale fra A / B / C / rinvio è in attesa.
+
+## Situazione
+
+L'estensione **MCP Apps** introdotta nella primavera 2026 (riferimento Microsoft Tech Community 8 aprile 2026) permette a un server MCP di esporre, oltre ai tool, **risorse UI HTML/JS/CSS** che il client chat (VS Code Copilot, Claude Desktop, ChatGPT) renderizza in iframe sandbox direttamente nella conversazione. Questo apre una via alternativa al disegno v1 di `roadbook-mcp` ([`2026-04-24-mcp-server-roadbook-scope-v1.md`](2026-04-24-mcp-server-roadbook-scope-v1.md)) basato su URL-payload + apertura tab esterna.
+
+Vincoli del confronto:
+
+- **Costo zero** preferito: nessun hosting custom, nessuna spesa ricorrente.
+- **Tempo al primo valore** breve: l'utente vuole iniziare a usare il flusso entro 1-2 settimane.
+- **Supporto host MCP Apps** ancora in evoluzione: non tutti i client chat supportano l'estensione, e con il rilascio recente la stabilità è da verificare.
+- **Vincoli CSP iframe sandbox**: alcuni provider tile (CartoDB, OSM) potrebbero non essere raggiungibili dall'iframe per via di policy CSP del client host.
+
+Tre opzioni di design valutate:
+
+- **Opzione A — URL-payload + tab esterna** (v1 esistente): server MCP stdio, tool che ritorna URL `?viaggio_data=<base64url>` cliccabile, PWA esterna apre la tab. Nessun hosting, costo zero, ~1 settimana.
+- **Opzione B — MCP App con UI bundled inline**: server MCP HTTP che espone risorsa UI in iframe sandbox direttamente nella chat. Hosting richiesto (Cloudflare Workers free tier), bundle UI dedicato, ~1.5-2 settimane.
+- **Opzione C — Ibrida A+B**: due tool nello stesso server MCP (`anteprima_itinerario` per consultazione inline + `apri_in_roadbook` per salvataggio nella PWA). ~3 settimane.
+
+## Scelta
+
+**Raccomandazione corrente**: opzione A come v1.0, opzione B in backlog per v1.1 dopo POC di verifica.
+
+Motivazioni:
+
+1. **Tempo al primo valore** breve (~1 settimana per A vs 1.5-2 per B), realizzabile in parallelo all'uso quotidiano della PWA.
+2. **Rischio tecnico minimo**: A non introduce dipendenze (hosting, supporto host MCP Apps, CSP tile) che oggi non esistono.
+3. **Costo zero confermato**: A non richiede hosting.
+4. **Path evolutivo aperto**: A non preclude B. Il server MCP di A può evolvere a server HTTP che espone anche risorse UI in v1.1, riusando validatore e codifica payload. Transizione additiva.
+5. **Degrado UX accettabile**: il "click sul link → tab esterna" non è ideale ma è familiare e funziona anche su client MCP che non supportano feature avanzate.
+
+**Quando riconsiderare**:
+
+- Se Claude Desktop pubblica un esempio ufficiale di MCP App che mostra mappe Leaflet senza problemi di CSP → valutare passaggio diretto a B saltando A.
+- Se l'utente trova fastidioso il cambio tab e usa il flusso più di una volta a settimana → l'investimento per B si giustifica.
+
+**Decisioni rinviate (devono essere chiuse prima dell'inizio implementazione)**:
+
+1. Repo `roadbook-mcp` già creato su GitHub? Se no, è il primo passo.
+2. Conferma stack: JavaScript puro + Node 22+ (coerenza con Roadbook).
+3. Trasporto MCP: stdio per A, HTTP/SSE per B/C.
+4. Hosting per B/C (se scelte): Cloudflare Workers free tier raccomandato.
+
+## Conseguenze
+
+**Positive** (opzione A come v1.0):
+
+- Realizzabile in ~1 settimana di lavoro, deployabile come repo Node.js installabile in Claude Desktop via stdio.
+- Niente nuove infrastrutture da mantenere.
+- Compatibile con qualsiasi client MCP che supporti stdio (oggi: Claude Desktop sicuro, VS Code Copilot quasi sicuro).
+- Permette di raccogliere osservazioni d'uso reale prima di investire in B.
+
+**Negative / vincoli introdotti**:
+
+- **Cambio di contesto utente**: la verifica visiva avviene in tab browser separata, non inline nella chat. Friction su flussi iterativi rapidi.
+- **Soglia URL ~30 KB**: itinerari grandi superano i limiti browser. Mitigation: warning espliciti, compressione rinviata a v1.2.
+- **Re-import manuale**: il viaggio modificato in chat va re-importato a mano nella PWA del device per uso sul campo. La voce TODO #2 "Login social" porterà sync automatico ma è scope diverso.
+- **Disallineamento validatori**: la validazione minima del MCP duplica logica della PWA. v2 prevede estrazione del validatore in pacchetto NPM condiviso.
+
+**Se in futuro si sceglie B/C invece di A**:
+
+- Aggiunta hosting (Cloudflare Workers free tier proposto): impegno operativo continuo per mantenerlo vivo.
+- Bundle UI dedicato: subset selettivo dei componenti Vue di Roadbook (MappaLeaflet, AreaPanel, PuntoCard, validatore) come pacchetto interno o git submodule.
+- Rischio CSP non chiuso: serve POC 0.5-1 giorno per verificare raggiungibilità tile dal sandbox iframe del client.
+- Privacy: il payload (itinerario) transita su Cloudflare Workers; documentare nei termini d'uso.
+
+---
+
+## Documento esteso
+
+> Quanto segue è il contenuto integrale dell'analisi tecnica del 2026-04-28. La sezione canonica sopra è la **versione vincolante** per future slice; questa appendice è l'analisi completa con confronti, costi dettagliati e roadmap proposte.
 
 ## Sommario
 
@@ -35,7 +103,7 @@ L'host mostra l'iframe inline nella conversazione, l'utente non lascia mai la ch
 
 ### Cosa cambia rispetto al disegno v1
 
-L'analisi v1 (vedere [`mcp-roadbook-v1.md`](mcp-roadbook-v1.md)) prevede:
+L'analisi v1 (vedere [`2026-04-24-mcp-server-roadbook-scope-v1.md`](2026-04-24-mcp-server-roadbook-scope-v1.md)) prevede:
 
 - Server MCP via trasporto stdio.
 - Tool `visualizza_itinerario` che valida il JSON e ritorna un URL `https://AldebaranPrimo.github.io/roadbook/?viaggio_data=<base64url>` cliccabile.
@@ -54,7 +122,7 @@ MCP Apps offre un'alternativa qualitativamente diversa:
 
 ### Opzione A — URL-payload + tab esterna (v1 esistente)
 
-Il disegno descritto in [`mcp-roadbook-v1.md`](mcp-roadbook-v1.md). Server MCP stdio, tool che genera URL, browser che apre tab sulla PWA pubblica.
+Il disegno descritto in [`2026-04-24-mcp-server-roadbook-scope-v1.md`](2026-04-24-mcp-server-roadbook-scope-v1.md). Server MCP stdio, tool che genera URL, browser che apre tab sulla PWA pubblica.
 
 **Punti di forza**:
 - Nessun hosting richiesto, nessun costo ricorrente.
@@ -186,7 +254,7 @@ Per Roadbook, dove il viaggio è pubblico-comunque (mete turistiche, niente dati
 
 ### Costo opzione A
 
-Già stimato in [`mcp-roadbook-v1.md`](mcp-roadbook-v1.md): ~1 settimana (scaffold + tool + validatore minimo + codifica URL + test E2E + slice additiva PWA per gestione `?viaggio_data`).
+Già stimato in [`2026-04-24-mcp-server-roadbook-scope-v1.md`](2026-04-24-mcp-server-roadbook-scope-v1.md): ~1 settimana (scaffold + tool + validatore minimo + codifica URL + test E2E + slice additiva PWA per gestione `?viaggio_data`).
 
 ### Costo opzione B
 
@@ -257,7 +325,7 @@ Indipendentemente dall'opzione scelta:
 4. **Hosting opzione B (se scelta)**: Cloudflare Workers free tier è la mia raccomandazione tecnica. Confermare o scegliere altrimenti.
 
 Specifico per opzione A:
-5. Decisioni già aperte in [`mcp-roadbook-v1.md`](mcp-roadbook-v1.md) §"Domande aperte". Ricondurre lì.
+5. Decisioni già aperte in [`2026-04-24-mcp-server-roadbook-scope-v1.md`](2026-04-24-mcp-server-roadbook-scope-v1.md) §"Domande aperte". Ricondurre lì.
 
 Specifico per opzione B:
 6. **Persistenza dello stato dell'iframe**: il viaggio mostrato nell'anteprima è sempre quello dell'ultimo tool result, oppure si tiene in stato dell'iframe? Implica decidere se l'iframe ha proprio storage (es. in memoria, oppure window.localStorage relativo al server MCP).
@@ -269,7 +337,7 @@ Specifico per opzione B:
 
 ### Roadmap conservativa (raccomandata)
 
-1. **Slice di scaffold `roadbook-mcp` v1.0** secondo [`mcp-roadbook-v1.md`](mcp-roadbook-v1.md). Esecuzione come da quel documento, ordine di slice 1-10 elencato lì.
+1. **Slice di scaffold `roadbook-mcp` v1.0** secondo [`2026-04-24-mcp-server-roadbook-scope-v1.md`](2026-04-24-mcp-server-roadbook-scope-v1.md). Esecuzione come da quel documento, ordine di slice 1-10 elencato lì.
 2. **Slice additiva `roadbook` PWA** per gestione `?viaggio_data` (già nel piano v1).
 3. **Uso reale di v1.0 per qualche settimana**, raccolta di osservazioni d'uso (frequenza, fastidio del cambio tab, dimensione tipica dei payload).
 4. **POC opzionale di MCP App in Claude Desktop**: 0.5 giorni per verificare supporto host e CSP tile. Se positivo, alimenta una decisione di scope per v1.1.
@@ -289,7 +357,7 @@ La differenza tra le due roadmap si gioca su quanto è alta la probabilità che 
 
 Questo documento è una **bozza** preparatoria al kickoff del task TODO #3. Non sostituisce la decisione di scope dell'utente. La decisione attesa è:
 
-- **Sì opzione A come da `mcp-roadbook-v1.md`** (status quo).
+- **Sì opzione A come da `2026-04-24-mcp-server-roadbook-scope-v1.md`** (status quo).
 - **Sì opzione A ora, B aggiunto come v1.1 dopo POC** (roadmap conservativa).
 - **Sì opzione B direttamente, salto A** (roadmap aggressiva).
 - **Sì opzione C ibrida** (massimo investimento).

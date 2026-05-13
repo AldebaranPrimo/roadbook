@@ -14,7 +14,7 @@ Lista delle cose da fare in futuro, in ordine di priorità logica (non strettame
 
 ### 1. Precaricamento offline totale al primo import
 
-**Analisi completata**: vedere [`analisi/prefetch-offline.md`](analisi/prefetch-offline.md). Verdetto SEMPLICE, 4 file toccati, ~198 righe, 0 nuove dipendenze.
+**Analisi completata**: vedere [`decisions/2026-04-24-prefetch-offline-strategia.md`](decisions/2026-04-24-prefetch-offline-strategia.md). Verdetto SEMPLICE, 4 file toccati, ~198 righe, 0 nuove dipendenze.
 
 **Scope implementativo** (`risk:medium`):
 - Nuova utility `src/utils/prefetch-offline.js` che espone `avviaPrefetch(viaggio, providerId)`, `annulla()`, `statoPrefetch` reattivo
@@ -52,11 +52,11 @@ Raccomandazioni dall'analisi: zoom default 12, zoom 13 solo su conferma esplicit
 
 **Design alternativi disponibili — scelta di scope ancora aperta**:
 
-- **Opzione A — URL-payload + tab esterna** ([`analisi/mcp-roadbook-v1.md`](analisi/mcp-roadbook-v1.md), pianificata in dettaglio): server MCP stdio, tool `visualizza_itinerario` che ritorna URL `?viaggio_data=<base64url>` cliccabile. La PWA Roadbook aperta in nuova tab decodifica e importa. Nessun hosting, costo zero, ~1 settimana di lavoro.
+- **Opzione A — URL-payload + tab esterna** ([`decisions/2026-04-24-mcp-server-roadbook-scope-v1.md`](decisions/2026-04-24-mcp-server-roadbook-scope-v1.md), pianificata in dettaglio): server MCP stdio, tool `visualizza_itinerario` che ritorna URL `?viaggio_data=<base64url>` cliccabile. La PWA Roadbook aperta in nuova tab decodifica e importa. Nessun hosting, costo zero, ~1 settimana di lavoro.
 - **Opzione B — MCP App con UI bundled inline** (estensione MCP Apps recente, riferimento [Microsoft, 8 aprile 2026](https://techcommunity.microsoft.com/blog/appsonazureblog/build-and-host-mcp-apps-on-azure-app-service/4509705)): server MCP HTTP che espone una risorsa UI (HTML+JS+CSS bundled) renderizzata in iframe sandbox direttamente nella chat Claude / VS Code Copilot / ChatGPT. Anteprima inline, niente cambio di contesto. Richiede hosting (Cloudflare Workers / Azure / altro) e bundle UI dedicato. ~1.5-2 settimane.
 - **Opzione C — Ibrida**: A + B come due tool dello stesso server MCP (`anteprima_itinerario` per consultazione inline + `apri_in_roadbook` per salvataggio definitivo nella PWA dell'utente). ~3 settimane.
 
-**Analisi di fattibilità dettagliata** delle tre opzioni: [`analisi/mcp-apps-roadbook-fattibilita.md`](analisi/mcp-apps-roadbook-fattibilita.md). Contiene confronto su costo, dipendenze (hosting, supporto host MCP Apps), vincoli iframe sandbox, raggiungibilità tile mappa, raccomandazione sintetica e roadmap proposte.
+**Analisi di fattibilità dettagliata** delle tre opzioni: [`decisions/2026-04-28-mcp-apps-fattibilita-scope.md`](decisions/2026-04-28-mcp-apps-fattibilita-scope.md). Contiene confronto su costo, dipendenze (hosting, supporto host MCP Apps), vincoli iframe sandbox, raggiungibilità tile mappa, raccomandazione sintetica e roadmap proposte.
 
 **Raccomandazione attuale**: opzione A come v1.0 (status quo già pianificato), opzione B in backlog per v1.1 dopo POC di verifica. Decisione finale rimandata al kickoff del task quando l'utente sceglie roadmap conservativa o aggressiva (vedere ultima sezione del documento di fattibilità).
 
@@ -147,28 +147,18 @@ Già previste come campi opzionali, da implementare quando emergono esigenze:
 
 ## Debito tecnico
 
-- **Ristrutturazione branch a tre livelli `main` + `production` + `develop`** (`risk:medium`, task di processo — da NON eseguire finché non pianificato esplicitamente). Decisione presa dall'utente il 2026-04-24 dopo il banner GitHub ricorrente "Compare & pull request" sul branch main. Modello target:
-  - `main` = branch principale di lavoro. Commit diretti ammessi per slice piccole, slice AI-led significative via `ai/{tipo}/{desc}` → merge su main.
-  - `production` = branch di pubblicazione. GitHub Pages deployà **solo** sui push qui. Il promotion avviene via push diretto `main:production` o via PR self-merge `main → production` (scelta da confermare al kickoff).
-  - `develop` = riservato a feature complesse multi-slice. Resta dormiente allineato a main finché non serve.
+Il debito tecnico è ora tracciato come **registro centralizzato** in [`docs/tech-debt.md`](tech-debt.md), in formato `TD-NNN` con sezioni di approccio suggerito per ciascuna voce. Vedi quel file per voci aperte e chiuse.
 
-  **Passi concreti alla partenza del task**:
-  1. Allinea locale: `git pull` su main e develop, cancella eventuali branch slice già mergiati.
-  2. Crea `production` da `origin/main` (snapshot attuale = stato pubblicato).
-  3. Modifica `.github/workflows/deploy.yml`: trigger `branches: [main]` → `branches: [production]`.
-  4. Riscrivi `CLAUDE.md` sezioni "Scale" e "Hosting" con il nuovo flusso a tre branch, rimuovi la regola "commit diretti su main solo per docs-only".
-  5. Bumpa versione (patch).
-  6. Aggiorna `CHANGELOG.md`.
-  7. Commit + push su main + primo push a production (per attivare il nuovo trigger sul deploy corrente).
-  8. Branch protection su production da Settings → Branches (a mano, lato utente).
+Voci attuali (riassunto, vedi il file per i dettagli completi):
 
-  **Note di rischio**: dopo il cambio trigger, il prossimo commit su main **non** sarà deployato finché non si fa il primo push a production (passo 7 parte integrante). Il default branch GitHub resta `main` (niente da toccare). Da discutere al kickoff: (a) push diretto vs PR per main → production; (b) tenere `develop` sincronizzato con main o lasciarlo indietro fino all'uso; (c) branch protection stringente o light.
-
-- **Test Vitest** per le utility pure (`valida-schema`, `routing-osrm` decoder, `mappe-esterne`). Non blocca nulla ora, ma crescerà di utilità man mano che le utility si complicano.
-- **Audit WCAG 2.1 AA**: skip link → `#main-content` (mancante), `aria-expanded` sul modal, controllo contrasti in tutti e 5 i provider tile + tema scuro, navigazione tastiera completa.
-- **ESLint + Prettier** configurati. Al momento non c'è lint step — un semplice `eslint-config` Vue 3 con regole blande coprirebbe già i casi critici (unused imports, var drift).
-- **TypeScript**: eventuale migrazione JS → TS. Scope contenuto (~15 file), beneficio concreto su `store-viaggi.js` e `valida-schema.js` che oggi ricostruiscono tipi "a mano" nei commenti. Da valutare quando la codebase cresce.
-- **Hook Claude Code** (`.claude/settings.json`): PostToolUse per auto-build su edit + SessionStart briefing. Utile soprattutto quando la codebase cresce o passiamo a `piccolo-team`.
+| ID | Titolo | Priorità |
+|---|---|---|
+| TD-001 | Ristrutturazione branch a tre livelli `main` + `production` + `develop` | media |
+| TD-002 | Test Vitest per le utility pure | bassa |
+| TD-003 | Audit WCAG 2.1 AA | media |
+| TD-004 | ESLint + Prettier non configurati | bassa |
+| TD-005 | Possibile migrazione JS → TS | bassa (valutativa) |
+| TD-006 | Hook Claude Code (`.claude/settings.json`) ulteriori | bassa |
 
 ---
 

@@ -1,12 +1,74 @@
-# Analisi — Precaricamento offline totale al primo import di un viaggio
+# Decisione — Strategia di precaricamento offline totale al primo import
 
-> Analisi di complessità della voce #5 del [TODO](../TODO.md) prima di iniziare l'implementazione.
-> Output richiesto: verdetto **semplice** vs **complesso** sulla base di criteri oggettivi.
-> Data: 2026-04-24.
+> **Data**: 2026-04-24
+> **Stato**: aperta — analisi di fattibilità conclusa, implementazione non ancora avviata.
+> **Slice referente**: voce TODO #1 "Precaricamento offline totale al primo import".
 
 ---
 
-## Criterio di decisione
+## Stato
+
+**aperta**. Analisi di scope completa, verdetto di complessità formulato. L'implementazione verrà eseguita in una slice dedicata (`ai/feat/prefetch-offline` da `develop`, `risk:medium`).
+
+## Situazione
+
+Roadbook è progettato per consultazione offline in zone montane senza connettività (caso d'uso primario: viaggiatore in camper). Oggi il routing OSRM viene cachato persistentemente all'apertura di ogni area, ma le **tile cartografiche** e le **foto** dei punti vengono scaricate on-demand alla prima navigazione di ciascuna area — quindi se l'utente importa un viaggio e va offline prima di aver aperto tutte le aree, alcune di esse mostreranno mappa nera o foto rotte.
+
+Si vuole quindi un **precaricamento totale**, una tantum al primo import, di tutte le risorse necessarie per la consultazione offline completa del viaggio.
+
+Vincoli:
+
+1. **Policy provider tile**: OpenStreetMap, OpenTopoMap vietano esplicitamente il "bulk downloading"; rispettare throttling conservativo e zoom moderato.
+2. **Cleanup all'eliminazione**: oggi `eliminaViaggio()` non tocca le cache del service worker (`map-tiles-*`), perché il SW non conserva associazione URL ↔ viaggio. Bisogna mantenere una inventory delle URL scaricate per viaggio.
+3. **UX**: progresso visibile, processo annullabile, non bloccare l'utente.
+4. **Criterio di slice "semplice"** definito dal team: < 300 righe diff, ≤ 4 file toccati, 0 nuove dipendenze runtime.
+
+Alternative considerate:
+
+- **A**: prefetch on-demand area-per-area gestito manualmente dall'utente (status quo, no slice).
+- **B**: prefetch globale automatico al primo import (questa decisione).
+- **C**: lasciar fare a un service worker più aggressivo che cachi tutto ciò che vede al primo accesso (rifiutata perché viola policy OSM e non gestisce il cleanup all'eliminazione).
+
+## Scelta
+
+**Opzione B con vincolo architetturale**: prefetch globale **manuale**, attivabile dall'utente dal modal Info tramite bottone "Prepara per uso offline", con auto-prefetch al primo import rinviato a una versione successiva.
+
+Articolazione:
+
+1. **Una sola utility nuova** `src/utils/prefetch-offline.js` che orchestra prefetch di tile + foto + routing e mantiene lo stato reattivo condiviso (composable accorpato nello stesso file, non separato).
+2. **Bump schema IndexedDB a `DB_VERSION = 2`** con nuovo object store `prefetchInventory` (chiave `viaggioId`, valore `{ urls, cacheNames, salvatoIl }`).
+3. **Modifica `eliminaViaggio()`** per pulire le cache SW basandosi sull'inventory.
+4. **Default zoom prefetch tile = 12** (Friuli: ~147 tile, ~4 MB). Zoom 13+ disponibile su conferma utente esplicita con avviso sulla policy OSM.
+5. **Throttling**: 2 thread max contemporanei per tile (conformità OSM); 3-4 thread per foto; sequenziale per routing.
+
+## Conseguenze
+
+**Positive**:
+
+- Roadbook diventa pienamente utilizzabile offline dopo il primo prefetch, allineato al caso d'uso target.
+- L'inventory + cleanup risolve la perdita silenziosa di spazio (cache SW di viaggi eliminati che restavano per sempre).
+- Architettura predisposta per auto-prefetch in versione successiva: basta cambiare il trigger.
+
+**Negative / vincoli introdotti**:
+
+- Slice da 5 file, ~248 righe — leggermente sopra il valore tipico "semplice" (≤ 4 file), accettato come trade-off per non frammentare ulteriormente.
+- Bump `DB_VERSION` richiede test esplicito che i dati esistenti sopravvivano all'upgrade incrementale.
+- Onere di mantenimento dell'inventory: ogni nuovo provider tile o nuovo tipo di risorsa cacheable richiede aggiornamento alla raccolta URL.
+- Volume disco per il device dell'utente: 4 MB (Friuli zoom 12) + foto variabili — accettabile per uso camper/mobile, da rivedere se mai si vorrà includere viaggi con centinaia di foto in HD.
+
+**Decisioni rinviate alla slice implementativa**:
+
+- Auto-prefetch al primo import → versione successiva, fuori scope di questa decisione.
+- Strategia di retry per tile/foto falliti → loggare e continuare, non bloccare il prefetch.
+- Priorità di caricamento → routing prima (più critico), poi tile, poi foto.
+
+---
+
+## Documento esteso
+
+> Quanto segue è il contenuto integrale dell'analisi originale del 2026-04-24, conservato per memoria del ragionamento dietro la scelta. La sezione canonica sopra è la **versione vincolante** per future slice; questa appendice è di consultazione.
+
+### Criterio di decisione
 
 Una slice viene considerata **semplice** se rientra in **tutti** i seguenti limiti:
 
@@ -16,9 +78,7 @@ Una slice viene considerata **semplice** se rientra in **tutti** i seguenti limi
 
 Se uno di questi è violato, la slice va classificata **complessa** e suddivisa in più sub-slice incrementali.
 
----
-
-## Requisito
+### Requisito completo
 
 Al primo accesso online dopo l'import di un nuovo viaggio, l'app deve precaricare:
 
@@ -32,11 +92,9 @@ Ulteriore requisito: la UX deve mostrare il progresso, essere annullabile e risp
 
 **Requisito aggiuntivo (inventory + cleanup)**: quando l'utente elimina un viaggio, vanno eliminate anche le risorse scaricate in cache per quel viaggio specifico. Oggi `eliminaViaggio()` pulisce `visitati`, `note`, `routing` (entry prefissate con il `viaggioId`) ma **non** tocca le cache del service worker (`map-tiles-*`, future `photos-*`), perché il SW non conserva associazione URL ↔ viaggio. Il prefetch deve quindi mantenere in IndexedDB una **inventory** degli URL scaricati per ciascun viaggio, e all'eliminazione chiamare `caches.open(nomeCache).delete(url)` per ogni URL dell'inventory, poi svuotare l'inventory stessa. Senza questo meccanismo, nel tempo la cache SW si riempie di risorse di viaggi eliminati.
 
----
+### Scomposizione tecnica
 
-## Scomposizione tecnica
-
-### 1. Prefetch tile — MEDIA complessità
+#### 1. Prefetch tile — MEDIA complessità
 
 **Algoritmo**:
 
@@ -61,7 +119,7 @@ Range utile per camper = **zoom 10–13**: **~595 tile totali**. A ~30 KB/tile =
 
 **Complessità di codice**: ~60 righe in una nuova utility `src/utils/prefetch-offline.js`.
 
-### 2. Prefetch foto — BASSA complessità
+#### 2. Prefetch foto — BASSA complessità
 
 **Algoritmo**:
 
@@ -75,7 +133,7 @@ Range utile per camper = **zoom 10–13**: **~595 tile totali**. A ~30 KB/tile =
 
 **Cambio SW necessario**: +1 pattern `runtimeCaching` in `vite.config.js` per URL `image/*` (o più permissivo: qualsiasi hostname non in blacklist). Rischio: la cache delle immagini può crescere molto; va limitata con `expiration: { maxEntries: 500, maxAgeSeconds: 60*60*24*90 }`.
 
-### 3. Prefetch routing — TRIVIAL
+#### 3. Prefetch routing — TRIVIAL
 
 **Algoritmo**:
 
@@ -89,7 +147,7 @@ Usa infrastruttura esistente (`src/utils/routing-osrm.js`), la cache è già per
 
 **Complessità di codice**: ~5 righe.
 
-### 4. UI di progresso — MEDIA complessità
+#### 4. UI di progresso — MEDIA complessità
 
 **Scope**:
 
@@ -100,14 +158,14 @@ Usa infrastruttura esistente (`src/utils/routing-osrm.js`), la cache è già per
 
 **Complessità di codice**: ~100 righe tra composable + componente modale.
 
-### 5. Persistenza stato — TRIVIAL
+#### 5. Persistenza stato — TRIVIAL
 
 - Flag `preferenze.prefetchCompletato:<viaggioId>` in IndexedDB per sapere se un viaggio ha già fatto prefetch. Quando l'utente riapre un viaggio già prefetchato → nessun prompt automatico.
 - L'utente può sempre ripetere il prefetch manualmente dal modal Info ("Ripeti prefetch").
 
 **Complessità di codice**: ~10 righe.
 
-### 6. Inventory URL + cleanup all'elimina viaggio — BASSA complessità
+#### 6. Inventory URL + cleanup all'elimina viaggio — BASSA complessità
 
 **Nuovo object store IndexedDB** `prefetchInventory`, chiave `viaggioId`, valore `{ viaggioId, urls: string[], cacheNames: string[], salvatoIl }`. Durante il prefetch, raccolta incrementale di tutte le URL scaricate per quel viaggio.
 
@@ -128,11 +186,9 @@ if (inventory) {
 
 **Bump schema IndexedDB**: la nuova store richiede un `upgrade()` incrementale. Siccome oggi siamo `DB_VERSION = 1`, va portata a `2` con l'aggiunta del nuovo store (non-distruttivo, le store esistenti restano intatte).
 
----
+### Policy dei provider di tile
 
-## Policy dei provider di tile
-
-### OpenStreetMap standard ([policy ufficiale](https://operations.osmfoundation.org/policies/tiles/))
+#### OpenStreetMap standard ([policy ufficiale](https://operations.osmfoundation.org/policies/tiles/))
 
 > *"Heavy use (e.g. distributing an app that uses tiles from www.openstreetmap.org) is forbidden without prior permission."*
 > *"OSMF operates these tile servers on a shoestring budget. Avoid usage patterns that impact server load unnecessarily."*
@@ -147,21 +203,19 @@ Limiti desunti dalla community:
 
 **Raccomandazione**: zoom max 12 per il prefetch automatico (Friuli → ~147 tile totali, ~4 MB), con avviso all'utente *"lo zoom 13+ verrà scaricato on-demand durante la navigazione"*. Zoom 13 solo su conferma esplicita dell'utente con un messaggio che spiega la policy.
 
-### CartoDB ([policy](https://carto.com/attributions/))
+#### CartoDB ([policy](https://carto.com/attributions/))
 
 Meno restrittiva di OSM. Nessun rate limit dichiarato per uso non-commerciale. Prefetch a zoom 13 dovrebbe essere sicuro.
 
-### OpenTopoMap ([policy](https://opentopomap.org/credits.php))
+#### OpenTopoMap ([policy](https://opentopomap.org/credits.php))
 
 Simile a OSM, gestita da volontari. Raccomandato uso moderato.
 
-### Rischio complessivo
+#### Rischio complessivo
 
 **Medio-basso**: 600 tile una tantum per utente, spalmati su 10 secondi di throttling, sono trascurabili rispetto al traffico aggregato dei tile server. L'app **non deve** eseguire prefetch periodicamente né in background: è one-shot per `viaggio.id`.
 
----
-
-## Stima file toccati
+### Stima file toccati
 
 | File | Tipo | Righe stimate |
 |---|---|---|
@@ -174,9 +228,7 @@ Simile a OSM, gestita da volontari. Raccomandato uso moderato.
 
 **Totale**: 6 file, ~248 righe.
 
----
-
-## Verdetto
+### Verdetto
 
 | Criterio | Soglia | Stima | Esito |
 |---|---|---|---|
@@ -186,7 +238,7 @@ Simile a OSM, gestita da volontari. Raccomandato uso moderato.
 
 **Risultato**: i due nuovi file (`prefetch-offline.js` + `usePrefetchOffline.js`) + i tre file di wiring (`store-viaggi.js` per inventory, `ModalInfo.vue`, `App.vue`) + `vite.config.js` spingono il conteggio a 6 file. Accorpando il composable dentro l'utility si torna a 5 file. L'aggiunta del requisito "cleanup cache all'elimina viaggio" ha costretto a toccare `store-viaggi.js` (bump `DB_VERSION`, nuovo object store, modifica di `eliminaViaggio`) rendendo la slice **leggermente più corposa** della stima iniziale ma comunque **gestibile in una slice singola**.
 
-### Verdetto aggiornato: **MEDIO-SEMPLICE**, con condizione architetturale
+#### Verdetto aggiornato: **MEDIO-SEMPLICE**, con condizione architetturale
 
 La slice implementativa va strutturata così:
 
@@ -199,15 +251,13 @@ La slice implementativa va strutturata così:
 
 Con questa condizione: **5 file, ~248 righe, 0 nuove dipendenze → rientra ancora nei criteri di "semplice"** (sotto 300 righe, sotto 6 file con un margine). La slice resta fattibile in un singolo giro ma richiede **attenzione particolare all'upgrade di schema IndexedDB** (cambio a `DB_VERSION = 2`): va testata che i dati esistenti in storage non vengano persi dall'upgrade.
 
-### Prossime azioni consigliate
+#### Prossime azioni consigliate
 
 1. Mergiare la PR di questa analisi per fissarne il contenuto.
 2. Aprire slice `ai/feat/prefetch-offline` separata, implementativa, da `develop` aggiornato. Rischio dichiarato: `risk:medium` (volume dati, UX del progresso, policy OSM da rispettare).
 3. Nella implementazione, default zoom 12 + opzione zoom 13 con conferma utente, come raccomandato sopra.
 
----
-
-## Appendice — Decisioni lasciate alla slice implementativa
+### Appendice — Decisioni lasciate alla slice implementativa
 
 Queste sono scelte minori che non influiscono sul verdetto di complessità:
 
