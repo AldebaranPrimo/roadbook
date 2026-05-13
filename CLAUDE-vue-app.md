@@ -1,7 +1,7 @@
 # AI Execution Contract — Vue 3 standalone app (no backend)
 
-> **Data ultimo aggiornamento**: 2026-05-12
-> **Data ultima sincronizzazione**: 2026-05-12
+> **Data ultimo aggiornamento**: 2026-05-13
+> **Data ultima sincronizzazione**: 2026-05-13
 >
 > Origin: derived from `CLAUDE-dotnet-vue-apps.md` (Skoda). **Relaxed** contract for self-contained Vue 3 apps without their own backend, deployed as static sites (GitHub Pages / Netlify / Cloudflare Pages / Vercel).
 > Language: English for body, Italian retained for canonical doc templates (ADR/request/incident sections describing files that will be written in Italian unless the per-repo `CLAUDE.md` declares otherwise). Scope: small-scope projects, single or small teams, often in MVP or beta phase.
@@ -262,7 +262,7 @@ The user sees their own screen; the AI does not. If the user reports that a file
 
 ## Documentation Layout & Lifecycle
 
-This is the **primary architectural decision** of this contract for documentation. The repo's `Docs/` folder is the single source of truth for project documentation. Git provides versioning, **not the reading interface** — the AI and the human read filesystem markdown files, not PR threads or external trackers.
+This is the **primary architectural decision** of this contract for documentation. The repo's `docs/` folder is the single source of truth for project documentation. Git provides versioning, **not the reading interface** — the AI and the human read filesystem markdown files, not PR threads or external trackers.
 
 ### Documentation primary target: LLM, secondarily human
 
@@ -279,13 +279,13 @@ This priority ordering has practical consequences:
 The three folders below host **atomic** documents: one event = one file, sealed once its lifecycle ends. File naming: `YYYY-MM-DD-slug.md` (date the item was opened). Slug in Italian, kebab-case, max 4-5 words.
 
 ```
-Docs/
+docs/
 ├── decisions/        ← architectural / technical decisions (ADR-style)
 ├── requests/         ← client requests with full interlocution log
 └── incidents/        ← production incidents and post-mortems
 ```
 
-**`Docs/decisions/`** — Decisions taken by the team about how to build/configure something. Once accepted, immutable. Superseded only by a later decision file that explicitly references the predecessor.
+**`docs/decisions/`** — Decisions taken by the team about how to build/configure something. Once accepted, immutable. Superseded only by a later decision file that explicitly references the predecessor.
 
 Sezioni canoniche (italiano):
 ```
@@ -302,7 +302,7 @@ Sezioni canoniche (italiano):
 [impatti positivi e negativi, vincoli che si introducono]
 ```
 
-**`Docs/requests/`** — Client-originated requests with the full interlocution. The file is *active* (status updated as interlocution progresses) until the request is closed (implemented, rejected, or withdrawn).
+**`docs/requests/`** — Client-originated requests with the full interlocution. The file is *active* (status updated as interlocution progresses) until the request is closed (implemented, rejected, or withdrawn).
 
 Sezioni canoniche:
 ```
@@ -322,7 +322,7 @@ Sezioni canoniche:
 [link al branch/commit/PR, eventuali note di chiusura, link a doc tecnica nuova se prodotta]
 ```
 
-**`Docs/incidents/`** — Production incidents and post-mortems. Sealed once the incident is closed and the lesson is documented.
+**`docs/incidents/`** — Production incidents and post-mortems. Sealed once the incident is closed and the lesson is documented.
 
 Sezioni canoniche:
 ```
@@ -346,7 +346,7 @@ Sezioni canoniche:
 
 **Default: file singolo** dentro la cassetto.
 
-Promuovi a cartella `Docs/<cassetto>/YYYY-MM-DD-slug/` con `README.md` indice + allegati solo se almeno **due** dei seguenti sono veri:
+Promuovi a cartella `docs/<cassetto>/YYYY-MM-DD-slug/` con `README.md` indice + allegati solo se almeno **due** dei seguenti sono veri:
 - Stima > 1 settimana di lavoro
 - ≥ 3 interlocuzioni cliente formali previste
 - ≥ 2 artefatti tecnici aggiuntivi (mockup, diagrammi, dati di esempio, allegati binari)
@@ -354,11 +354,11 @@ Promuovi a cartella `Docs/<cassetto>/YYYY-MM-DD-slug/` con `README.md` indice + 
 
 Sotto la soglia: il file `.md` singolo è auto-sufficiente. **Mai** creare cartelle scheletro vuote o file scheletro con sezioni vuote in attesa di essere riempite.
 
-### Live tech debt — `Docs/tech-debt.md` (single file)
+### Live tech debt — `docs/tech-debt.md` (single file)
 
 Technical debt accumulates in fragments across the codebase. Inline `TODO(refactor):` / `TODO(perf):` / `FIXME:` markers are the **primary discovery mechanism for the human reading code** but are insufficient as a tracking system: they're easily lost in greps, hard to prioritize, hard to summarize.
 
-A **single living file** `Docs/tech-debt.md` is the central registry. Single file (not a cassetto folder) because:
+A **single living file** `docs/tech-debt.md` is the central registry. Single file (not a cassetto folder) because:
 - Tech debt is a **catalog** that grows and shrinks, not a series of atomic events
 - LLM agents consume it more efficiently as a single read (one ID lookup, full context)
 - Items have shared lifecycle (opened → in-progress → closed), not independent ones
@@ -398,9 +398,9 @@ When an entry transitions to `chiuso`, move it under "Voci chiuse" with a closur
 
 When the corresponding inline marker exists in code (e.g. `TODO(td-001):`), it must match the ID in this file. The marker is the in-code pointer; this file is the authoritative tracker. **In-code marker without entry here = bug**: open the entry.
 
-### Doc viva (non ADR-style) — root of `Docs/`
+### Doc viva (non ADR-style) — root of `docs/`
 
-Beyond the cassetti and `tech-debt.md`, `Docs/` hosts **living technical docs** that change over time as the codebase evolves:
+Beyond the cassetti and `tech-debt.md`, `docs/` hosts **living technical docs** that change over time as the codebase evolves:
 
 - `README-*.md` — operational guides (deploy, import/export, alert system)
 - `DEPLOY-*.md` — deploy procedures
@@ -415,34 +415,34 @@ Naming: free-form descriptive Title-Case or kebab-case, no `YYYY-MM-DD-` prefix.
 Claude Code's memory layer can live in **two places**:
 
 - **External** (default): `~/.claude/projects/<project-hash>/memory/` — gitignored by definition (outside the repo), lives on the developer's machine.
-- **Internal**: `Docs/claude-memory/` — committed to the repo, shared across machines/team members.
+- **Internal**: `docs/claude-memory/` — committed to the repo, shared across machines/team members.
 
 The choice is **per-project**, taken once and held consistently. Mixing the two (some memory files inside, some outside) is forbidden — it creates ambiguity about which is authoritative.
 
-Per-repo `CLAUDE.md` declares which mode the project uses. If internal, `CLAUDE.md` instructs the AI to read `Docs/claude-memory/*.md` at session start. If external, the AI reads via the standard auto-memory mechanism.
+Per-repo `CLAUDE.md` declares which mode the project uses. If internal, `CLAUDE.md` instructs the AI to read `docs/claude-memory/*.md` at session start. If external, the AI reads via the standard auto-memory mechanism.
 
 ### Anti-pattern da evitare
 
-1. **Cartelle scheletro vuote** (`Docs/requests/2026-05-01-foo/{request,questions,answers,decision}.md` con file vuoti) — pure noise, harms LLM efficiency.
+1. **Cartelle scheletro vuote** (`docs/requests/2026-05-01-foo/{request,questions,answers,decision}.md` con file vuoti) — pure noise, harms LLM efficiency.
 2. **`README.md` indice manuale aggiornato a mano** in ogni sottocartella — diventa stale rapidamente. Se serve un indice, lasciar fare a `git ls-files` o a uno script.
-3. **Strutture > 2 livelli di profondità** sotto `Docs/` — `Docs/clients/zordan/requests/2026/05/...` è ingegnerizzazione preventiva.
+3. **Strutture > 2 livelli di profondità** sotto `docs/` — `docs/clients/zordan/requests/2026/05/...` è ingegnerizzazione preventiva.
 4. **Mescolare doc viva e doc atomica** nella stessa cartella.
 5. **Eliminare voci chiuse di tech-debt** invece di archiviarle in-place — perde la storia.
-6. **Cassetti annidati** (`Docs/decisions/architettura/`, `Docs/requests/2026/`) — flat per definition.
+6. **Cassetti annidati** (`docs/decisions/architettura/`, `docs/requests/2026/`) — flat per definition.
 
 ### Legacy documentation — co-existence with pre-existing docs
 
 This chapter does not impose retroactive migration of existing documentation. When a repo adopts this contract, the documentation already present stays where it is and operates in **permanent co-existence** with the new structure. The rules:
 
-**A. Definition of "legacy"** — Everything in `Docs/` (or equivalent) **at the date this chapter is adopted in the per-repo `CLAUDE.md`**. That date must be explicitly declared in the per-repo `CLAUDE.md` as `Data adozione Documentation Layout: YYYY-MM-DD`. Without an explicit adoption date, legacy and new are indistinguishable.
+**A. Definition of "legacy"** — Everything in `docs/` (or equivalent) **at the date this chapter is adopted in the per-repo `CLAUDE.md`**. That date must be explicitly declared in the per-repo `CLAUDE.md` as `Data adozione Documentation Layout: YYYY-MM-DD`. Without an explicit adoption date, legacy and new are indistinguishable.
 
-**B. Physical position** — Legacy docs stay where they are. They are not moved into `Docs/legacy/` or elsewhere. Moving them breaks internal links from code/commit messages, bookmarks, external references — high cost, zero benefit.
+**B. Physical position** — Legacy docs stay where they are. They are not moved into `docs/legacy/` or elsewhere. Moving them breaks internal links from code/commit messages, bookmarks, external references — high cost, zero benefit.
 
-**C. Distinction by position** — Anything inside `Docs/decisions/`, `Docs/requests/`, `Docs/incidents/`, and `Docs/tech-debt.md` follows the new structure. Anything outside these cassetti is legacy *or* a stack-specific living doc (architecture, runbook, glossaries) that does not fit the three cassetti — they co-exist.
+**C. Distinction by position** — Anything inside `docs/decisions/`, `docs/requests/`, `docs/incidents/`, and `docs/tech-debt.md` follows the new structure. Anything outside these cassetti is legacy *or* a stack-specific living doc (architecture, runbook, glossaries) that does not fit the three cassetti — they co-exist.
 
 **D. Conversion is optional** — Conversion from legacy to the new format is **not mandatory**. It happens ONLY when, during an update to a legacy doc, a new decision/incident/request emerges that deserves to live in a cassetto. In that case:
 - create the ADR-style file in the cassetto,
-- leave the legacy where it is, optionally with a cross-reference (`> See Docs/decisions/2026-MM-DD-X.md for the current decision`),
+- leave the legacy where it is, optionally with a cross-reference (`> See docs/decisions/2026-MM-DD-X.md for the current decision`),
 - the legacy remains as historical memory / pre-decision snapshot.
 
 An overly rigid rule ("every time you touch X, you must redo it as ADR") leads to workarounds. Optional is better.
@@ -512,8 +512,8 @@ When scaffolding a new repo of this family, the root `CLAUDE.md` should contain 
 9. **SW update policy** (if PWA active) — `autoUpdate`, `user-prompt`, `periodic-check`, or other; with any details (e.g., "Update now" toast).
 10. **Exceptions to family contract** — every deviation from I-01..I-15 with rationale. If none, state so explicitly.
 11. **Do-not list** — repo-specific footguns, **not** duplicates of the *Forbidden* section of the generic contract.
-12. **Documentation Layout adoption date** — date this repo adopted the *Documentation Layout & Lifecycle* chapter (`Data adozione Documentation Layout: YYYY-MM-DD`). Everything in `Docs/` before this date is legacy documentation per that chapter.
-13. **Legacy documentation** — list of legacy files/folders in `Docs/` (or equivalent) pre-existing the chapter adoption, with a one-line summary each. If there is no legacy doc, state so explicitly.
+12. **Documentation Layout adoption date** — date this repo adopted the *Documentation Layout & Lifecycle* chapter (`Data adozione Documentation Layout: YYYY-MM-DD`). Everything in `docs/` before this date is legacy documentation per that chapter.
+13. **Legacy documentation** — list of legacy files/folders in `docs/` (or equivalent) pre-existing the chapter adoption, with a one-line summary each. If there is no legacy doc, state so explicitly.
 
 ### Recommended
 
@@ -572,7 +572,7 @@ If a section would be empty, declare it ("no deviation from family contract") ra
 Only non-trivial revisions are recorded here.
 
 - **2026-05-12** (rev 8) — Added the cross-family chapter `Code documentation standard` after *Documentation Layout & Lifecycle*. Mandatory header comments on files, exported functions, and components — explicit override of the Claude Code global "no comments by default" rule for this family (file/function-level documentation, not inline narration). Propagated in one direct-modification session to all 9 master contracts and all 9 consumer copies. Snapshot pre-modification in `storico/2026-05-12-direct-code-doc-standard/`.
-- **2026-05-08** (rev 7) — Translated the contract from Italian to English for consistency with the other family contracts (5/8 already in English including the family root `CLAUDE-dotnet-vue-legacy.md`) and to gain ~25–40% token efficiency on every context load. The canonical sections of ADR/request/incident/tech-debt templates inside *Documentation Layout & Lifecycle* remain in Italian (they describe the doc files which are written in Italian unless the per-repo `CLAUDE.md` declares otherwise). H3 headers inside that chapter (`### Anti-pattern da evitare`, `### Doc viva (non ADR-style) — root of Docs/`, `### Soglia "file singolo vs cartella dedicata"`) also remain in Italian, matching the precedent set by the other 5 English contracts. No semantic change to any rule.
+- **2026-05-08** (rev 7) — Translated the contract from Italian to English for consistency with the other family contracts (5/8 already in English including the family root `CLAUDE-dotnet-vue-legacy.md`) and to gain ~25–40% token efficiency on every context load. The canonical sections of ADR/request/incident/tech-debt templates inside *Documentation Layout & Lifecycle* remain in Italian (they describe the doc files which are written in Italian unless the per-repo `CLAUDE.md` declares otherwise). H3 headers inside that chapter (`### Anti-pattern da evitare`, `### Doc viva (non ADR-style) — root of docs/`, `### Soglia "file singolo vs cartella dedicata"`) also remain in Italian, matching the precedent set by the other 5 English contracts. No semantic change to any rule.
 - **2026-05-07** (rev 6) — Removed the contract's semver versioning system in favor of the "Data ultimo aggiornamento" convention (alignment with `_master-contracts/CLAUDE.md` §4). The header no longer declares `Versione contratto: vX.Y.Z`. The mandatory point "Versione contratto di famiglia" of the per-repo `CLAUDE.md` minimum sections has been rewritten as "Allineamento col contratto di famiglia" in terms of `Data ultima sincronizzazione`. Past historical entries retain `(rev N)` as atomic identifier, only `= vX.Y.Z` removed. Change applied as direct modification not from sync (`_master-contracts/CLAUDE.md` §9.3).
 - **2026-04-24** (rev 5) — Fix of the syntax to activate GitHub Copilot's automatic review: the correct string is `@copilot review`, **not** `@copilot esegui revisione`. Applied in 3 points of the contract (Step 5 Phase 4, Step 4.5 ↔ Step 5 relation note, revision history). No semantic change.
 - **2026-04-24** (rev 4) — Consolidated update derived from constructive criticism of rev 1. Explicit semver versioning of the contract (declared in header, every per-repo `CLAUDE.md` must declare the version it conforms to). New invariants added: I-13 performance budget with override-able defaults, I-14 external links with `rel="noopener"`, I-15 export/import of local user data. Expanded invariants: I-05 (mandatory storage migrations, reverse or reset), I-07 (user input sanitization + URL protocol whitelist), I-08 (declared SW update policy + new external resource requires SW runtime caching), I-11 (indefinite cache duration + mandatory attribution), I-12 (TS only if `tsconfig.json` present). Per-repo `CLAUDE.md` minimum sections extended: contract version, project language, performance budget, SW policy. Docs-only exception now includes `package.json` metadata. New prohibition: regenerating lockfiles by hand. Phase 4 Steps 1-3 made harness-agnostic. Clarified that Step 4.5 remains a mandatory gate even with `@copilot review` (rev 3). Repos conformant to rev 1 must add to their `CLAUDE.md` the sections "Contract version" (later renamed, see rev 6), "Project language", "Performance budget", "SW policy"; no other breaking changes.
