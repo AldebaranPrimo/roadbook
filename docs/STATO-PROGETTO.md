@@ -25,7 +25,7 @@ PWA per consultare itinerari di viaggio da file JSON, online e offline. Caso d'u
 - Selettore stile mappa con 5 provider (OpenStreetMap / CartoDB Voyager / Positron / OpenTopoMap / Dark Matter) + OSM default con filtro CSS invertito in tema scuro + runtime caching SW esteso.
 - Geolocalizzazione "tu sei qui" live sulla mappa via `watchPosition` singolo condiviso, consenso al primo rendering mappa, niente re-prompt se l'utente nega.
 - Schema JSON v1.1 con campo root opzionale `annotazioni` (visitati + note portabili), bottone "Esporta viaggio" con checkbox *"Includi le mie note e visite"*, conferma a 3 opzioni in import quando il JSON contiene annotazioni.
-- Analisi di fattibilità del prefetch offline (`docs/analisi/prefetch-offline.md`): verdetto SEMPLICE, slice implementativa prevista come prossima prioritaria.
+- Analisi di fattibilità del prefetch offline ([`docs/decisions/2026-04-24-prefetch-offline-strategia.md`](decisions/2026-04-24-prefetch-offline-strategia.md)): verdetto SEMPLICE, slice implementativa prevista come prossima prioritaria.
 - Numero di versione visibile (badge header + sezione in modal Info con SHA commit + data build) + auto-update PWA con toast "Aggiorna ora" via `virtual:pwa-register/vue`.
 - Documento `SPECIFICHE-APP.md` alleggerito a storico del giorno zero (rimosso schema ridondante, disclaimer in testa); nuovo `public/schema/viaggio-1.1.md` come schema vivente accessibile via URL statica, pensato per essere passato a un LLM.
 - Help sostanzioso nella modal import con link allo schema e all'esempio Friuli; bottone GitHub nell'header; fix sanitizzazione emoji nel popup marker.
@@ -162,7 +162,7 @@ GitHub Pages via `.github/workflows/deploy.yml` a ogni push su `main`. Build Nod
 - **Nessun meccanismo di sync cloud**: tutto locale al dispositivo. Il refactor per supportarlo sarà guidato dall'astrazione già presente in `store-viaggi.js`.
 - **WCAG AA non completamente auditato** in v1.0. Obbligatorio sulle modifiche future.
 - **Test automatici assenti**: backstop con smoke Playwright manuale su `npm run preview` (vedere [`CLAUDE.md`](../CLAUDE.md) sezione Test).
-- **Prefetch offline** dei tile/foto/routing non ancora implementato — oggi i dati cartografici si cachanno solo via navigazione attiva dell'utente. L'analisi è pronta in [`docs/analisi/prefetch-offline.md`](analisi/prefetch-offline.md), verdetto SEMPLICE.
+- **Prefetch offline** dei tile/foto/routing non ancora implementato — oggi i dati cartografici si cachanno solo via navigazione attiva dell'utente. L'analisi è pronta in [`docs/decisions/2026-04-24-prefetch-offline-strategia.md`](decisions/2026-04-24-prefetch-offline-strategia.md), verdetto SEMPLICE.
 
 ## Comandi utili
 

@@ -4,9 +4,25 @@ PWA per consultare itinerari di viaggio da file JSON, online e offline. Caso d'u
 
 > **Questo file contiene solo le regole specifiche del repo Roadbook.** Tutto ciò che non è qui segue il contratto di famiglia `CLAUDE-vue-app.md` nella stessa cartella. Leggere prima quello, poi questo.
 
-## Versione contratto di famiglia
+## Allineamento col contratto di famiglia
 
-Conforme a [`CLAUDE-vue-app.md`](CLAUDE-vue-app.md) **v1.1.1** (rev 5 del 2026-04-24 — patch sintassi `@copilot review`).
+**Data ultima sincronizzazione**: 2026-05-13 (rev 8 del 2026-05-12 — capitolo *Code documentation standard*, header obbligatori).
+
+Il contratto di famiglia non si versiona più con semver (vedi rev 6 di `CLAUDE-vue-app.md`): l'allineamento avviene per data esplicita di sincronizzazione, attraverso sessioni guidate di review. Questo repo è valido sulla rev del 2026-05-12 finché non si fa la prossima sincronizzazione.
+
+## Data adozione Documentation Layout
+
+**Data adozione Documentation Layout**: 2026-05-13.
+
+Tutto ciò che era in `docs/` prima del 2026-05-13 è da considerarsi documentazione legacy ai sensi del capitolo *Documentation Layout & Lifecycle* del contratto, salvo i tre file dell'ex `docs/analisi/` che sono stati convertiti retroattivamente in ADR sotto `docs/decisions/` con la stessa data di sincronizzazione (scelta consapevole dell'autore di praticare il nuovo pattern, in deroga alla raccomandazione del contratto sulla non-retroattività).
+
+## Legacy documentation
+
+L'unico file dichiarato legacy ai sensi del capitolo *Documentation Layout & Lifecycle*:
+
+- [`docs/SPECIFICHE-APP.md`](docs/SPECIFICHE-APP.md) — Specifiche iniziali del 24/4/2026. Alleggerito al 24/4 a documento storico del giorno zero. Contiene contesto iniziale e §6 "Problemi noti e lezioni apprese" ancora valido. Non consultare per scelte correnti.
+
+Tutti gli altri file in `docs/` sono **doc viva** (`TODO.md`, `CHANGELOG.md`, `STATO-PROGETTO.md`, `tech-debt.md`) o **ADR** (`docs/decisions/*.md`), nessun altro legacy.
 
 ## Lingua del progetto
 
@@ -123,9 +139,12 @@ Deviazioni da `CLAUDE-vue-app.md`:
 
 - **JavaScript, non TypeScript** — il progetto è JS puro. Di conseguenza I-12 si applica solo per le parti disponibili: `npm run build` obbligatorio; `npm run type-check` non esiste (non c'è lint step configurato al momento — quando sarà aggiunto l'eslint, questa eccezione si accorcia).
 - **Lingua di UI, errori e commenti**: **italiano**. Anche gli identificatori di dominio (variabili, funzioni, file) sono in italiano (`useViaggio`, `aree`, `chiavePunto`). I nomi tecnici universali (hook Vue, API standard: `ref`, `computed`, `onMounted`, `fetch`) restano inglesi.
-- **Accessibilità WCAG AA (I-09)** è un obiettivo, ma non completamente auditato in v1.0. Obbligatorio sulle modifiche future; debito attuale tracciato come `TODO(a11y):` dove rilevato.
+- **Accessibilità WCAG AA (I-09)** è un obiettivo, ma non completamente auditato in v1.0. Obbligatorio sulle modifiche future; debito attuale tracciato come [`TD-003`](docs/tech-debt.md) e come `TODO(a11y):` inline dove rilevato.
+- **`docs/` minuscolo** — il contratto cita `Docs/` con D maiuscola come convenzione default. Roadbook usa `docs/` minuscolo per coerenza storica con i commit precedenti, convenzione npm/Node, e supporto nativo di GitHub Pages alla root `/docs`. Rinominare la cartella romperebbe link nei commit storici senza valore concreto.
+- **Code documentation standard applicato solo a file nuovi** — il capitolo rev 8 del contratto introduce header obbligatori su file, exported function/composable/class/method, e component. In Roadbook applichiamo gli header **a regime su file nuovi** e a file modificati in modo sostanziale (slice tematica su quel file). Niente refactor retroattivo di massa sulla codebase v1.0. Il livello di copertura crescerà organicamente nelle slice future.
+- **Memoria Claude esterna** — la scelta per-progetto su "memoria interna vs esterna" (capitolo *Claude memory — internal vs external*) per Roadbook è **esterna**, default del contratto: la memoria vive in `~/.claude/projects/d---RedBones-Tomita-roadbook/memory/`, gitignorata, locale alla macchina dell'autore. Non duplicare i contenuti dentro il repo.
 
-Nessun'altra deviazione rispetto a I-01..I-12.
+Nessun'altra deviazione rispetto a I-01..I-15.
 
 ---
 
