@@ -84,8 +84,8 @@ export function validaViaggio(dato) {
       if (!eStringaNonVuota(a.nome)) {
         errori.push(`${prefix}: "nome" mancante.`)
       }
-      if (a.modalita && !['auto', 'piedi'].includes(a.modalita)) {
-        avvisi.push(`${prefix}: "modalita" "${a.modalita}" non riconosciuta (attese: auto, piedi). Userò "auto".`)
+      if (a.modalita && !['auto', 'piedi', 'bici', 'treno', 'autobus', 'traghetto'].includes(a.modalita)) {
+        avvisi.push(`${prefix}: "modalita" "${a.modalita}" non riconosciuta (attese: auto, piedi, bici, treno, autobus, traghetto). Userò "auto".`)
       }
       if (!Array.isArray(a.punti) || a.punti.length === 0) {
         errori.push(`${prefix}: "punti" mancante o vuoto (serve almeno 1 punto).`)

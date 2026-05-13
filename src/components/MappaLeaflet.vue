@@ -30,7 +30,7 @@ let cerchioAccuratezza = null
 // fuori tempo e sovrascrive la polyline dell'area corrente. Ogni chiamata a
 // disegna() incrementa idDisegno e a fine async controlla che sia ancora "la sua".
 let idDisegno = 0
-const origineRouting = ref(null) // 'cache' | 'osrm' | 'retta'
+const origineRouting = ref(null) // 'cache' | 'osrm' | 'retta' | 'retta-mezzo'
 
 const { tema } = useTema()
 const { posizione: posizioneUtente, stato: statoGeo, richiedi: richiediGeo } = useGeolocalizzazione()
@@ -183,10 +183,15 @@ async function disegna() {
   origineRouting.value = esito.origine
   emit('stato', { origine: esito.origine, punti: punti.length })
 
-  const stile = esito.origine === 'retta'
-    ? { color: '#888', weight: 3, opacity: 0.65, dashArray: '6 6' }
-    : { color: '#16a34a', weight: 4, opacity: 0.85 }
+  const stile = stilePolyline(esito.origine)
   polyline = L.polyline(esito.coord, stile).addTo(mappa)
+}
+
+function stilePolyline(origine) {
+  if (origine === 'retta' || origine === 'retta-mezzo') {
+    return { color: '#888', weight: 3, opacity: 0.65, dashArray: '6 6' }
+  }
+  return { color: '#16a34a', weight: 4, opacity: 0.85 }
 }
 
 function evidenziaMarker(n) {
@@ -322,9 +327,7 @@ defineExpose({ evidenziaMarker, ricalcolaRouting: async () => {
     forzaAggiornamento: true
   })
   if (polyline) polyline.remove()
-  const stile = esito.origine === 'retta'
-    ? { color: '#888', weight: 3, opacity: 0.65, dashArray: '6 6' }
-    : { color: '#16a34a', weight: 4, opacity: 0.85 }
+  const stile = stilePolyline(esito.origine)
   polyline = L.polyline(esito.coord, stile).addTo(mappa)
   origineRouting.value = esito.origine
   emit('stato', { origine: esito.origine, punti: props.area.punti.length })
@@ -337,6 +340,9 @@ defineExpose({ evidenziaMarker, ricalcolaRouting: async () => {
     <div ref="contenitore" class="mappa" aria-label="Mappa dell'area"></div>
     <p v-if="origineRouting === 'retta'" class="banner-retta" role="status">
       Percorso non ancora calcolato: mostrata linea retta tra i punti. Riapri l'area online per calcolare il percorso reale.
+    </p>
+    <p v-else-if="origineRouting === 'retta-mezzo'" class="banner-retta" role="status">
+      Linea retta tra i punti: il routing è attualmente solo stradale, non disponibile per treno, autobus o traghetto.
     </p>
   </div>
 </template>

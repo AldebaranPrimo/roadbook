@@ -126,9 +126,22 @@ Ogni area è un blocco geografico/tematico del viaggio. Un viaggio tipico ha 3-1
 | `id` | int | **sì** | Numero intero univoco tra le aree del viaggio |
 | `nome` | string | **sì** | Nome dell'area, mostrato come tab |
 | `intro` | string | no | Descrizione introduttiva mostrata sopra la lista punti |
-| `modalita` | `"auto"` \| `"piedi"` | no | Default `"auto"`. Determina il profilo OSRM e lo stile della polyline |
+| `modalita` | enum stringa | no | Default `"auto"`. Valori: `"auto"`, `"piedi"`, `"bici"`, `"treno"`, `"autobus"`, `"traghetto"`. Vedere sotto |
 | `tags` | array string | no | Tag liberi a livello area |
 | `punti` | array | **sì** | Almeno 1 punto (vedi sotto) |
+
+### Valori di `modalita`
+
+| Valore | Significato | Routing |
+|---|---|---|
+| `auto` (default) | Spostamenti in automobile, camper, moto | OSRM stradale |
+| `piedi` | Trekking, passeggiate, centro storico a piedi | OSRM stradale |
+| `bici` | Tappa in bicicletta | OSRM stradale |
+| `treno` | Tratta in treno | **Linea retta** (vedi nota) |
+| `autobus` | Tratta in pullman / autobus di linea | **Linea retta** (vedi nota) |
+| `traghetto` | Tratta in traghetto / nave / imbarcazione | **Linea retta** (vedi nota) |
+
+> **Nota sul routing**: Roadbook usa il server pubblico OSRM, che oggi fornisce solo routing stradale. Per coerenza, `auto`/`piedi`/`bici` chiamano OSRM (in attesa che il server supporti profili distinti, il percorso è lo stesso per le tre modalità). Per `treno`/`autobus`/`traghetto` un routing stradale sarebbe attivamente fuorviante, perciò si mostra una linea retta tra i punti, segnalata con un banner sopra la mappa. La limitazione è documentata nel README del progetto.
 
 ---
 

@@ -115,7 +115,27 @@ Bottone che apre il prossimo punto non marcato come visitato nell'area corrente,
 
 `?viaggio=<id>&area=<id>&punto=<n>` → apre l'app focalizzata su quel punto. Utile per condividere un luogo specifico via WhatsApp/email senza dover descrivere dove cercarlo.
 
-### 11. Estensioni schema JSON (v1.2+)
+### 11. Multimodalità all'interno di una singola area
+
+Oggi `area.modalita` vale per tutti i punti dell'area. Scenario non coperto: "arrivo in macchina al parcheggio del rifugio, poi sentiero a piedi, ritorno in funivia" come **unica** escursione, dove spezzare in due o tre aree contigue snatura l'unitarietà dell'attività dal punto di vista dell'utente.
+
+**Approcci da progettare** (almeno tre, non mutuamente esclusivi):
+
+- `modalita` sulla tratta `punto-N → punto-(N+1)`, magari come campo opzionale sul punto di destinazione della tratta
+- Sotto-tratte esplicite con array `tratte: [{ da: 1, a: 2, modalita: 'auto' }, ...]` a livello area
+- Modalità ereditata dal punto di partenza, con un campo `modalita` opzionale sul singolo punto
+
+**Impatti implementativi attesi**:
+
+- OSRM chiamato a pezzi per le tratte stradali, risultati concatenati
+- Polyline disegnata con stile diverso per ogni tratta (colore? linea tratteggiata vs piena? differenziazione per modalità non stradale)
+- Cache routing IndexedDB con granularità per tratta (oggi è per area)
+- Validatore + schema doc + UI etichette aggiornati
+- Backwards-compat: viaggi v1.1 con solo `area.modalita` devono continuare a funzionare uguale
+
+**Non urgente**: prima valutiamo se le 6 modalità per area introdotte con la slice di maggio 2026 coprono già abbastanza casi reali. Riapriamo la discussione quando emerge un itinerario concreto che lo richiede. Aperta una issue GitHub dedicata per il follow-up.
+
+### 12. Estensioni schema JSON (v1.2+)
 
 Già previste come campi opzionali, da implementare quando emergono esigenze:
 - `giorni`: array opzionale per viaggi suddivisi in giornate (alternativa a `aree`)
