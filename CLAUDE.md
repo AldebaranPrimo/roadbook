@@ -6,7 +6,7 @@ PWA per consultare itinerari di viaggio da file JSON, online e offline. Caso d'u
 
 ## Allineamento col contratto di famiglia
 
-**Data ultima sincronizzazione**: 2026-05-13 (rev 8 + estensioni 2026-05-13: *Scope discipline* nell'intro e *Tech debt & issue tracker* capability-gated nel capitolo Documentation Layout).
+**Data ultima sincronizzazione**: 2026-05-13 (rev 8 + estensioni 2026-05-13: *Scope discipline* nell'intro, *Tech debt & issue tracker* capability-gated, *Issue conventions* con `risk:<level>` label e branch naming `ai/<slice-type>/<issue-id>-<slug>`).
 
 Il contratto di famiglia non si versiona più con semver (vedi rev 6 di `CLAUDE-vue-app.md`): l'allineamento avviene per data esplicita di sincronizzazione, attraverso sessioni guidate di review. Questo repo è valido sulla rev del 2026-05-12 finché non si fa la prossima sincronizzazione.
 
@@ -33,6 +33,15 @@ Tutti gli altri file in `docs/` sono **doc viva** (`TODO.md`, `CHANGELOG.md`, `S
 Se in futuro emergerà una voce TD significativa (es. che richiede input di un tester o di un secondo dev, che ha contorni decisionali aperti, che beneficia di tracking visibile), si aprirà la corrispondente issue GitHub con cross-link `→ issue #N` nella voce. La policy resta `github`, l'applicazione è graduata caso per caso.
 
 Le issue oggi aperte (#30 estensione modalità, #31 multimodalità intra-area) sono **feature/enhancement utenti-rilevanti**, non voci di tech-debt — sono tracciate dove devono essere, su GitHub Issues, non in `tech-debt.md`.
+
+**Convenzioni issue su questo repo** (allineate al contratto rev 2026-05-13):
+
+- **Lingua**: italiano (default del contratto, esplicitato qui).
+- **Tono**: tecnico, succinto, niente prosa lunga.
+- **Branch ↔ issue linkage**: i branch che chiudono una issue specifica usano il pattern `ai/<slice-type>/<issue-id>-<slug>` (es. `ai/feat/30-modalita-mezzi-vari`). I branch puramente di docs/refactor/contratto che non chiudono issue restano col vecchio pattern `ai/<slice-type>/<slug>`.
+- **Commit message**: riferimento `(#N)` se la slice chiude una issue; PR body con `Closes #N` / `Fixes #N` per auto-close al merge.
+- **`risk:<level>` label**: ogni issue code-change porta `risk:low` / `risk:medium` / `risk:high` / `risk:critical` (label create il 2026-05-13). Le definizioni stack-specific vivono in §*Execution Workflow / Phase 1 Task intake* del contratto di famiglia: riflettono il *cognitive blast radius* (cosa va riconsiderato dopo il cambio + complessità del rollback plan), non un file-count. La label guida la review depth, il flusso PR, e il rollback plan.
+  - Stato attuale repo: #30 ha `risk:low` (chiusa dalla PR #32 confermata risk:low); #31 ha `risk:high` (multimodalità intra-area con decisione di design ancora aperta).
 
 ## Lingua del progetto
 
