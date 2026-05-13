@@ -1,6 +1,6 @@
 # AI Execution Contract — Vue 3 standalone app (no backend)
 
-> **Data ultimo aggiornamento**: 2026-05-13 (Scope discipline + Tech debt & issue tracker)
+> **Data ultimo aggiornamento**: 2026-05-13 (YAML front matter dei cassetti + TD-D-NNN decisioni differite)
 > **Data ultima sincronizzazione**: 2026-05-13
 >
 > Origin: derived from `CLAUDE-dotnet-vue-apps.md` (Skoda). **Relaxed** contract for self-contained Vue 3 apps without their own backend, deployed as static sites (GitHub Pages / Netlify / Cloudflare Pages / Vercel).
@@ -289,12 +289,20 @@ docs/
 └── incidents/        ← production incidents and post-mortems
 ```
 
+**Front matter YAML**: ogni file nuovo dei tre cassetti apre con un blocco YAML come fonte di verità dei metadati (stato, date, supersession, cross-reference). Schema completo (campi obbligatori e opzionali, gestione del cambio cassetto, `review-trigger`, validazione): vedi `CLAUDE-meta.md` §*Documentation Layout / YAML schema canonico per i file dei cassetti*. Schema-version corrente: 1.
+
 **`docs/decisions/`** — Decisions taken by the team about how to build/configure something. Once accepted, immutable. Superseded only by a later decision file that explicitly references the predecessor.
 
 Sezioni canoniche (italiano):
 ```
-## Stato
-[aperta | accettata | superata-da: <file>]
+---
+id: <slug del filename senza estensione>
+stato: <aperta | accettata | superata>
+data-apertura: YYYY-MM-DD
+schema-version: 1
+tag: [tag1, tag2]                          # opzionale
+superata-da: <filename>                     # obbligatorio se stato=superata
+---
 
 ## Situazione
 [contesto, vincoli, alternative considerate]
@@ -304,14 +312,23 @@ Sezioni canoniche (italiano):
 
 ## Conseguenze
 [impatti positivi e negativi, vincoli che si introducono]
+
+## Review trigger
+[opzionale: condizione esplicita che, se verificata, motiva la riapertura — versione discorsiva del campo YAML `review-trigger`]
 ```
 
 **`docs/requests/`** — Client-originated requests with the full interlocution. The file is *active* (status updated as interlocution progresses) until the request is closed (implemented, rejected, or withdrawn).
 
 Sezioni canoniche:
 ```
-## Stato
-[aperta | approvata | implementata | chiusa | respinta | superata-da: <file>]
+---
+id: <slug del filename senza estensione>
+stato: <aperta | approvata | implementata | chiusa | respinta | superata>
+data-apertura: YYYY-MM-DD
+schema-version: 1
+tag: [tag1, tag2]                          # opzionale
+superata-da: <filename>                     # obbligatorio se stato=superata
+---
 
 ## Richiesta
 [testo originale del cliente, mail/messaggio, citazione letterale]
@@ -330,8 +347,14 @@ Sezioni canoniche:
 
 Sezioni canoniche:
 ```
-## Stato
-[in-corso | risolto | chiuso]
+---
+id: <slug del filename senza estensione>
+stato: <in-corso | risolto | chiuso>
+data-apertura: YYYY-MM-DD
+schema-version: 1
+severity: <bassa | media | alta | critica>   # opzionale
+tag: [tag1, tag2]                          # opzionale
+---
 
 ## Sintomo
 [cosa l'utente / il monitoraggio ha visto]
@@ -371,10 +394,16 @@ A **single living file** `docs/tech-debt.md` is the central registry. Single fil
 Format (LLM-friendly):
 
 ```markdown
+---
+id: tech-debt
+ultimo-aggiornamento: YYYY-MM-DD
+schema-version: 1
+---
+
 # Tech Debt
 
 ## Convention
-- ID format: `TD-NNN` (zero-padded 3 digits)
+- ID format: `TD-NNN` (debito tecnico classico — codice da rifattorizzare) oppure `TD-D-NNN` (debito decisionale — decisioni differite, vedi sezione dedicata)
 - Status: `aperto` | `in-corso` | `chiuso` (closed entries kept under "Voci chiuse" section)
 - Inline marker (optional): `TODO(td-001)` in code → matches the entry here
 
@@ -388,15 +417,27 @@ Format (LLM-friendly):
 - **Motivo**: ...
 - **Approccio suggerito**: ...
 
+### TD-D-001 — <titolo breve di una decisione differita>
+- **Stato**: aperto
+- **Priorità**: bassa | media | alta
+- **File coinvolti**: `path/to/foo.ext`
+- **Aperto il**: YYYY-MM-DD
+- **Trigger di riapertura**: <condizione esplicita e testabile — obbligatoria per TD-D-NNN>
+- **Motivo del rinvio**: <perché si è deciso di non intervenire ora>
+
 (altre voci...)
 
 ## Voci chiuse
 
 ### TD-XYZ — <titolo>
 - **Stato**: chiuso il YYYY-MM-DD
-- **Risolto da**: branch/commit/PR
+- **Risolto da**: branch/commit/PR (per TD-D-NNN: link all'ADR creato)
 - **Note**: ...
 ```
+
+Front matter YAML del file (`id`, `ultimo-aggiornamento`, `schema-version`) e voci `TD-D-NNN` (decisioni differite) seguono lo schema canonico definito in `CLAUDE-meta.md` §*Documentation Layout / YAML schema canonico per i file dei cassetti*.
+
+Asimmetria voluta: il `review-trigger` è opzionale negli ADR del cassetto `decisions/`, ma il `Trigger di riapertura` è **obbligatorio** nelle voci `TD-D-NNN` — senza trigger esplicito una decisione differita è solo procrastinazione mascherata.
 
 When an entry transitions to `chiuso`, move it under "Voci chiuse" with a closure note. Don't delete — closed items are part of the project's debt history.
 
