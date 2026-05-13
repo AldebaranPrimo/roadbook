@@ -6,8 +6,20 @@ import { leggiRouting, salvaRouting } from './store-viaggi.js'
 const BASE_OSRM = 'https://router.project-osrm.org/route/v1'
 const TIMEOUT_MS = 5000
 
+// Modalità per cui non ha senso un routing stradale: il percorso resta
+// volutamente una linea retta tra i punti, segnalata da origine 'retta-mezzo'.
+const MODALITA_NON_STRADALI = ['treno', 'autobus', 'traghetto']
+
 function profiloPer(modalita) {
-  return modalita === 'piedi' ? 'foot' : 'driving'
+  switch (modalita) {
+    case 'piedi': return 'foot'
+    case 'bici': return 'cycling'
+    default: return 'driving'
+  }
+}
+
+export function richiedeRoutingStradale(modalita) {
+  return !MODALITA_NON_STRADALI.includes(modalita)
 }
 
 function coordinateStringa(punti) {
@@ -62,7 +74,9 @@ async function chiamaOsrm(punti, modalita) {
 }
 
 /**
- * Ritorna un oggetto { coord: [[lat, lon], ...], origine: 'cache' | 'osrm' | 'retta' }.
+ * Ritorna un oggetto { coord: [[lat, lon], ...], origine: 'cache' | 'osrm' | 'retta' | 'retta-mezzo' }.
+ * - Se la modalità è treno / autobus / traghetto, salta del tutto OSRM e ritorna retta-mezzo
+ *   (un percorso stradale calcolato sarebbe attivamente fuorviante per mezzi su rotaia / acqua).
  * - Se c'è routing in cache IndexedDB per (viaggioId, areaId) → lo usa (anche offline).
  * - Altrimenti chiama OSRM, salva in cache, ritorna.
  * - Se OSRM fallisce (timeout, offline, errore) → polyline retta tra i punti.
@@ -70,6 +84,10 @@ async function chiamaOsrm(punti, modalita) {
 export async function ottieniPercorso({ viaggioId, areaId, punti, modalita = 'auto', forzaAggiornamento = false }) {
   if (!punti || punti.length < 2) {
     return { coord: (punti || []).map(p => [p.lat, p.lon]), origine: 'retta' }
+  }
+
+  if (!richiedeRoutingStradale(modalita)) {
+    return { coord: punti.map(p => [p.lat, p.lon]), origine: 'retta-mezzo' }
   }
 
   if (!forzaAggiornamento) {

@@ -268,6 +268,19 @@ Per i dettagli sul perché **non** ESRI (problema di proiezione), **non** Alpine
 
 ---
 
+## Limitazioni note
+
+### Routing solo stradale, indipendentemente dalla modalità
+
+Lo schema viaggio v1.1 prevede sei modalità per ogni area (`auto`, `piedi`, `bici`, `treno`, `autobus`, `traghetto`), ma il **routing reale** è oggi disponibile solo su rete stradale, attraverso il server pubblico OSRM. Conseguenze concrete:
+
+- **`auto`, `piedi`, `bici`**: il percorso disegnato segue la rete stradale. Il server pubblico OSRM non distingue i profili di routing (test empirico maggio 2026: stessa risposta per `driving`, `foot`, `cycling`), quindi in pratica le tre modalità producono lo stesso percorso. L'enum è già predisposto per il giorno in cui si passerà a un router che supporta profili distinti (GraphHopper, OSRM self-hosted, altro).
+- **`treno`, `autobus`, `traghetto`**: nessun routing viene calcolato. Sulla mappa viene tracciata una **linea retta** tra i punti, con un banner discreto che lo segnala. Mostrare un percorso stradale per un mezzo su rotaia o su acqua sarebbe attivamente fuorviante.
+
+Se l'itinerario contiene tappe miste (es. arrivo a Civitavecchia in auto, attraversata in traghetto a Olbia, esplorazione locale a piedi), la soluzione corrente è suddividere in aree distinte. Una multimodalità per tratte all'interno di una stessa area è registrata in `docs/TODO.md` come miglioria futura.
+
+---
+
 ## Documenti correlati
 
 - **[`docs/STATO-PROGETTO.md`](docs/STATO-PROGETTO.md)** — snapshot dello stato attuale del sistema

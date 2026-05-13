@@ -1,359 +1,581 @@
-# Contratto di esecuzione AI — Vue 3 app standalone (senza backend)
+# AI Execution Contract — Vue 3 standalone app (no backend)
 
-> **Versione contratto**: `1.1.1` (semver). Incrementi minor = aggiunte compatibili (nuovi invarianti, chiarimenti). Incrementi major = breaking change (rimozione o rinomina di invarianti, cambio di default che rompe repo conformi). Il `CLAUDE.md` di repo dichiara la versione a cui si conforma.
-> Origine: derivazione da `CLAUDE-dotnet-vue-apps.md` (Skoda). Contratto **rilassato** per app Vue 3 autonome senza backend proprio, deployate come sito statico (GitHub Pages / Netlify / Cloudflare Pages / Vercel).
-> Lingua: italiano per corpo, inglese per termini tecnici universali (slice, gate, commit, push, PR). Ambito: progetti di portata contenuta, team mono-developer o piccolo, spesso in fase MVP o beta.
-> Storico revisioni in coda.
+> **Data ultimo aggiornamento**: 2026-05-12
+> **Data ultima sincronizzazione**: 2026-05-12
+>
+> Origin: derived from `CLAUDE-dotnet-vue-apps.md` (Skoda). **Relaxed** contract for self-contained Vue 3 apps without their own backend, deployed as static sites (GitHub Pages / Netlify / Cloudflare Pages / Vercel).
+> Language: English for body, Italian retained for canonical doc templates (ADR/request/incident sections describing files that will be written in Italian unless the per-repo `CLAUDE.md` declares otherwise). Scope: small-scope projects, single or small teams, often in MVP or beta phase.
+> See *Revision history* at the bottom for non-trivial revisions.
 
-Questo documento regola il comportamento dell'agente AI sui progetti di questa famiglia. **Non è documentazione di prodotto**: è una policy di esecuzione in runtime.
+This document governs AI agent behavior on projects in this family. It is a **runtime execution policy**, not product documentation.
 
-L'AI deve seguire queste regole in modo stretto. Se un task non è eseguibile entro questi vincoli, l'AI si ferma e chiede chiarimento. Dove un punto è segnato come "rilassato" può essere saltato nelle condizioni indicate.
-
----
-
-## Ambito
-
-Progetti che soddisfano **tutte** le seguenti:
-
-- **Frontend puro Vue 3** (`<script setup>`, Composition API), senza un proprio backend attivo. Eventuali servizi esterni consumati (tile server, API pubbliche come OSRM, endpoint REST di terzi) sono usati in *sola lettura* e non fanno parte del repo.
-- **Build statico** — Vite o equivalente, output `dist/` servibile da qualsiasi CDN statica.
-- **Storage locale** — `localStorage`, `IndexedDB`, `sessionStorage`. Nessun DB gestito nel repo.
-- **Single dev o piccolo team**, deploy su ambiente personale/ricreativo/piccolo cliente; nessuna QA dedicata.
-
-**Fuori scope**: app SSR (Nuxt/Astro full-stack), front-end accoppiati tightly a un backend interno nello stesso repo (→ vedere `CLAUDE-dotnet-vue-apps.md`), siti marketing / landing puri, applicazioni mobile native.
+The AI must follow these rules strictly. If a task cannot be executed within these constraints, the AI stops and asks for clarification. Where a rule is marked "relaxed", it can be skipped under the stated conditions.
 
 ---
 
-## Scale del progetto
+## Scope
 
-| Scale | Definizione |
+Projects that meet **all** of the following:
+
+- **Pure Vue 3 frontend** (`<script setup>`, Composition API), with no active backend of their own. External services consumed (tile servers, public APIs like OSRM, third-party REST endpoints) are read-only and not part of the repo.
+- **Static build** — Vite or equivalent, `dist/` output servable from any static CDN.
+- **Local storage** — `localStorage`, `IndexedDB`, `sessionStorage`. No DB managed in the repo.
+- **Single dev or small team**, deploy to personal/recreational/small-client environment; no dedicated QA.
+
+**Out of scope**: SSR apps (Nuxt/Astro full-stack), frontends tightly coupled to an internal backend in the same repo (→ see `CLAUDE-dotnet-vue-apps.md`), pure marketing/landing sites, native mobile applications.
+
+---
+
+## Project scale
+
+| Scale | Definition |
 |---|---|
-| 👤 **solo** | Dev singolo, uso personale o piccolo pubblico. **Default di questa famiglia.** |
-| 🧪 **mvp** | Prima fase prima del rilascio pubblico stabile. Le regole di `solo` + disciplina di commit extra |
-| 👥 **piccolo-team** | 2-4 dev, una parte d'utenti esterni. Si attivano PR, review, branch protection |
-| 🔧 **porting** | Migrazione da stack precedente (Vue 2 → 3, Options API → Composition) |
+| 👤 **solo** | Single dev, personal use or small audience. **Default of this family.** |
+| 🧪 **mvp** | Early phase before stable public release. `solo` rules + extra commit discipline |
+| 👥 **small-team** | 2-4 devs, some external users. PR, review, branch protection are activated |
+| 🔧 **porting** | Migration from previous stack (Vue 2 → 3, Options API → Composition) |
 
-Regole **rilassate** per `solo` / `mvp` / `porting`:
+Rules **relaxed** for `solo` / `mvp` / `porting`:
 
-- Branch model completo (`ai/{slice-type}/{desc}` → `develop` → `main`) → su `solo` / `mvp` è ammesso **commit diretto su `develop`** senza branch intermedio, se la slice è piccola e ben circoscritta. Il passaggio `develop` → `main` resta manuale.
-- PR formali con review → su `solo` le PR sono self-merge; su `mvp` si apre comunque la PR (utile come diario), ma il dev può mergiare da solo.
-- Test automatici Vitest / Playwright obbligatori → rilassati a **consigliati**. Un test manuale documentato (checklist, screenshot Playwright ad hoc) è un sostituto accettabile su `solo` / `mvp`.
-- Separate staging environment → non richiesto; il preview locale (`npm run preview`) è il banco di prova.
+- Full branch model (`ai/{slice-type}/{desc}` → `develop` → `main`) → on `solo` / `mvp` **direct commit on `develop`** is allowed without intermediate branch, if the slice is small and well-circumscribed. The `develop` → `main` promotion remains manual.
+- Formal PRs with review → on `solo`, PRs are self-merge; on `mvp` the PR is opened anyway (useful as a journal), but the dev can merge alone.
+- Mandatory automated Vitest / Playwright tests → relaxed to **recommended**. A documented manual test (checklist, ad-hoc Playwright screenshot) is an acceptable substitute on `solo` / `mvp`.
+- Separate staging environment → not required; local preview (`npm run preview`) is the test bench.
 
-Regole **strette** indipendentemente dalla scale:
+Rules **strict regardless of scale**:
 
-- Tutti gli **Invariants di stack** (I-01..I-15 più sotto).
-- `npm run type-check` (se TS) + `npm run build` devono passare prima di un commit.
-- Secrets (API key, token) mai committati. `.env*` mai nel repo.
-- Nessuna nuova dipendenza runtime senza una ragione dichiarata nella task/commit.
-- Nessuna modifica di `base` / `publicPath` / percorsi di deploy fuori da una slice dedicata.
+- All **Stack Invariants** (I-01..I-15 below).
+- `npm run type-check` (if TS) + `npm run build` must pass before commit.
+- Secrets (API keys, tokens) never committed. `.env*` never in repo.
+- No new runtime dependency without a declared reason in the task/commit.
+- No changes to `base` / `publicPath` / deploy paths outside a dedicated slice.
 
 ---
 
-## Modello di sviluppo
+## Development model
 
-Sviluppo **AI-First, slice-driven**.
+**AI-First, slice-driven** development.
 
-Una *slice* è un'unità di lavoro: verticalmente completa, testabile indipendentemente, minimale nello scope, rilasciabile e soprattutto **rollback-ready**.
+A *slice* is a unit of work: vertically complete, independently testable, minimal in scope, releasable, and above all **rollback-ready**.
 
-Slice tipiche: nuovo componente, nuovo composable, nuovo view/route, nuova utility, nuova sezione di settings, refactor di un unico file, bugfix puntuale, adeguamento a una nuova versione di dipendenza.
+Typical slices: new component, new composable, new view/route, new utility, new settings section, single-file refactor, point bugfix, adaptation to a new dependency version.
 
-Una slice **non** dovrebbe mescolare:
-- feature nuove e refactor "di passaggio"
-- bugfix e modifiche di stile cosmetiche non richieste
-- aggiornamenti di dipendenze e logica applicativa
+A slice should **not** mix:
+- new features and "drive-by" refactors
+- bugfixes and unsolicited cosmetic style changes
+- dependency updates and application logic
 
-Se un intervento supera naturalmente questi confini, va **spezzato** in slice separate committate in sequenza.
+If an intervention naturally exceeds these boundaries, it must be **split** into separate slices committed in sequence.
 
 ---
 
 ## File Scope Rule
 
-L'AI deve modificare solo:
+The AI must modify only:
 
-- i file esplicitamente listati nel task
-- i file strettamente necessari a far compilare / buildare / passare il type-check dopo le modifiche richieste
+- the files explicitly listed in the task
+- the files strictly necessary to make the build/type-check pass after the requested changes
 
-L'AI **non** deve:
+The AI **must not**:
 
-- refattorizzare componenti non toccati dalla slice
-- cambiare path alias, tsconfig, vite.config fuori da una slice dedicata
-- aggiungere una nuova dipendenza senza un task che lo giustifichi
-- fare bump major di framework (Vue 3.x → 4, Vite 5 → 6) in una slice non dedicata al bump
-- toccare configurazioni di deploy (`vite.config.js` `base`, `.github/workflows/*`, `manifest` di PWA) fuori da una slice di infrastructure
-
----
-
-## Debito tecnico — in-line markers
-
-Il *File Scope Rule* vieta i refactor opportunistici, ma non vieta di **annotare** il debito trovato lungo il percorso.
-
-Convenzione: `// TODO(<tag>): <motivo>` in una riga sola. Tag canonici:
-
-- `TODO(refactor):` debito strutturale
-- `TODO(perf):` debito di performance (re-render inutili, bundle size, N+1 fetch)
-- `TODO(a11y):` accessibilità (aria, contrasto, keyboard)
-- `TODO(i-NN):` violazione di un invariante specifico di questo contratto (es. `TODO(i-05): legge direttamente da localStorage, va passato dallo store astratto`)
-- `FIXME:` comportamento rotto che l'autore non ha potuto sistemare nella slice corrente
-
-Annotare un TODO in una slice che non è un refactor è **permesso e incoraggiato**: è documentazione, non il refactor stesso. Il refactor vero resta un'altra slice.
-
-Per debito cross-file senza una sola home naturale, è accettabile un `docs/TECHDEBT.md` con: titolo, file coinvolti, severity, approccio suggerito.
+- refactor components not touched by the slice
+- change path aliases, tsconfig, vite.config outside a dedicated slice
+- add a new dependency without a task that justifies it
+- bump major framework versions (Vue 3.x → 4, Vite 5 → 6) in a slice not dedicated to the bump
+- touch deploy configurations (`vite.config.js` `base`, `.github/workflows/*`, PWA `manifest`) outside an infrastructure slice
 
 ---
 
-## Workflow di esecuzione
+## Technical debt — in-line markers
 
-### Fase 1 — Intake del task
+The *File Scope Rule* forbids opportunistic refactors but does not forbid **annotating** debt found along the way.
 
-Verificare che il task abbia: **Contesto**, **Goal**, **File coinvolti**, **Vincoli**, **Criteri di accettazione**. Se manca uno di questi, fermarsi e chiedere.
+Convention: `// TODO(<tag>): <reason>` on a single line. Canonical tags:
 
-**Risk classification** (guida le gate della Fase 4):
+- `TODO(refactor):` structural debt
+- `TODO(perf):` performance debt (unnecessary re-renders, bundle size, N+1 fetch)
+- `TODO(a11y):` accessibility (aria, contrast, keyboard)
+- `TODO(i-NN):` violation of a specific invariant of this contract (e.g., `TODO(i-05): reads directly from localStorage, should go through the abstract store`)
+- `FIXME:` broken behavior the author could not fix in the current slice
 
-- `risk:low` — label swap, tweak cosmetico, nuovo componente isolato, script di dev, commento
-- `risk:medium` — nuova view/route, nuovo composable, nuova utility con test manuale, cambio schema storage in-versione con migrazione dichiarata
-- `risk:high` — cambio del `base` di deploy, rotture di formato nello storage locale esistente (breaking schema), nuova dipendenza runtime pesante (>100KB gzip), modifica del service worker con invalidazione cache forzata
-- `risk:critical` — rimozione di tutto uno store IndexedDB esistente senza migrazione, rotture breaking dell'interfaccia di import/export, cambio del dominio di deploy
+Annotating a TODO in a slice that is not a refactor is **allowed and encouraged**: it's documentation, not the refactor itself. The actual refactor remains a separate slice.
 
-### Fase 2 — Branch (su `piccolo-team`; rilassata su `solo`/`mvp`)
+For cross-file debt without a single natural home, a `docs/TECHDEBT.md` is acceptable with: title, files involved, severity, suggested approach.
 
-Creare `ai/{slice-type}/{short-description}` dal branch di integrazione (`develop` se esiste, altrimenti `main`).
+---
+
+## Execution workflow
+
+### Phase 1 — Task intake
+
+Verify the task has: **Context**, **Goal**, **Files involved**, **Constraints**, **Acceptance criteria**. If any of these is missing, stop and ask.
+
+**Risk classification** (drives Phase 4 gates):
+
+- `risk:low` — label swap, cosmetic tweak, isolated new component, dev script, comment
+- `risk:medium` — new view/route, new composable, new utility with manual test, in-version storage schema change with declared migration
+- `risk:high` — deploy `base` change, format breakage in existing local storage (breaking schema), new heavy runtime dependency (>100KB gzip), service worker change with forced cache invalidation
+- `risk:critical` — removal of an entire existing IndexedDB store without migration, breaking changes to import/export interface, deploy domain change
+
+### Phase 2 — Branch (on `small-team`; relaxed on `solo`/`mvp`)
+
+Create `ai/{slice-type}/{short-description}` from the integration branch (`develop` if it exists, otherwise `main`).
 
 Slice types: `component`, `view`, `composable`, `utility`, `store`, `fix`, `perf`, `refactor`, `a11y`, `style`, `config`, `docs`, `ci`, `deps`.
 
-Il prefisso `ai/` è **sempre** usato quando Claude tocca il codice in modo sostanziale, indipendentemente dalla quantità di guida umana. È una traccia di authorship per l'audit, non un giudizio di qualità.
+The `ai/` prefix is **always** used when Claude touches code substantially, regardless of how much human guidance there is. It is an authorship trace for audit, not a quality judgment.
 
-Commit umani non-banali usano prefissi liberi (`feat/`, `fix/` o diretti su `develop` per `solo`).
+Non-trivial human commits use free prefixes (`feat/`, `fix/`, or direct on `develop` for `solo`).
 
-### Fase 3 — Implementazione
+### Phase 3 — Implementation
 
-Prima di scrivere:
+Before writing:
 
-1. Se la task tocca API di una libreria poco conosciuta, consultare la docs ufficiale o usare uno stack-docs MCP (es. `context7`). Evitare di andare a memoria su API che potrebbero essere cambiate tra major.
-2. Se la task ha >3 file da modificare, abbozzare un piano testuale (non serve plan-mode formale, basta un commento in chat).
-3. Implementare **solo** ciò che è dichiarato. Debito osservato di passaggio → marker TODO.
+1. If the task touches APIs of a less-known library, consult the official docs or use a stack-docs MCP (e.g., `context7`). Avoid going from memory on APIs that may have changed between majors.
+2. If the task has >3 files to modify, sketch a textual plan (no formal plan-mode needed, just a chat comment).
+3. Implement **only** what is declared. Drive-by debt observed → TODO marker.
 
-### Fase 4 — Completamento (atomico)
+### Phase 4 — Completion (atomic)
 
-Step 0 (**gate bloccante**) — Domande pendenti aperte all'utente. Se esistono domande non risposte su semantica business-observable (schema dei dati, comportamento visibile, scelte di formato), fermarsi e riaprirle.
+Step 0 (**blocking gate**) — Pending questions to the user. If unanswered questions exist on business-observable semantics (data schema, visible behavior, format choices), stop and reopen them.
 
-Step 1–3: verifiche build. Se l'harness supporta hook automatici (Claude Code via `.claude/settings.json` PostToolUse, GitHub Actions pre-commit, lefthook, husky, o equivalenti), questi step si eseguono automaticamente su ogni edit e non richiedono esecuzione manuale prima del commit. Altrove, l'AI li esegue esplicitamente.
+Steps 1–3: build verifications. If the harness supports automated hooks (Claude Code via `.claude/settings.json` PostToolUse, GitHub Actions pre-commit, lefthook, husky, or equivalent), these steps run automatically on every edit and don't require manual execution before commit. Elsewhere, the AI runs them explicitly.
 
-1. `npm run type-check` — deve passare (se TS, cioè se esiste `tsconfig.json`)
-2. `npm run lint -- --fix` — deve passare (se lint configurato, es. ESLint + Prettier)
-3. `npm run build` — deve passare
+1. `npm run type-check` — must pass (if TS, i.e., if `tsconfig.json` exists)
+2. `npm run lint -- --fix` — must pass (if lint configured, e.g., ESLint + Prettier)
+3. `npm run build` — must pass
 
-Step 4: test.
+Step 4: tests.
 
-4. Se la slice ha aggiunto test automatici, eseguirli. Se la slice è UI-visibile e classificata `risk:high` o superiore, eseguire uno smoke test manuale (Playwright ad hoc o in-browser su `npm run preview`).
+4. If the slice added automated tests, run them. If the slice is UI-visible and classified `risk:high` or above, run a manual smoke test (ad-hoc Playwright or in-browser on `npm run preview`).
 
-Step 4.5 (**gate bloccante pre-commit**) — **Self-review come PR review**. Prima di committare e aprire la PR, leggere **come se fossimo il reviewer umano** il diff completo della slice. L'obiettivo è cogliere in questa fase gli errori che un review umano avrebbe identificato (bug logici, edge case non gestiti, regressioni, XSS/injection, imports inutilizzati, pattern incoerenti con il resto del codebase, documentazione disallineata).
+Step 4.5 (**blocking pre-commit gate**) — **Self-review as PR review**. Before committing and opening the PR, read the full diff of the slice **as if we were the human reviewer**. The goal is to catch in this phase the errors a human review would have identified (logic bugs, unhandled edge cases, regressions, XSS/injection, unused imports, patterns inconsistent with the rest of the codebase, misaligned documentation).
 
-**Come si fa**: `git diff HEAD` (o `git diff --cached` dopo `git add`) sul branch di lavoro, letto dall'inizio alla fine con attenzione file per file. Per ciascun file toccato porsi la checklist minima:
+**How**: `git diff HEAD` (or `git diff --cached` after `git add`) on the working branch, read from start to end carefully file by file. For each touched file pose the minimum checklist:
 
-- *Semantica*: il codice fa davvero quello che il task richiedeva? Ci sono rami logici mai eseguiti, condizioni impossibili, early-return che bypassano logica intenzionale?
-- *Edge case*: valori `null`/`undefined`/stringa vuota/array vuoto/unicode/input ostili entrano bene nelle funzioni toccate?
-- *Sicurezza*: ogni input utente o esterno passa da `escapeHtml` / `encodeURIComponent` / sanitize dove finisce in `innerHTML`, URL, storage? Ogni `fetch()` ha timeout e gestione errore?
-- *Consistenza*: naming, pattern, uso di composables, passaggio dati tra componenti coerenti con il resto del codebase?
-- *Dead code*: `TODO` obsoleti, variabili/import non usati, CSS orfano, `console.log` dimenticati?
-- *Documentazione*: README/CHANGELOG/STATO-PROGETTO allineati con i cambi? Commenti al codice che spiegano il *perché* (non il cosa)?
-- *Numerazione/lista*: se la slice modifica file strutturati (TODO.md numerati, CHANGELOG versioni), la rinumerazione è coerente? Non ci sono gap (#1 → #3 senza #2)?
+- *Semantics*: does the code really do what the task required? Are there logic branches never executed, impossible conditions, early-returns that bypass intentional logic?
+- *Edge cases*: do `null`/`undefined`/empty string/empty array/unicode/hostile inputs flow correctly through the touched functions?
+- *Security*: does every user or external input go through `escapeHtml` / `encodeURIComponent` / sanitize where it ends up in `innerHTML`, URL, storage? Does every `fetch()` have timeout and error handling?
+- *Consistency*: naming, patterns, composables usage, data passing between components consistent with the rest of the codebase?
+- *Dead code*: stale `TODO`s, unused variables/imports, orphan CSS, forgotten `console.log`?
+- *Documentation*: README/CHANGELOG/STATO-PROGETTO aligned with changes? Code comments that explain the *why* (not the what)?
+- *Numbering/list*: if the slice modifies structured files (numbered TODO.md, CHANGELOG versions), is renumbering coherent? No gaps (#1 → #3 without #2)?
 
-**Se la self-review trova un problema**: correggerlo **prima** del commit. Se il problema è non-risolvibile (ambiguità sul comportamento atteso, scelta di design non banale, bug profondo che richiede una ri-progettazione della slice) **non chiudere la slice**: lasciarla aperta in locale o come draft PR, descrivere il problema trovato nel messaggio all'operatore umano, richiederne esplicitamente il supporto. Chiudere una slice con un problema noto per "velocità" è una violazione del contratto — si accumulano debiti invisibili che ripresentano il lavoro come bug nelle sessioni successive.
+**If self-review finds a problem**: fix it **before** commit. If the problem is unresolvable (ambiguity on expected behavior, non-trivial design choice, deep bug requiring slice redesign) **do not close the slice**: leave it open locally or as a draft PR, describe the found problem in the message to the human operator, explicitly request support. Closing a slice with a known problem for "speed" is a contract violation — it accumulates invisible debt that resurfaces as bugs in later sessions.
 
-**Why**: esperienza concreta del 2026-04-24: più slice sono state chiuse dichiarando "smoke ok, build verde, zero errori console" pur contenendo problemi poi emersi alla review umana (numerazioni TODO non riallineate, voci del backlog ignorate in pianificazioni successive, stato di develop dichiarato incoerente con quello remoto, ecc.). Step 4.5 esiste per intercettare questa classe di errori senza richiedere un secondo paio d'occhi umano a ogni slice, indipendentemente dalla scale del progetto.
+**Why**: concrete experience from 2026-04-24: multiple slices were closed declaring "smoke ok, build green, zero console errors" while containing problems that emerged at human review (TODO numbering not realigned, backlog items ignored in subsequent planning, declared develop state inconsistent with remote, etc.). Step 4.5 exists to catch this class of errors without requiring a second pair of human eyes on every slice, regardless of project scale.
 
-**Relazione con Step 5 (Copilot review)**: lo Step 4.5 resta obbligatorio anche quando al commit viene aggiunto `@copilot review` (Step 5). I due gate sono **complementari, non alternativi**: Step 4.5 cattura errori che richiedono contesto del codebase e della sessione (scelte consolidate, convenzioni interne, coerenza tra docs e codice), Copilot cattura pattern generici di best-practice che la self-review può aver normalizzato per consuetudine di stile. La rimozione di Step 4.5 "perché tanto c'è Copilot" è una violazione del contratto.
+**Relation with Step 5 (Copilot review)**: Step 4.5 remains mandatory even when `@copilot review` is added at commit (Step 5). The two gates are **complementary, not alternative**: Step 4.5 catches errors requiring codebase and session context (consolidated choices, internal conventions, coherence between docs and code), Copilot catches generic best-practice patterns that self-review may have normalized through style habit. Removing Step 4.5 "because there's Copilot" is a contract violation.
 
-Step 5–7: commit e deploy.
+Steps 5–7: commit and deploy.
 
-5. Commit — formato: `{slice-type}: {descrizione breve}\n\n{dettagli opzionali}`. **Se il commit andrà a popolare una PR** (branch `ai/*` o comunque non diretto su `main`/`develop` "piatti"), aggiungere al messaggio di commit — tipicamente in fondo, su riga dedicata — la stringa `@copilot review`. Questo attiva la review automatica di GitHub Copilot sulla PR.
-   > ⚠ **Regola temporanea / in valutazione** (introdotta 2026-04-24): la presenza simultanea di Step 4.5 self-review e Copilot review è intenzionale — l'utente sta testando Copilot come reviewer e vuole confrontare i due approcci in parallelo. Al termine del periodo di test deciderà se mantenere entrambi i gate, rimuovere la self-review (affidandosi a Copilot), o rimuovere Copilot (mantenendo solo la self-review). Finché la regola resta, **entrambi i gate sono obbligatori** (vedere nota nello Step 4.5).
-6. Push branch
-7. Se `solo` e la slice è su `develop`, fine. Se `piccolo-team` o la slice è su un branch `ai/`, aprire PR verso il branch di integrazione.
-
----
-
-## Vietato senza autorizzazione esplicita
-
-- Commit diretti su `main` quando esiste un branch `develop` e la slice non è docs-only. L'**eccezione docs-only** si applica a modifiche che toccano *esclusivamente*: `*.md`, `docs/**`, `CLAUDE*.md` e commenti di codice. L'eccezione **non** copre `package.json`: qualsiasi modifica a `package.json` (inclusi campi metadata come `scripts`, `name`, `version`, `description`, `keywords`, `author`, `license`, `repository`, `bugs`, `homepage`) rende la slice non docs-only.
-- Committare segreti: API key, token, credenziali di terze parti, chiavi private. `.env*` mai nel repo.
-- Aggiungere una nuova dipendenza runtime (npm dependency, non devDependency) senza un task dedicato. `devDependencies` solo se davvero necessarie al flusso di build/test.
-- Bumpare la versione major di framework (Vue, Vite, TS) fuori da una slice `deps` dedicata.
-- Toccare `base` / `publicPath` / `.github/workflows/*.yml` fuori da una slice `ci` o `config`.
-- Modificare `manifest` / `Workbox runtime caching` fuori da una slice dedicata alla PWA.
-- Pushare con `--force` su `main` o su branch condivisi. `--force-with-lease` solo su branch personali.
-- Saltare `npm run type-check` / `npm run build` con `git commit --no-verify` per aggirare hook falliti: il hook va capito e risolto, non bypassato.
-- **Cancellare o rigenerare manualmente** `package-lock.json` / `yarn.lock` / `pnpm-lock.yaml`. Il lockfile è un artefatto deterministico del gestore pacchetti; va committato e modificato solo via `npm install` / `yarn add` / `pnpm add`. Conflitti di merge sul lockfile si risolvono rigenerando via `npm install` a partire dalla versione corretta di `package.json`, **non** cancellando il file.
-- Spostare un modulo dallo store astratto (es. `useStorage`, `useSettings`) a un accesso diretto a `localStorage`/`IndexedDB`: l'astrazione esiste apposta per la portabilità futura (sync cloud, cambio backend).
-- Usare `eval` / `new Function` / template injection con input esterni. Ogni JSON caricato dall'utente va prima **validato** secondo lo schema dichiarato.
+5. Commit — format: `{slice-type}: {short description}\n\n{optional details}`. **If the commit will populate a PR** (branch `ai/*` or otherwise not direct on flat `main`/`develop`), append to the commit message — typically at the bottom on a dedicated line — the string `@copilot review`. This activates GitHub Copilot's automatic review on the PR.
+   > ⚠ **Temporary / under evaluation rule** (introduced 2026-04-24): the simultaneous presence of Step 4.5 self-review and Copilot review is intentional — the user is testing Copilot as reviewer and wants to compare the two approaches in parallel. At the end of the test period the user will decide whether to keep both gates, remove self-review (relying on Copilot), or remove Copilot (keeping only self-review). While the rule stands, **both gates are mandatory** (see note in Step 4.5).
+6. Push branch.
+7. If `solo` and the slice is on `develop`, done. If `small-team` or the slice is on an `ai/` branch, open PR toward the integration branch.
 
 ---
 
-## Invariants di stack
+## Forbidden without explicit authorization
 
-### Frontend Vue 3 + Vite
+- Direct commits on `main` when a `develop` branch exists and the slice is not docs-only. The **docs-only exception** applies to changes that touch *exclusively*: `*.md`, `docs/**`, `CLAUDE*.md` and code comments. The exception **does not** cover `package.json`: any modification to `package.json` (including metadata fields like `scripts`, `name`, `version`, `description`, `keywords`, `author`, `license`, `repository`, `bugs`, `homepage`) makes the slice non-docs-only.
+- Committing secrets: API keys, tokens, third-party credentials, private keys. `.env*` never in repo.
+- Adding a new runtime dependency (npm dependency, not devDependency) without a dedicated task. `devDependencies` only if truly necessary to the build/test flow.
+- Bumping major framework versions (Vue, Vite, TS) outside a dedicated `deps` slice.
+- Touching `base` / `publicPath` / `.github/workflows/*.yml` outside a `ci` or `config` slice.
+- Modifying `manifest` / `Workbox runtime caching` outside a slice dedicated to PWA.
+- Pushing with `--force` on `main` or shared branches. `--force-with-lease` only on personal branches.
+- Bypassing `npm run type-check` / `npm run build` with `git commit --no-verify` to circumvent failed hooks: the hook must be understood and resolved, not bypassed.
+- **Manually deleting or regenerating** `package-lock.json` / `yarn.lock` / `pnpm-lock.yaml`. The lockfile is a deterministic artifact of the package manager; it must be committed and modified only via `npm install` / `yarn add` / `pnpm add`. Lockfile merge conflicts are resolved by regenerating via `npm install` from the correct version of `package.json`, **not** by deleting the file.
+- Moving a module from the abstract store (e.g., `useStorage`, `useSettings`) to direct access of `localStorage`/`IndexedDB`: the abstraction exists precisely for future portability (cloud sync, backend swap).
+- Using `eval` / `new Function` / template injection with external inputs. Every JSON loaded by the user must first be **validated** against the declared schema.
 
-- **I-01** Nuovi componenti in Composition API con `<script setup>` (+ `lang="ts"` se il progetto è TS). Options API tollerata solo nei file non ancora migrati da Vue 2.
-- **I-02** Nessun `this.$xxx` in file nuovi. In particolare `this.$store` → `useStore()` / Pinia; `this.$router` / `this.$route` → `useRouter()` / `useRoute()`; `this.$refs.xxx` → `const xxxRef = ref()`; `this.$nextTick` → `nextTick()`.
-- **I-03** State globale condiviso: **Pinia** (se il progetto lo usa). Altrimenti composables con stato privato al modulo (`const state = ref(...)` fuori dal `useXxx()` esportato). Mai `window.*` per stato applicativo.
-- **I-04** Path importazioni: se il progetto definisce un alias (es. `@/`), usarlo per moduli propri. Niente import a profondità `../../../`.
-- **I-05** Storage locale sempre dietro uno **store astratto** (composable o utility function). I componenti non chiamano direttamente `localStorage.setItem` / `indexedDB.open`. La ragione è rendere possibile la sostituzione futura con un backend cloud o una diversa strategia di persistenza senza riscrivere i componenti.
-  - **Droppare un object store / rinominare chiavi / cambiare formato di un record è vietato senza migrazione.** Una slice che modifica lo schema di storage deve implementare almeno una *migrazione forward* (i dati esistenti vengono letti e riformattati); deve documentare in un commento nel codice o nella PR se è ragionevole anche una *migrazione reverse*; se nessuna migrazione è possibile (caso raro e strutturale), deve prevedere un *reset esplicito* con conferma utente bloccante.
-- **I-06** Percorsi statici sempre **relativi al `base` URL** — usare `import.meta.env.BASE_URL` per costruire URL di asset pubblici. Niente path assoluti con `/foo` che rompono il deploy in sottopath (GitHub Pages tipicamente serve da `/<nome-repo>/`).
-- **I-07** Schema dei dati persisti o scambiati con l'esterno (JSON di configurazione, JSON importabili dall'utente) **versionato** con un campo esplicito (es. `$schema_version: "1.0"`). Una validazione dedicata con errori/avvisi chiari in lingua utente è il gate all'accesso dei dati all'app. Campi sconosciuti vanno **ignorati silenziosamente** per forward-compatibility.
-  - **Sanitizzazione input**: ogni valore testuale proveniente da JSON utente, URL, `postMessage` o altri canali esterni che finisce in `innerHTML` / `v-html` / concatenato in stringhe HTML deve passare da una funzione di escape (es. `escapeHtml`). Se la feature richiede davvero HTML arbitrario, usare un sanitizer dichiarato (DOMPurify o equivalente), mai `v-html` raw. URL esterne inserite dall'utente (es. parametro `?viaggio=<url>`) passano da `new URL()` con whitelist di protocollo esplicita (tipicamente `http:` / `https:` e basta).
-- **I-08** PWA, se presente: deve **funzionare davvero**. Un `<v-snackbar>` di "aggiornamento disponibile" con un flag mai toccato dal service worker è peggio che non avere PWA — nasconde la mancata implementazione dietro l'apparenza di averne una. O il flag è guidato da un evento del SW (tipicamente via `virtual:pwa-register/vue` di `vite-plugin-pwa`), o la PWA va rimossa dal progetto.
-  - **Policy di aggiornamento SW dichiarata**: il `CLAUDE.md` di repo deve dichiarare esplicitamente come l'app si comporta quando Workbox scarica un nuovo SW. Opzioni tipiche: `autoUpdate` silenzioso (skipWaiting + reload automatico), `prompt-utente` (il SW resta in waiting finché l'utente non clicca un toast), `periodic-check` (polling di aggiornamenti). Senza policy esplicita, gli utenti possono restare bloccati su versione vecchia per settimane.
-  - **Aggiungere una nuova risorsa esterna (tile provider, CDN foto, API endpoint) alla PWA richiede di aggiornare anche il `workbox.runtimeCaching` in `vite.config.js` / equivalente.** La risorsa senza pattern di caching funziona online e **si rompe silenziosamente offline** — è un comportamento subdolo scoperto solo quando qualcuno prova a usare l'app senza rete.
-- **I-09** Accessibilità baseline: **WCAG 2.1 AA** come obiettivo. Almeno: skip link a `#main-content`, `aria-label` su controlli senza testo visibile, `aria-expanded` su toggleable, focus visibile con contrasto ≥3:1, colore mai l'unico veicolo di significato. Il CSS di tema chiaro/scuro deve passare i contrasti su entrambe le modalità.
-- **I-10** Date e numeri: formattare tramite un singolo punto di passaggio (`src/utils/formatters.js` o `src/composables/useFormatters.js`). Niente `new Date().toLocaleString()` sparsi nei template.
-- **I-11** Fetch verso endpoint esterni (tile server, OSRM, API di terzi): sempre con **timeout esplicito** (es. `AbortController`), **fallback graceful** quando il servizio non risponde, e **cache applicativa persistente** quando il dato è riutilizzabile tra sessioni offline. Un Workbox runtime cache non è sufficiente: ha eviction e TTL decisi dal SW, non dall'app.
-  - **Durata della cache applicativa**: i dati riutilizzabili offline (tipicamente risultati di routing, map tiles, risposte di API lente) non hanno TTL imposto dal codice applicativo. L'invalidazione passa da un'azione utente esplicita (es. bottone "Ricalcola") o da un cambio di schema dichiarato. Il rischio "dati stantii" è accettato perché compensato dall'affidabilità offline.
-  - **Attribuzione obbligatoria**: molti provider esterni (OpenStreetMap, CartoDB, OpenTopoMap, Mapbox) richiedono l'attribuzione visibile nella UI come condizione dei loro ToS. Verificare prima di committare che l'attribuzione sia presente e **non accidentalmente rimossa** da override CSS, `attributionControl: false` di Leaflet, o simili. Un'attribuzione nascosta è una violazione di licenza.
-- **I-12** `npm run build` + eventuali `npm run type-check` (se TS) + `npm run lint -- --fix` (se lint configurato) **tutti verdi** prima del commit. La clausola `type-check` si applica solo se `tsconfig.json` è presente nel repo: per progetti JS puri non va dichiarata alcuna eccezione. Quando TS è presente, `tsconfig` con `strict: true` è il default; eventuali rilassamenti vanno dichiarati nel `CLAUDE.md` di repo con motivazione.
-- **I-13** **Performance budget** dichiarato nel `CLAUDE.md` di repo. Defaults suggeriti (override-abili con motivazione):
-  - Bundle JS iniziale (main chunk): **≤ 150 KB gzip**.
-  - CSS totale: **≤ 30 KB gzip**.
-  - Score Lighthouse PWA: **≥ 90** (categoria "PWA" se la PWA è attiva).
-  - Sforare i default richiede una slice `perf` dedicata, oppure un override motivato nel `CLAUDE.md` di repo (es. *"budget bundle: 200 KB gzip per via di Leaflet + idb + 5 tile provider"*). Senza budget, le regressioni di performance non scattano nella `risk classification`.
-- **I-14** **Link esterni**: ogni elemento `<a target="_blank">` richiede `rel="noopener"` per chiudere il vettore tabnabbing (la nuova tab non può più manipolare `window.opener`). `noreferrer` è opzionale: toglie `document.referrer`, utile se l'integrazione con analytics di terzi non è desiderata, ma può rompere funzionalità legate a origin tracking.
-- **I-15** **Export/import dei dati utente locali**: se l'app conserva nello storage locale dati con valore per l'utente (note personali, stati, viaggi importati, configurazioni non banali), deve fornire una feature di **export** (scarica un JSON di backup) e **import** (carica un backup precedente) accessibile dalla UI. Motivazione: IndexedDB / localStorage sono cancellabili dal browser, dall'OS, dalla reinstallazione della PWA — senza export l'utente perde tutto in modo non recuperabile. Non è richiesto che l'export sia granulare (singolo record): basta un dump completo.
+---
+
+## Stack Invariants
+
+### Vue 3 + Vite Frontend
+
+- **I-01** New components in Composition API with `<script setup>` (+ `lang="ts"` if the project is TS). Options API tolerated only in files not yet migrated from Vue 2.
+- **I-02** No `this.$xxx` in new files. In particular `this.$store` → `useStore()` / Pinia; `this.$router` / `this.$route` → `useRouter()` / `useRoute()`; `this.$refs.xxx` → `const xxxRef = ref()`; `this.$nextTick` → `nextTick()`.
+- **I-03** Shared global state: **Pinia** (if the project uses it). Otherwise composables with module-private state (`const state = ref(...)` outside the exported `useXxx()`). Never `window.*` for application state.
+- **I-04** Import paths: if the project defines an alias (e.g., `@/`), use it for own modules. No `../../../` deep imports.
+- **I-05** Local storage always behind an **abstract store** (composable or utility function). Components do not call `localStorage.setItem` / `indexedDB.open` directly. The reason is to make future replacement with a cloud backend or a different persistence strategy possible without rewriting components.
+  - **Dropping an object store / renaming keys / changing record format is forbidden without migration.** A slice that modifies the storage schema must implement at least a *forward migration* (existing data is read and reformatted); it must document in a code comment or PR whether a *reverse migration* is also reasonable; if no migration is possible (rare structural case), it must provide an *explicit reset* with blocking user confirmation.
+- **I-06** Static paths always **relative to `base` URL** — use `import.meta.env.BASE_URL` to build public asset URLs. No absolute paths with `/foo` that break deploy in subpath (GitHub Pages typically serves from `/<repo-name>/`).
+- **I-07** Schema of data persisted or exchanged externally (config JSON, user-importable JSON) **versioned** with an explicit field (e.g., `$schema_version: "1.0"`). A dedicated validation with errors/warnings clear in user language is the gate to data access in the app. Unknown fields must be **silently ignored** for forward compatibility.
+  - **Input sanitization**: every textual value coming from user JSON, URLs, `postMessage` or other external channels that ends up in `innerHTML` / `v-html` / concatenated into HTML strings must pass through an escape function (e.g., `escapeHtml`). If the feature truly requires arbitrary HTML, use a declared sanitizer (DOMPurify or equivalent), never raw `v-html`. External URLs inserted by the user (e.g., `?viaggio=<url>` parameter) pass through `new URL()` with explicit protocol whitelist (typically `http:` / `https:` only).
+- **I-08** PWA, if present: must **actually work**. A `<v-snackbar>` of "update available" with a flag never touched by the service worker is worse than not having a PWA — it hides the missing implementation behind the appearance of having one. Either the flag is driven by an SW event (typically via `virtual:pwa-register/vue` of `vite-plugin-pwa`), or the PWA must be removed from the project.
+  - **Declared SW update policy**: the per-repo `CLAUDE.md` must explicitly declare how the app behaves when Workbox downloads a new SW. Typical options: silent `autoUpdate` (skipWaiting + automatic reload), `user-prompt` (the SW remains in waiting until the user clicks a toast), `periodic-check` (update polling). Without an explicit policy, users may stay stuck on an old version for weeks.
+  - **Adding a new external resource (tile provider, photo CDN, API endpoint) to the PWA also requires updating `workbox.runtimeCaching` in `vite.config.js` / equivalent.** A resource without a caching pattern works online and **silently breaks offline** — a sneaky behavior discovered only when someone tries to use the app without network.
+- **I-09** Baseline accessibility: **WCAG 2.1 AA** as objective. At minimum: skip link to `#main-content`, `aria-label` on controls without visible text, `aria-expanded` on toggleables, visible focus with contrast ≥3:1, color never the sole carrier of meaning. Light/dark theme CSS must pass contrasts in both modes.
+- **I-10** Dates and numbers: format through a single passage point (`src/utils/formatters.js` or `src/composables/useFormatters.js`). No `new Date().toLocaleString()` scattered in templates.
+- **I-11** Fetch toward external endpoints (tile servers, OSRM, third-party APIs): always with **explicit timeout** (e.g., `AbortController`), **graceful fallback** when the service does not respond, and **persistent application cache** when the data is reusable across offline sessions. A Workbox runtime cache is not sufficient: it has eviction and TTL decided by the SW, not by the app.
+  - **Application cache duration**: data reusable offline (typically routing results, map tiles, slow API responses) has no TTL imposed by application code. Invalidation goes through an explicit user action (e.g., "Recompute" button) or a declared schema change. The "stale data" risk is accepted because compensated by offline reliability.
+  - **Mandatory attribution**: many external providers (OpenStreetMap, CartoDB, OpenTopoMap, Mapbox) require visible attribution in the UI as a condition of their ToS. Verify before committing that attribution is present and **not accidentally removed** by CSS overrides, Leaflet's `attributionControl: false`, or similar. Hidden attribution is a license violation.
+- **I-12** `npm run build` + any `npm run type-check` (if TS) + `npm run lint -- --fix` (if lint configured) **all green** before commit. The `type-check` clause applies only if `tsconfig.json` is present in the repo: for pure JS projects no exception needs to be declared. When TS is present, `tsconfig` with `strict: true` is the default; any relaxation must be declared in the per-repo `CLAUDE.md` with rationale.
+- **I-13** **Performance budget** declared in the per-repo `CLAUDE.md`. Suggested defaults (overridable with rationale):
+  - Initial JS bundle (main chunk): **≤ 150 KB gzip**.
+  - Total CSS: **≤ 30 KB gzip**.
+  - Lighthouse PWA score: **≥ 90** ("PWA" category if PWA is active).
+  - Exceeding the defaults requires a dedicated `perf` slice, or a justified override in the per-repo `CLAUDE.md` (e.g., *"bundle budget: 200 KB gzip due to Leaflet + idb + 5 tile providers"*). Without a budget, performance regressions don't trigger in `risk classification`.
+- **I-14** **External links**: every `<a target="_blank">` element requires `rel="noopener"` to close the tabnabbing vector (the new tab can no longer manipulate `window.opener`). `noreferrer` is optional: it strips `document.referrer`, useful if integration with third-party analytics is undesired, but may break functionality tied to origin tracking.
+- **I-15** **Export/import of local user data**: if the app stores in local storage data of value to the user (personal notes, states, imported trips, non-trivial configurations), it must provide an **export** feature (download a JSON backup) and **import** (load a previous backup) accessible from the UI. Rationale: IndexedDB / localStorage are clearable by the browser, by the OS, by PWA reinstall — without export the user loses everything irretrievably. The export is not required to be granular (single record): a complete dump suffices.
 
 ---
 
 ## Branch & Promotion Model
 
-- `main` → produzione (deploy automatico via CI, tipicamente GitHub Pages)
-- `develop` → integrazione (dove arrivano le slice, e dove il dev testa prima della promozione)
-- `ai/{slice-type}/{desc}` → slice in lavorazione, da `develop`
+- `main` → production (automatic deploy via CI, typically GitHub Pages)
+- `develop` → integration (where slices arrive, and where the dev tests before promotion)
+- `ai/{slice-type}/{desc}` → slice in progress, from `develop`
 
 ```
-ai/{slice-type}/{desc} → develop → main (promozione manuale via PR o merge)
+ai/{slice-type}/{desc} → develop → main (manual promotion via PR or merge)
 ```
 
-Su scale `solo` / `mvp` il prefisso `ai/` può essere saltato per slice piccole e reversibili; il commit va comunque su `develop`, non su `main`.
+On `solo` / `mvp` scale, the `ai/` prefix can be skipped for small reversible slices; the commit still goes on `develop`, not on `main`.
 
-**Eccezione docs-only** — modifiche che toccano *esclusivamente* `*.md`, `docs/**`, `CLAUDE*.md`, `.gitignore` con sole aggiunte pattern, commenti di codice, possono andare direttamente sul target di promozione (`main`) saltando il flusso `ai/* → develop → main`. L'eccezione **non** copre `package.json`, `vite.config.*`, `tsconfig*.json`, `.github/workflows/*`, `.env.example`, file di i18n consumati a runtime.
+**Docs-only exception** — changes touching *exclusively* `*.md`, `docs/**`, `CLAUDE*.md`, `.gitignore` with pattern-only additions, code comments, may go directly on the promotion target (`main`) skipping the `ai/* → develop → main` flow. The exception **does not** cover `package.json`, `vite.config.*`, `tsconfig*.json`, `.github/workflows/*`, `.env.example`, runtime-consumed i18n files.
 
-**Rebase vs merge** — prima di aprire una PR è buona abitudine fare rebase del branch `ai/*` sulla cima del branch di integrazione, per mantenere la storia lineare. Dopo la PR aperta non più rebase + force-push, altrimenti si invalidano i commenti di review.
-
----
-
-## Risposta agli incidenti
-
-Quando il deploy è rotto, l'app in produzione non parte, o una piattaforma (hosting, CDN, tile provider) si comporta in modo inatteso, tre principi vincolano il comportamento:
-
-### 1. Leggere le docs ufficiali prima di speculare
-
-Prima di proporre una modifica a flag di configurazione del hosting (build command, env var, redirect rules), aprire la docs ufficiale del provider o usare una ricerca web. Frase tipo "strano — X succede anche con la flag Y disattivata" senza citazione docs è un segnale di stop, non di itera.
-
-### 2. Recupero prima di ottimizzazione
-
-In modalità incidente il goal è **tornare all'ultimo stato buono noto**, non migliorare. Proporre un'ottimizzazione non ancora validata *durante* un incidente allunga l'incidente. Le ottimizzazioni si pianificano **fuori** dall'incidente, con un rollback plan esplicito.
-
-### 3. Verificare prima di insistere quando l'utente contraddice
-
-L'utente vede il proprio schermo; l'AI no. Se l'utente riporta che un file / log / UI state non c'è e l'inferenza dell'AI (da logs vecchi o contesto passato) dice il contrario, **verificare via comando live**, non insistere. Chiedere uno screenshot o l'output fresco di un comando.
+**Rebase vs merge** — before opening a PR it's good practice to rebase the `ai/*` branch on the tip of the integration branch, to keep history linear. After the PR is open, no more rebase + force-push, otherwise review comments are invalidated.
 
 ---
 
-## Livelli di conoscenza
+## Incident Response
 
-| Layer | File | Ambito | Velocità di cambio |
-|---|---|---|---|
-| Contratto di famiglia | `CLAUDE-vue-app.md` (questo file) | Cross-repo Vue app standalone | Raro — mesi tra revisioni |
-| Contratto di repo | `CLAUDE.md` alla root del repo | Questo singolo progetto: eccezioni, scelte hosting, deviazioni | Per sprint / per decisione rilevante |
-| Memoria dinamica di repo | `MEMORY.md` + file topic sotto `~/.claude/projects/<hash>/memory/` | Singolo progetto, singolo dev, singola macchina | Continua — dopo ogni sessione |
+When deploy is broken, the production app doesn't start, or a platform (hosting, CDN, tile provider) behaves unexpectedly, three principles bind behavior:
 
-**Regola di promozione**: un pattern osservato in **≥2 repo** della stessa famiglia è candidato a essere promosso dal `CLAUDE.md` di repo a `CLAUDE-vue-app.md`.
+### 1. Read official docs before speculating
 
-**Regola di demozione**: una regola in `CLAUDE-vue-app.md` che si rivela variabile per progetto va demossa a `CLAUDE.md` di repo, e sostituita qui da un principio più generale.
+Before proposing a change to hosting configuration flags (build command, env vars, redirect rules), open the provider's official docs or use a web search. A sentence like "weird — X happens even with flag Y disabled" without a docs citation is a stop signal, not an iteration signal.
 
-**Cosa NON mettere in memoria**: stato ricostruibile dal codebase (`git log`, lettura file, `git status`). Memoria è per **lezioni apprese**, non per snapshot di stato. Non duplicare il contratto nella memoria.
+### 2. Recovery before optimization
+
+In incident mode the goal is **to return to the last known good state**, not to improve. Proposing an unvalidated optimization *during* an incident lengthens the incident. Optimizations are planned **outside** the incident, with an explicit rollback plan.
+
+### 3. Verify before insisting when the user contradicts
+
+The user sees their own screen; the AI does not. If the user reports that a file / log / UI state is missing and the AI's inference (from old logs or past context) says otherwise, **verify via a live command**, do not insist. Ask for a screenshot or fresh output of a command.
 
 ---
 
-## `CLAUDE.md` di repo — sezioni minime
+## Documentation Layout & Lifecycle
 
-Quando si scaffold un nuovo repo di questa famiglia, il `CLAUDE.md` di root dovrebbe contenere almeno:
+This is the **primary architectural decision** of this contract for documentation. The repo's `Docs/` folder is the single source of truth for project documentation. Git provides versioning, **not the reading interface** — the AI and the human read filesystem markdown files, not PR threads or external trackers.
 
-### Obbligatorie
+### Documentation primary target: LLM, secondarily human
 
-1. **Intro** — un paragrafo sullo scopo dell'app, nella lingua di lavoro del progetto.
-2. **Versione contratto di famiglia** — il `CLAUDE.md` di repo dichiara esplicitamente a quale versione di `CLAUDE-vue-app.md` si conforma (es. *"Conforme a CLAUDE-vue-app.md v1.1.0"*). Quando il contratto di famiglia sale di minor, i repo conformi restano validi; quando sale di major, i repo devono aggiornare o dichiarare conformità alla major precedente in modo esplicito.
-3. **Lingua del progetto** — dichiarare le tre lingue operative:
-   - *identificatori* (variabili, funzioni, classi, file): inglese universalmente, oppure lingua del progetto se l'utente lo preferisce (es. `useViaggio` vs `useTrip`);
-   - *UI utente* (testi mostrati a schermo, etichette, messaggi di errore di validazione): lingua dei destinatari;
-   - *commenti / log* (audience sviluppatore): di solito coincide con la lingua del progetto.
-   Se non dichiarata, il default è: **identificatori e commenti in inglese**, **UI nella lingua dichiarata del prodotto**.
-4. **Repo & ecosistema** — URL del repo, path locale, posizione in un eventuale ecosistema multi-repo.
-5. **Stack** — versioni di runtime e framework effettivamente bloccate in `package.json`. Vanno qui perché le versioni derivano in fretta.
-6. **Scale dichiarata** — `solo` / `mvp` / `piccolo-team` / `porting`.
-7. **Storage locale** — cosa vive in `localStorage` / `IndexedDB` / URL / ecc., con convenzioni sulle chiavi.
-8. **Performance budget** — valori effettivi in uso (bundle gzip, CSS gzip, Lighthouse target), con motivazione esplicita per eventuali override rispetto ai default di I-13.
-9. **Policy di aggiornamento SW** (se PWA attiva) — `autoUpdate`, `prompt-utente`, `periodic-check`, o altro; con eventuali dettagli (es. toast "Aggiorna ora").
-10. **Eccezioni al contratto di famiglia** — ogni deviazione da I-01..I-15 con motivazione. Se non ci sono, dichiararlo esplicitamente.
-11. **Non fare** — footgun specifici di questo repo, **non** duplicati della sezione *Vietato* del contratto generico.
+Documentation is structured to be efficiently consumable by an LLM agent (full-text searchable, predictable section structure, atomic units when possible). Human readability is a secondary goal, achieved through markdown formatting.
 
-### Raccomandate
+This priority ordering has practical consequences:
+- Predictable section headers > prose narrative
+- Status fields and IDs > descriptive paragraphs
+- Lists and tables > flowing text
+- Atomic single-purpose files > multi-topic catch-all files (when the lifecycle allows)
 
-12. **Hosting** — dove deploya, quali configurazioni ci sono sul provider, link a eventuale `docs/DEPLOY.md`.
-13. **Convenzioni** — path alias, convenzioni di naming specifiche, logging.
-14. **Flusso principale** — la mappa mentale di ciò che l'app fa end-to-end, in una pagina.
-15. **Test** — cosa è testato automatico vs manuale, e perché.
+### Three ADR-style cassetti — atomic, immutable-once-sealed
 
-### Cosa NON va nel `CLAUDE.md` di repo
+The three folders below host **atomic** documents: one event = one file, sealed once its lifecycle ends. File naming: `YYYY-MM-DD-slug.md` (date the item was opened). Slug in Italian, kebab-case, max 4-5 words.
 
-- Ripetizione degli invarianti I-01..I-15.
-- Pattern generici di Vue / Pinia / Vite (stanno nelle skill di stack o nella docs ufficiale).
-- Stato di sessione corrente (è territorio del hook SessionStart o della memoria).
-- Lezioni accumulate (memoria).
+```
+Docs/
+├── decisions/        ← architectural / technical decisions (ADR-style)
+├── requests/         ← client requests with full interlocution log
+└── incidents/        ← production incidents and post-mortems
+```
 
-### Scheletro minimo
+**`Docs/decisions/`** — Decisions taken by the team about how to build/configure something. Once accepted, immutable. Superseded only by a later decision file that explicitly references the predecessor.
+
+Sezioni canoniche (italiano):
+```
+## Stato
+[aperta | accettata | superata-da: <file>]
+
+## Situazione
+[contesto, vincoli, alternative considerate]
+
+## Scelta
+[la decisione presa, in modo dichiarativo]
+
+## Conseguenze
+[impatti positivi e negativi, vincoli che si introducono]
+```
+
+**`Docs/requests/`** — Client-originated requests with the full interlocution. The file is *active* (status updated as interlocution progresses) until the request is closed (implemented, rejected, or withdrawn).
+
+Sezioni canoniche:
+```
+## Stato
+[aperta | approvata | implementata | chiusa | respinta | superata-da: <file>]
+
+## Richiesta
+[testo originale del cliente, mail/messaggio, citazione letterale]
+
+## Interlocuzione
+[lista cronologica delle domande nostre + risposte cliente, con date]
+
+## Decisione
+[scope finale, stima, vincoli accettati]
+
+## Implementazione
+[link al branch/commit/PR, eventuali note di chiusura, link a doc tecnica nuova se prodotta]
+```
+
+**`Docs/incidents/`** — Production incidents and post-mortems. Sealed once the incident is closed and the lesson is documented.
+
+Sezioni canoniche:
+```
+## Stato
+[in-corso | risolto | chiuso]
+
+## Sintomo
+[cosa l'utente / il monitoraggio ha visto]
+
+## Causa
+[root cause con evidenze]
+
+## Risoluzione
+[fix applicato, comandi/passi]
+
+## Lezione
+[cosa si impara — patterns da evitare in futuro, doc da aggiornare]
+```
+
+### Soglia "file singolo vs cartella dedicata"
+
+**Default: file singolo** dentro la cassetto.
+
+Promuovi a cartella `Docs/<cassetto>/YYYY-MM-DD-slug/` con `README.md` indice + allegati solo se almeno **due** dei seguenti sono veri:
+- Stima > 1 settimana di lavoro
+- ≥ 3 interlocuzioni cliente formali previste
+- ≥ 2 artefatti tecnici aggiuntivi (mockup, diagrammi, dati di esempio, allegati binari)
+- Coinvolge ≥ 2 sotto-progetti del repo
+
+Sotto la soglia: il file `.md` singolo è auto-sufficiente. **Mai** creare cartelle scheletro vuote o file scheletro con sezioni vuote in attesa di essere riempite.
+
+### Live tech debt — `Docs/tech-debt.md` (single file)
+
+Technical debt accumulates in fragments across the codebase. Inline `TODO(refactor):` / `TODO(perf):` / `FIXME:` markers are the **primary discovery mechanism for the human reading code** but are insufficient as a tracking system: they're easily lost in greps, hard to prioritize, hard to summarize.
+
+A **single living file** `Docs/tech-debt.md` is the central registry. Single file (not a cassetto folder) because:
+- Tech debt is a **catalog** that grows and shrinks, not a series of atomic events
+- LLM agents consume it more efficiently as a single read (one ID lookup, full context)
+- Items have shared lifecycle (opened → in-progress → closed), not independent ones
+- Closed items are archived in-place under a fold, not deleted (history preserved)
+
+Format (LLM-friendly):
 
 ```markdown
-# Claude Code — <Nome App>
+# Tech Debt
 
-<un paragrafo su cosa fa>
+## Convention
+- ID format: `TD-NNN` (zero-padded 3 digits)
+- Status: `aperto` | `in-corso` | `chiuso` (closed entries kept under "Voci chiuse" section)
+- Inline marker (optional): `TODO(td-001)` in code → matches the entry here
 
-## Repo & ecosistema
+## Voci aperte
+
+### TD-001 — <titolo breve>
+- **Stato**: aperto
+- **Priorità**: bassa | media | alta
+- **File coinvolti**: `path/to/foo.ext`, `path/to/bar.ext`
+- **Aperto il**: YYYY-MM-DD
+- **Motivo**: ...
+- **Approccio suggerito**: ...
+
+(altre voci...)
+
+## Voci chiuse
+
+### TD-XYZ — <titolo>
+- **Stato**: chiuso il YYYY-MM-DD
+- **Risolto da**: branch/commit/PR
+- **Note**: ...
+```
+
+When an entry transitions to `chiuso`, move it under "Voci chiuse" with a closure note. Don't delete — closed items are part of the project's debt history.
+
+When the corresponding inline marker exists in code (e.g. `TODO(td-001):`), it must match the ID in this file. The marker is the in-code pointer; this file is the authoritative tracker. **In-code marker without entry here = bug**: open the entry.
+
+### Doc viva (non ADR-style) — root of `Docs/`
+
+Beyond the cassetti and `tech-debt.md`, `Docs/` hosts **living technical docs** that change over time as the codebase evolves:
+
+- `README-*.md` — operational guides (deploy, import/export, alert system)
+- `DEPLOY-*.md` — deploy procedures
+- `TODO.md` — operational roadmap (long-term planned initiatives, distinct from tech-debt fragments)
+- `CHANGELOG.md` — version history
+- `HOWTO-*.md` — point-in-time tutorials
+
+Naming: free-form descriptive Title-Case or kebab-case, no `YYYY-MM-DD-` prefix. These files are **edited in place** as the underlying behavior changes — git carries the history.
+
+### Claude memory — internal vs external (project decision)
+
+Claude Code's memory layer can live in **two places**:
+
+- **External** (default): `~/.claude/projects/<project-hash>/memory/` — gitignored by definition (outside the repo), lives on the developer's machine.
+- **Internal**: `Docs/claude-memory/` — committed to the repo, shared across machines/team members.
+
+The choice is **per-project**, taken once and held consistently. Mixing the two (some memory files inside, some outside) is forbidden — it creates ambiguity about which is authoritative.
+
+Per-repo `CLAUDE.md` declares which mode the project uses. If internal, `CLAUDE.md` instructs the AI to read `Docs/claude-memory/*.md` at session start. If external, the AI reads via the standard auto-memory mechanism.
+
+### Anti-pattern da evitare
+
+1. **Cartelle scheletro vuote** (`Docs/requests/2026-05-01-foo/{request,questions,answers,decision}.md` con file vuoti) — pure noise, harms LLM efficiency.
+2. **`README.md` indice manuale aggiornato a mano** in ogni sottocartella — diventa stale rapidamente. Se serve un indice, lasciar fare a `git ls-files` o a uno script.
+3. **Strutture > 2 livelli di profondità** sotto `Docs/` — `Docs/clients/zordan/requests/2026/05/...` è ingegnerizzazione preventiva.
+4. **Mescolare doc viva e doc atomica** nella stessa cartella.
+5. **Eliminare voci chiuse di tech-debt** invece di archiviarle in-place — perde la storia.
+6. **Cassetti annidati** (`Docs/decisions/architettura/`, `Docs/requests/2026/`) — flat per definition.
+
+### Legacy documentation — co-existence with pre-existing docs
+
+This chapter does not impose retroactive migration of existing documentation. When a repo adopts this contract, the documentation already present stays where it is and operates in **permanent co-existence** with the new structure. The rules:
+
+**A. Definition of "legacy"** — Everything in `Docs/` (or equivalent) **at the date this chapter is adopted in the per-repo `CLAUDE.md`**. That date must be explicitly declared in the per-repo `CLAUDE.md` as `Data adozione Documentation Layout: YYYY-MM-DD`. Without an explicit adoption date, legacy and new are indistinguishable.
+
+**B. Physical position** — Legacy docs stay where they are. They are not moved into `Docs/legacy/` or elsewhere. Moving them breaks internal links from code/commit messages, bookmarks, external references — high cost, zero benefit.
+
+**C. Distinction by position** — Anything inside `Docs/decisions/`, `Docs/requests/`, `Docs/incidents/`, and `Docs/tech-debt.md` follows the new structure. Anything outside these cassetti is legacy *or* a stack-specific living doc (architecture, runbook, glossaries) that does not fit the three cassetti — they co-exist.
+
+**D. Conversion is optional** — Conversion from legacy to the new format is **not mandatory**. It happens ONLY when, during an update to a legacy doc, a new decision/incident/request emerges that deserves to live in a cassetto. In that case:
+- create the ADR-style file in the cassetto,
+- leave the legacy where it is, optionally with a cross-reference (`> See Docs/decisions/2026-MM-DD-X.md for the current decision`),
+- the legacy remains as historical memory / pre-decision snapshot.
+
+An overly rigid rule ("every time you touch X, you must redo it as ADR") leads to workarounds. Optional is better.
+
+**E. Legacy docs that WOULD be a cassetto** — If a legacy doc retroactively contains a decision/incident/request that today would live in a cassetto: **do not touch it**. It stays where it is. The lesson, if still relevant, may be registered as a new file in the cassetto with a back-reference to the legacy — but at the maintainer's discretion, never as a retroactive obligation.
+
+**F. "Legacy documentation" section in the per-repo `CLAUDE.md`** — The per-repo `CLAUDE.md` lists legacy files/folders with a one-line summary each. Without this list, legacy docs become invisible to anyone landing on the repo. It is updated when a legacy doc is replaced or summarized in a cassetto. If there is no legacy doc, state so explicitly.
+
+**G. Co-existence over time** — On mature projects, legacy docs may remain for years. **OK**. No obligation to migrate everything. The system works in permanent co-existence.
+
+---
+
+## Code documentation standard
+
+In this family, **every code artifact carries a header comment** — explicit override of the "no comments by default" rule from Claude Code's global instructions. Opening any file cold must immediately tell the reader (human or AI) **what it is** and **what it does**, without having to read the code.
+
+**Mandatory header on**:
+- **Files** (`.vue` / `.ts` / `.js` / `.liquid` / `.cs` / `.rs` / equivalent): top-of-file block.
+- **Exported functions / composables / classes / methods**: short JSDoc-style description.
+- **Components** (Vue SFC / Liquid section / Razor component / etc.): purpose + key inputs.
+
+**Content — 2-5 lines, concise**:
+1. *What this is* — one phrase identifying role ("Composable for X", "Page for `/post/[slug]`", "Liquid section for the homepage hero", "Service for token validation").
+2. *What it does* — one phrase summarizing responsibility.
+3. *(Optional)* Non-obvious constraints, dependencies, or contracts ("requires sanity-image plugin", "consumed by `/post/[slug].vue`", "client-only by design", "throws if `id` is null").
+
+**Still in force**: inline comments within function bodies follow the default global rule — write none unless the *WHY* is non-obvious (hidden constraint, workaround, subtle invariant). Headers are file/function-level documentation, not inline narration.
+
+**Why this override**: opening any file should immediately answer "what am I looking at?" and "what does this do?" without reading the code. With multiple devs and AI agents touching a multi-project codebase, the lookup-on-open is high frequency; a 2-line header saves 20 seconds × hundreds of opens × multiple readers. The default "no comments" rule existed to prevent narrating obvious code line-by-line — that purpose is unaffected.
+
+---
+
+## Knowledge Layers
+
+| Layer | File | Scope | Change velocity |
+|---|---|---|---|
+| Family contract | `CLAUDE-vue-app.md` (this file) | Cross-repo standalone Vue app | Rare — months between revisions |
+| Per-repo contract | `CLAUDE.md` at repo root | This single project: exceptions, hosting choices, deviations | Per sprint / per relevant decision |
+| Dynamic per-repo memory | `MEMORY.md` + topic files under `~/.claude/projects/<hash>/memory/` | Single project, single dev, single machine | Continuous — after every session |
+
+**Promotion rule**: a pattern observed in **≥2 repos** of the same family is a candidate to be promoted from per-repo `CLAUDE.md` to `CLAUDE-vue-app.md`.
+
+**Demotion rule**: a rule in `CLAUDE-vue-app.md` that turns out to be variable per project must be demoted to per-repo `CLAUDE.md`, and replaced here with a more general principle.
+
+**What NOT to put in memory**: state reconstructible from the codebase (`git log`, file reads, `git status`). Memory is for **lessons learned**, not state snapshots. Don't duplicate the contract in memory.
+
+---
+
+## Per-repo CLAUDE.md — minimum viable sections
+
+When scaffolding a new repo of this family, the root `CLAUDE.md` should contain at minimum:
+
+### Mandatory
+
+1. **Intro** — one paragraph on the app's purpose, in the project's working language.
+2. **Alignment with family contract** — the per-repo `CLAUDE.md` declares the `Data ultima sincronizzazione` with `CLAUDE-vue-app.md`. Alignment happens through explicit sync sessions (guided brainstorming between user and AI, never automation): repos remain valid on their version until the next sync.
+3. **Project language** — declare the three operational languages:
+   - *identifiers* (variables, functions, classes, files): English universally, or project language if the user prefers (e.g., `useViaggio` vs `useTrip`);
+   - *user UI* (texts shown on screen, labels, validation error messages): language of the recipients;
+   - *comments / logs* (developer audience): usually matches the project language.
+   If not declared, the default is: **identifiers and comments in English**, **UI in the declared product language**.
+4. **Repo & ecosystem** — repo URL, local path, position in any multi-repo ecosystem.
+5. **Stack** — runtime and framework versions actually locked in `package.json`. They go here because versions drift quickly.
+6. **Declared scale** — `solo` / `mvp` / `small-team` / `porting`.
+7. **Local storage** — what lives in `localStorage` / `IndexedDB` / URL / etc., with key conventions.
+8. **Performance budget** — actual values in use (gzip bundle, gzip CSS, Lighthouse target), with explicit rationale for any override of I-13 defaults.
+9. **SW update policy** (if PWA active) — `autoUpdate`, `user-prompt`, `periodic-check`, or other; with any details (e.g., "Update now" toast).
+10. **Exceptions to family contract** — every deviation from I-01..I-15 with rationale. If none, state so explicitly.
+11. **Do-not list** — repo-specific footguns, **not** duplicates of the *Forbidden* section of the generic contract.
+12. **Documentation Layout adoption date** — date this repo adopted the *Documentation Layout & Lifecycle* chapter (`Data adozione Documentation Layout: YYYY-MM-DD`). Everything in `Docs/` before this date is legacy documentation per that chapter.
+13. **Legacy documentation** — list of legacy files/folders in `Docs/` (or equivalent) pre-existing the chapter adoption, with a one-line summary each. If there is no legacy doc, state so explicitly.
+
+### Recommended
+
+14. **Hosting** — where it deploys, what configurations exist on the provider, link to any `docs/DEPLOY.md`.
+15. **Conventions** — path aliases, specific naming conventions, logging.
+16. **Main flow** — the mental map of what the app does end-to-end, in one page.
+17. **Tests** — what is tested automatically vs manually, and why.
+
+### What does NOT belong in per-repo `CLAUDE.md`
+
+- Restatements of invariants I-01..I-15.
+- Generic Vue / Pinia / Vite patterns (they live in stack skills or official docs).
+- Current session state (that's SessionStart hook territory or memory).
+- Accumulated lessons (memory).
+
+### Minimum viable skeleton
+
+```markdown
+# Claude Code — <App Name>
+
+<one paragraph on what it does>
+
+## Repo & ecosystem
 ...
 
 ## Stack
 ## Scale
-## Storage locale
-## Eccezioni al contratto di famiglia
-## Non fare
+## Local storage
+## Exceptions to family contract
+## Do-not list
 
-> Le parti non elencate qui seguono il contratto di famiglia in `CLAUDE-vue-app.md`.
+> Sections not listed here follow the family contract in `CLAUDE-vue-app.md`.
 ```
 
-Se una sezione sarebbe vuota, dichiararlo ("nessuna deviazione dal contratto di famiglia") piuttosto che ometterla. L'assenza di una sezione è ambigua, una sezione vuota è inequivoca.
+If a section would be empty, declare it ("no deviation from family contract") rather than omitting it. Section absence is ambiguous; an empty section is unequivocal.
 
 ---
 
-## Glossario
+## Glossary
 
-| Termine | Significato in questa famiglia |
+| Term | Meaning in this family |
 |---|---|
-| Slice | Unità atomica di lavoro |
-| Task | Descrizione strutturata di una slice |
-| View | File `.vue` mappato a una route, sotto `src/views/` |
-| Component | File `.vue` riutilizzabile, sotto `src/components/` |
-| Composable | Funzione TS/JS con stato reattivo, sotto `src/composables/` |
-| Store astratto | Wrapper di persistenza (composable o utility) che nasconde `localStorage` / `IndexedDB` ai componenti, per rendere la persistenza sostituibile |
-| Scale | Fascia di complessità/criticità del progetto (`solo`, `mvp`, `piccolo-team`, `porting`) |
-| Slice AI-led | Slice in cui Claude ha toccato il codice in modo sostanziale; prefisso di branch `ai/` |
+| Slice | Atomic unit of work |
+| Task | Structured description of a slice |
+| View | `.vue` file mapped to a route, under `src/views/` |
+| Component | Reusable `.vue` file, under `src/components/` |
+| Composable | TS/JS function with reactive state, under `src/composables/` |
+| Abstract store | Persistence wrapper (composable or utility) that hides `localStorage` / `IndexedDB` from components, to make persistence replaceable |
+| Scale | Project complexity/criticality tier (`solo`, `mvp`, `small-team`, `porting`) |
+| AI-led slice | Slice in which Claude has touched code substantially; branch prefix `ai/` |
 
 ---
 
-## Storico revisioni
+## Revision history
 
-Solo le revisioni non banali sono registrate qui.
+Only non-trivial revisions are recorded here.
 
-- **2026-04-24** (rev 5 = v1.1.1) — Fix della sintassi per attivare la review automatica di GitHub Copilot: la stringa corretta è `@copilot review`, **non** `@copilot esegui revisione`. Applicato in 3 punti del contratto (Step 5 Fase 4, nota relazione Step 4.5 ↔ Step 5, revision history). Nessun cambio semantico.
-- **2026-04-24** (rev 4 = **v1.1.0**) — Aggiornamento consolidato derivato dalla critica costruttiva alla rev 1. Versionamento semver esplicito del contratto (dichiarato in intestazione, ogni `CLAUDE.md` di repo deve dichiarare la versione a cui si conforma). Nuovi invarianti aggiunti: I-13 performance budget con defaults override-abili, I-14 link esterni con `rel="noopener"`, I-15 export/import dati utente locali. Invarianti ampliati: I-05 (migrazioni storage obbligatorie, reverse o reset), I-07 (sanitizzazione input utente + whitelist protocolli URL), I-08 (policy aggiornamento SW dichiarata + nuova risorsa esterna richiede runtime caching SW), I-11 (durata cache indefinita + attribuzione obbligatoria), I-12 (TS solo se `tsconfig.json` presente). Sezioni minime `CLAUDE.md` di repo estese: versione contratto, lingua progetto, performance budget, policy SW. Eccezione docs-only ora include metadata di `package.json`. Nuovo divieto: rigenerare a mano i lockfile. Step 1-3 Fase 4 resi harness-agnostic. Chiarito che Step 4.5 resta gate obbligatorio anche con `@copilot review` (rev 3). I repo conformi a v1.0.x devono aggiungere al loro `CLAUDE.md` le sezioni "Versione contratto", "Lingua progetto", "Performance budget", "Policy SW" quando aggiornano a v1.1.0; nessuna altra breaking change.
-- **2026-04-24** (rev 3 = v1.0.2) — Aggiunta al Fase 4 Step 5: ogni commit destinato a diventare una PR deve includere `@copilot review` nel messaggio, per attivare la review automatica di GitHub Copilot come secondo pass complementare alla self-review dello Step 4.5.
-- **2026-04-24** (rev 2 = v1.0.1) — Aggiunto Step 4.5 "Self-review come PR review" nella Fase 4 del workflow. Gate bloccante pre-commit: leggere il diff completo come se fossimo il reviewer umano (semantica, edge case, sicurezza, consistenza, dead code, documentazione, numerazione). Se la self-review trova un problema non banale, non chiudere la slice. Primo trigger: slice chiuse senza riallineare TODO.md / CHANGELOG, generando incoerenze che l'utente ha dovuto segnalare manualmente.
-- **2026-04-24** (rev 1 = v1.0.0) — Derivazione iniziale da `CLAUDE-dotnet-vue-apps.md` (Skoda) rev 1. Rimosse sezioni backend (Dapper, EF, JWT, SQL, publish profiles, Vuetify). Riscritti gli invarianti come `I-01..I-15`: solo frontend Vue 3 + Vite + Pinia opzionale, storage locale dietro astrazione, schema JSON versionato, PWA reale o assente, percorsi relativi al `base`, fetch esterni con timeout + cache applicativa, WCAG 2.1 AA. Ammessa `solo` come scale di default con rilassamenti espliciti sul branch model e sui test automatici. Eccezione docs-only estesa a `CLAUDE*.md`. Prima applicazione sul progetto **Roadbook**.
+- **2026-05-12** (rev 8) — Added the cross-family chapter `Code documentation standard` after *Documentation Layout & Lifecycle*. Mandatory header comments on files, exported functions, and components — explicit override of the Claude Code global "no comments by default" rule for this family (file/function-level documentation, not inline narration). Propagated in one direct-modification session to all 9 master contracts and all 9 consumer copies. Snapshot pre-modification in `storico/2026-05-12-direct-code-doc-standard/`.
+- **2026-05-08** (rev 7) — Translated the contract from Italian to English for consistency with the other family contracts (5/8 already in English including the family root `CLAUDE-dotnet-vue-legacy.md`) and to gain ~25–40% token efficiency on every context load. The canonical sections of ADR/request/incident/tech-debt templates inside *Documentation Layout & Lifecycle* remain in Italian (they describe the doc files which are written in Italian unless the per-repo `CLAUDE.md` declares otherwise). H3 headers inside that chapter (`### Anti-pattern da evitare`, `### Doc viva (non ADR-style) — root of Docs/`, `### Soglia "file singolo vs cartella dedicata"`) also remain in Italian, matching the precedent set by the other 5 English contracts. No semantic change to any rule.
+- **2026-05-07** (rev 6) — Removed the contract's semver versioning system in favor of the "Data ultimo aggiornamento" convention (alignment with `_master-contracts/CLAUDE.md` §4). The header no longer declares `Versione contratto: vX.Y.Z`. The mandatory point "Versione contratto di famiglia" of the per-repo `CLAUDE.md` minimum sections has been rewritten as "Allineamento col contratto di famiglia" in terms of `Data ultima sincronizzazione`. Past historical entries retain `(rev N)` as atomic identifier, only `= vX.Y.Z` removed. Change applied as direct modification not from sync (`_master-contracts/CLAUDE.md` §9.3).
+- **2026-04-24** (rev 5) — Fix of the syntax to activate GitHub Copilot's automatic review: the correct string is `@copilot review`, **not** `@copilot esegui revisione`. Applied in 3 points of the contract (Step 5 Phase 4, Step 4.5 ↔ Step 5 relation note, revision history). No semantic change.
+- **2026-04-24** (rev 4) — Consolidated update derived from constructive criticism of rev 1. Explicit semver versioning of the contract (declared in header, every per-repo `CLAUDE.md` must declare the version it conforms to). New invariants added: I-13 performance budget with override-able defaults, I-14 external links with `rel="noopener"`, I-15 export/import of local user data. Expanded invariants: I-05 (mandatory storage migrations, reverse or reset), I-07 (user input sanitization + URL protocol whitelist), I-08 (declared SW update policy + new external resource requires SW runtime caching), I-11 (indefinite cache duration + mandatory attribution), I-12 (TS only if `tsconfig.json` present). Per-repo `CLAUDE.md` minimum sections extended: contract version, project language, performance budget, SW policy. Docs-only exception now includes `package.json` metadata. New prohibition: regenerating lockfiles by hand. Phase 4 Steps 1-3 made harness-agnostic. Clarified that Step 4.5 remains a mandatory gate even with `@copilot review` (rev 3). Repos conformant to rev 1 must add to their `CLAUDE.md` the sections "Contract version" (later renamed, see rev 6), "Project language", "Performance budget", "SW policy"; no other breaking changes.
+- **2026-04-24** (rev 3) — Added at Phase 4 Step 5: every commit destined to become a PR must include `@copilot review` in the message, to activate GitHub Copilot's automatic review as a second pass complementary to Step 4.5 self-review.
+- **2026-04-24** (rev 2) — Added Step 4.5 "Self-review as PR review" in workflow Phase 4. Pre-commit blocking gate: read the full diff as if we were the human reviewer (semantics, edge case, security, consistency, dead code, documentation, numbering). If self-review finds a non-trivial problem, do not close the slice. First trigger: slices closed without realigning TODO.md / CHANGELOG, generating inconsistencies that the user had to flag manually.
+- **2026-04-24** (rev 1) — Initial derivation from `CLAUDE-dotnet-vue-apps.md` (Skoda) rev 1. Removed backend sections (Dapper, EF, JWT, SQL, publish profiles, Vuetify). Rewrote invariants as `I-01..I-15`: frontend-only Vue 3 + Vite + optional Pinia, local storage behind abstraction, versioned JSON schema, real PWA or absent, paths relative to `base`, external fetches with timeout + application cache, WCAG 2.1 AA. `solo` admitted as default scale with explicit relaxations on branch model and automated tests. Docs-only exception extended to `CLAUDE*.md`. First application on the **Roadbook** project.

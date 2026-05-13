@@ -251,6 +251,8 @@ async function onRicalcolaRouting() {
   const origine = await mappaRef.value.ricalcolaRouting()
   if (origine === 'retta') {
     alert('Impossibile contattare OSRM (offline o errore). Il percorso è ancora una retta.')
+  } else if (origine === 'retta-mezzo') {
+    messaggio.value = 'Linea retta mantenuta: il routing stradale non si applica a questa modalità.'
   } else {
     messaggio.value = 'Percorso ricalcolato.'
   }
