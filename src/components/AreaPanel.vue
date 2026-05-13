@@ -10,8 +10,21 @@ const props = defineProps({
 })
 const emit = defineEmits(['toggleVisitato', 'cambiaNota', 'focusPunto'])
 
+const ETICHETTE_MODALITA = {
+  auto: 'in auto',
+  piedi: 'a piedi',
+  bici: 'in bici',
+  treno: 'in treno',
+  autobus: 'in autobus',
+  traghetto: 'in traghetto',
+}
+
 function categoriaDi(punto) {
   return props.categorie[punto.categoria] || {}
+}
+
+function etichettaModalita(m) {
+  return ETICHETTE_MODALITA[m] || ETICHETTE_MODALITA.auto
 }
 </script>
 
@@ -22,7 +35,7 @@ function categoriaDi(punto) {
       <p v-if="area.intro" class="intro">{{ area.intro }}</p>
       <p class="meta-area">
         <span>{{ area.punti.length }} punti</span>
-        <span v-if="area.modalita">· {{ area.modalita === 'piedi' ? 'a piedi' : 'in auto' }}</span>
+        <span v-if="area.modalita">· {{ etichettaModalita(area.modalita) }}</span>
         <span v-for="t in area.tags" :key="t" class="tag">#{{ t }}</span>
       </p>
     </header>
