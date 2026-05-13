@@ -1,6 +1,6 @@
 # AI Execution Contract — Vue 3 standalone app (no backend)
 
-> **Data ultimo aggiornamento**: 2026-05-13
+> **Data ultimo aggiornamento**: 2026-05-13 (Scope discipline + Tech debt & issue tracker)
 > **Data ultima sincronizzazione**: 2026-05-13
 >
 > Origin: derived from `CLAUDE-dotnet-vue-apps.md` (Skoda). **Relaxed** contract for self-contained Vue 3 apps without their own backend, deployed as static sites (GitHub Pages / Netlify / Cloudflare Pages / Vercel).
@@ -10,6 +10,10 @@
 This document governs AI agent behavior on projects in this family. It is a **runtime execution policy**, not product documentation.
 
 The AI must follow these rules strictly. If a task cannot be executed within these constraints, the AI stops and asks for clarification. Where a rule is marked "relaxed", it can be skipped under the stated conditions.
+
+---
+
+**Scope discipline**: this contract codifies **family/stack** rules. User personal preferences and configuration that depend on the individual operator go in the user-global `CLAUDE.md` (`~/.claude/CLAUDE.md`); project-specific exceptions and overrides go in the per-repo `CLAUDE.md`. Keeping this separation prevents user-preference rules from sneaking into the contract and creating cross-operator surprises.
 
 ---
 
@@ -397,6 +401,14 @@ Format (LLM-friendly):
 When an entry transitions to `chiuso`, move it under "Voci chiuse" with a closure note. Don't delete — closed items are part of the project's debt history.
 
 When the corresponding inline marker exists in code (e.g. `TODO(td-001):`), it must match the ID in this file. The marker is the in-code pointer; this file is the authoritative tracker. **In-code marker without entry here = bug**: open the entry.
+
+### Tech debt & issue tracker (capability-gated)
+
+When the platform issue tracker CLI is available and authenticated (`gh` / `az repos` / `glab`), significant `tech-debt.md` entries **must** also exist as issues. The file is source-of-truth for **AI context** (aggregate, always readable locally); the issue is source-of-truth for **humans** (comments, labels, assignment, stable ID, external input). Cross-link in each significant entry: `→ issue #N`.
+
+The AI **reads** issue comments to surface external feedback (client, contributor, beta tester) but **never auto-acts** on them without user confirmation.
+
+If no platform CLI is available/authenticated (local-only repo, unauthenticated tooling, no issue tracker by design): file-only is sufficient. The per-repo `CLAUDE.md` declares the active policy (`issue tracker: github / azure / gitlab / none`).
 
 ### Doc viva (non ADR-style) — root of `docs/`
 
