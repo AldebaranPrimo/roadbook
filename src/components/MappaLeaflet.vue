@@ -32,6 +32,18 @@ let cerchioAccuratezza = null
 let idDisegno = 0
 const origineRouting = ref(null) // 'cache' | 'osrm' | 'retta' | 'retta-mezzo'
 
+const MODALITA_VALIDE = ['auto', 'piedi', 'bici', 'treno', 'autobus', 'traghetto']
+// Modalità effettiva dell'area: usa il valore dichiarato se riconosciuto, altrimenti 'auto'.
+// (la validazione all'import già avvisa l'utente; qui gestiamo il fallback runtime)
+const modalitaArea = computed(() => {
+  const m = props.area.modalita
+  if (m && !MODALITA_VALIDE.includes(m)) {
+    console.warn(`MappaLeaflet: modalita "${m}" non riconosciuta, uso "auto".`)
+    return 'auto'
+  }
+  return m || 'auto'
+})
+
 const { tema } = useTema()
 const { posizione: posizioneUtente, stato: statoGeo, richiedi: richiediGeo } = useGeolocalizzazione()
 
@@ -169,12 +181,11 @@ async function disegna() {
     mappa.fitBounds(bounds, { padding: [30, 30], maxZoom: 13, animate: false })
   }
 
-  const modalita = props.area.modalita === 'piedi' ? 'piedi' : 'auto'
   const esito = await ottieniPercorso({
     viaggioId: props.viaggioId,
     areaId: props.area.id,
     punti,
-    modalita
+    modalita: modalitaArea.value
   })
   // se nel frattempo l'utente ha cambiato area, questa risposta è obsoleta:
   // scartarla evita che sovrascriva la polyline dell'area corrente
@@ -318,12 +329,11 @@ watch(posizioneUtente, (p) => {
 })
 
 defineExpose({ evidenziaMarker, ricalcolaRouting: async () => {
-  const modalita = props.area.modalita === 'piedi' ? 'piedi' : 'auto'
   const esito = await ottieniPercorso({
     viaggioId: props.viaggioId,
     areaId: props.area.id,
     punti: props.area.punti,
-    modalita,
+    modalita: modalitaArea.value,
     forzaAggiornamento: true
   })
   if (polyline) polyline.remove()
