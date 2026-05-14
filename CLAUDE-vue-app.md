@@ -1,9 +1,9 @@
 # AI Execution Contract — Vue 3 standalone app (no backend)
 
-> **Data ultimo aggiornamento**: 2026-05-13 (YAML front matter dei cassetti + TD-D-NNN decisioni differite)
-> **Data ultima sincronizzazione**: 2026-05-13
+> **Data ultimo aggiornamento**: 2026-05-14 (Root files — `README.md` + `CHANGELOG.md` resi obbligatori in repo root, format Keep a Changelog prescritto)
+> **Data ultima sincronizzazione**: 2026-05-14
 >
-> Origin: derived from `CLAUDE-dotnet-vue-apps.md` (Skoda). **Relaxed** contract for self-contained Vue 3 apps without their own backend, deployed as static sites (GitHub Pages / Netlify / Cloudflare Pages / Vercel).
+> Origin: derived from `CLAUDE-dotnet-vue-apps.md` (la famiglia full-stack .NET + Vue). **Relaxed** contract for self-contained Vue 3 apps without their own backend, deployed as static sites (GitHub Pages / Netlify / Cloudflare Pages / Vercel).
 > Language: English for body, Italian retained for canonical doc templates (ADR/request/incident sections describing files that will be written in Italian unless the per-repo `CLAUDE.md` declares otherwise). Scope: small-scope projects, single or small teams, often in MVP or beta phase.
 > See *Revision history* at the bottom for non-trivial revisions.
 
@@ -458,6 +458,32 @@ The AI **reads** issue comments to surface external feedback but **never auto-ac
 
 If no platform CLI is available/authenticated (local-only repo, unauthenticated tooling, no issue tracker by design): file-only is sufficient. The per-repo `CLAUDE.md` declares the active policy (`issue tracker: github / azure / gitlab / none`).
 
+### Root files (mandatory) — `README.md` + `CHANGELOG.md`
+
+Two files **must exist at repo root** of every project under this contract, regardless of stack, scale, or audience. They are the first artifacts a human (or AI) sees opening the repo cold and live **at root**, not in `docs/`.
+
+**`README.md`** — repo entry-point. Minimum content:
+
+- **Project description**: what it is, target audience, stack — 2-4 lines.
+- **Link to internal documentation**: `docs/decisions/`, `docs/requests/`, `docs/tech-debt.md` (omit links to cassetti not yet populated; mention the *Documentation Layout & Lifecycle* chapter as reference).
+- **Minimum quickstart/setup**: essential commands for a dev opening the repo for the first time (install + run dev + run tests, if applicable).
+- **Language**: italian if the repo's users are italian; english if the repo targets a multi-lingual or open-source contributor base.
+
+**`CHANGELOG.md`** — history of significant changes.
+
+- **Position**: always at **repo root**. Not in `docs/`. (Some legacy repos host it in `docs/`: migrate to root opportunistically — no retroactive sweep, see *Legacy documentation*.)
+- **Prescribed format**: [Keep a Changelog 1.x](https://keepachangelog.com/). Sections `## [Unreleased]` + `## [<version>] - YYYY-MM-DD` with sub-sections `### Added`, `### Changed`, `### Fixed`, `### Removed`, `### Deprecated`, `### Security`.
+- **Update obligation**: every significant release or PR. "Significant" is stack-specific (see the *Branch & Promotion Model* / slice-completion conventions of this contract): typically any PR that changes externally observable behavior or AI-visible behavior.
+- **Versioning**: aligned with the contract's versioning model (semver where adopted, date-based for governance repos — see *Branch & Promotion Model*).
+
+**Opportunistic obligation for legacy repos**: repos that lack `README.md` or `CHANGELOG.md` (or host `CHANGELOG.md` in `docs/`) at the adoption date of this chapter are **not** touched retroactively. Create or migrate at the **next useful modification** (next feature, next bugfix that touches docs, next sync). No compliance sweep.
+
+**Specific anti-patterns**:
+
+- Scaffold-generated README (the default `README.md` from `npm init`, `dotnet new`, `nuxi init`, etc.) — must be rewritten with the minimum content above. Left as-is, it's equivalent to having no README.
+- CHANGELOG that accumulates everything in `## [Unreleased]` without ever closing a release — becomes unreadable. Even for projects without formal releases (e.g., governance repos), periodically close with a date-based version.
+- CHANGELOG auto-generated from git log without human editing — the noise of minor commits destroys the value. Auto-generation as a draft is OK; final editing is mandatory.
+
 ### Doc viva (non ADR-style) — root of `docs/`
 
 Beyond the cassetti and `tech-debt.md`, `docs/` hosts **living technical docs** that change over time as the codebase evolves:
@@ -465,7 +491,6 @@ Beyond the cassetti and `tech-debt.md`, `docs/` hosts **living technical docs** 
 - `README-*.md` — operational guides (deploy, import/export, alert system)
 - `DEPLOY-*.md` — deploy procedures
 - `TODO.md` — operational roadmap (long-term planned initiatives, distinct from tech-debt fragments)
-- `CHANGELOG.md` — version history
 - `HOWTO-*.md` — point-in-time tutorials
 
 Naming: free-form descriptive Title-Case or kebab-case, no `YYYY-MM-DD-` prefix. These files are **edited in place** as the underlying behavior changes — git carries the history.
