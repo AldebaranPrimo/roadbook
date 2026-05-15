@@ -1,7 +1,7 @@
 # AI Execution Contract — Vue 3 standalone app (no backend)
 
-> **Data ultimo aggiornamento**: 2026-05-14 (Root files — `README.md` + `CHANGELOG.md` resi obbligatori in repo root, format Keep a Changelog prescritto)
-> **Data ultima sincronizzazione**: 2026-05-14
+> **Data ultimo aggiornamento**: 2026-05-15 (Cross-family broadcast §9.3: aggiunto chapter `## Required tooling` stack-specific — pattern definito in `CLAUDE-meta.md` §"Setup prerequisites — pattern del README" rev 6 stesso giorno)
+> **Data ultima sincronizzazione**: 2026-05-15 (cross-family broadcast §9.3 — Required tooling chapter)
 >
 > Origin: derived from `CLAUDE-dotnet-vue-apps.md` (la famiglia full-stack .NET + Vue). **Relaxed** contract for self-contained Vue 3 apps without their own backend, deployed as static sites (GitHub Pages / Netlify / Cloudflare Pages / Vercel).
 > Language: English for body, Italian retained for canonical doc templates (ADR/request/incident sections describing files that will be written in Italian unless the per-repo `CLAUDE.md` declares otherwise). Scope: small-scope projects, single or small teams, often in MVP or beta phase.
@@ -652,9 +652,27 @@ If a section would be empty, declare it ("no deviation from family contract") ra
 
 ---
 
+## Required tooling
+
+Cross-family chapter shared via §9.3 broadcast 2026-05-15 — see `CLAUDE-meta.md` §"Setup prerequisites — pattern del README" for the structural pattern (5 sub-sections of `## Setup — prerequisiti` in satellite READMEs) + Base tooling (pwsh 7+, git, Claude Code CLI, VS Code) + Platform CLI per hosting (`gh`/`az`/`glab`) + regola UI-bearing (Playwright + `frontend-design` agent). This chapter lists the **stack-specific tooling** for any project consuming this contract; the satellite README §"Stack `vue-app`" mirrors this list.
+
+### Stack `vue-app`
+
+- **Node.js 18+** + npm.
+- Vue 3 + Vite + Pinia (eventuali) come dipendenze npm del progetto (no global install).
+- Niente backend proprio — deploy come static site (GitHub Pages / Netlify / Cloudflare Pages / Vercel).
+
+### Stack-specific MCP
+
+- Nessun MCP mandatory di stack.
+
+---
+
 ## Revision history
 
 Only non-trivial revisions are recorded here.
+
+- **2026-05-15** — Cross-family broadcast §9.3 da `_master-contracts/` (CLAUDE-meta.md rev 6): aggiunto chapter `## Required tooling` stack-specific (Node 18+). Nessun MCP mandatory di stack. Nessun cambio normativo agli invariants esistenti.
 
 - **2026-05-12** (rev 8) — Added the cross-family chapter `Code documentation standard` after *Documentation Layout & Lifecycle*. Mandatory header comments on files, exported functions, and components — explicit override of the Claude Code global "no comments by default" rule for this family (file/function-level documentation, not inline narration). Propagated in one direct-modification session to all 9 master contracts and all 9 consumer copies. Snapshot pre-modification in `storico/2026-05-12-direct-code-doc-standard/`.
 - **2026-05-08** (rev 7) — Translated the contract from Italian to English for consistency with the other family contracts (5/8 already in English including the family root `CLAUDE-dotnet-vue-legacy.md`) and to gain ~25–40% token efficiency on every context load. The canonical sections of ADR/request/incident/tech-debt templates inside *Documentation Layout & Lifecycle* remain in Italian (they describe the doc files which are written in Italian unless the per-repo `CLAUDE.md` declares otherwise). H3 headers inside that chapter (`### Anti-pattern da evitare`, `### Doc viva (non ADR-style) — root of docs/`, `### Soglia "file singolo vs cartella dedicata"`) also remain in Italian, matching the precedent set by the other 5 English contracts. No semantic change to any rule.
