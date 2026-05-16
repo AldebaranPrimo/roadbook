@@ -257,3 +257,27 @@ Mentre non è configurato un hook SessionStart, a ogni nuova sessione Claude:
 4. Verifica la build locale con `npm run build` se sta per toccare codice (opzionale ma consigliato dopo un `git pull`).
 
 Quando verrà attivato un hook `SessionStart` in `.claude/settings.json`, questa sezione si accorcia a un puntatore.
+
+---
+
+## Documentation cassetti
+
+Cassetti documentali secondo *Documentation Layout & Lifecycle* di `CLAUDE-vue-app.md` (rev 2026-05-16 broadcast). Stato corrente:
+
+- **`docs/decisions/`** — `populated` (cartella adottata con ADR esistenti). Skill `/decision-new` **non installata** in questo repo (no `.claude/skills/`); la creazione è manuale seguendo il template del contratto di famiglia (`CLAUDE-vue-app.md` §*Three ADR-style cassetti*).
+- **`docs/requests/`** — `populated` (cartella adottata). Stesso pattern manuale.
+- **`docs/incidents/`** — **non scaffolded** ancora. Da creare al primo trigger qualificato (anomalia operativa con impatto utente/team).
+- **`docs/tech-debt.md`** — `populated` (file presente con voci correnti).
+- **`docs/tech/`** — non applica alla famiglia `vue-app` con convenzione mandatory specifica.
+
+**Nota storica**: il 2026-05-16 questo satellite ha omesso di creare un file in `docs/requests/` durante una richiesta cliente che apriva interlocuzione non chiusa nel turno. Quell'omissione è stata il trigger reale della modifica del contratto di famiglia (vedi ADR `_master-contracts/docs/decisions/2026-05-16-trigger-cassetti-e-issue-coupling.md`) — il nuovo chapter *Triggers — when a cassetto file is created* di `CLAUDE-vue-app.md` rende ora prescrittivo cosa fare.
+
+## Issue tracker
+
+- **Piattaforma**: `github`.
+- **Organizzazione/Account**: `AldebaranPrimo` (host: `github.com/AldebaranPrimo`).
+- **Repo**: `roadbook`.
+- **Categoria proprietà**: `personal` — progetto personale pubblico di Aldebaran Primo (Marco Preti, autore Roadbook).
+- **CLI**: `gh` (GitHub CLI) per issue + PR + repo ops.
+
+**Coupling cassetti↔issue** (capability-gated, regola universale `CLAUDE-meta.md` rev 8): ogni file in `docs/requests/` e `docs/incidents/` ha cross-link 1:1 con una GitHub issue — bidirezionale (file → URL issue, issue → path file). Per-entry optional in `docs/tech-debt.md`. Optional per `docs/decisions/`.

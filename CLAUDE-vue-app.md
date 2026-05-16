@@ -1,7 +1,8 @@
 # AI Execution Contract — Vue 3 standalone app (no backend)
 
-> **Data ultimo aggiornamento**: 2026-05-15 (Cross-family broadcast §9.3: aggiunto chapter `## Required tooling` stack-specific — pattern definito in `CLAUDE-meta.md` §"Setup prerequisites — pattern del README" rev 6 stesso giorno)
-> **Data ultima sincronizzazione**: 2026-05-15 (cross-family broadcast §9.3 — Required tooling chapter)
+> **Data ultimo aggiornamento**: 2026-05-16 (Cross-family broadcast §9.3 da `CLAUDE-meta.md` rev 8: aggiunte 3 regole dentro *Documentation Layout & Lifecycle* — Triggers di creazione cassetti + Issue tracker universal coupling + Per-repo Documentation cassetti & Issue tracker mandatory declarations. ADR: `docs/decisions/2026-05-16-trigger-cassetti-e-issue-coupling.md`. **Stesso giorno-1**: rev precedente Required tooling broadcast. Trigger reale di questa modifica: omissione su Roadbook 2026-05-16 — vedi ADR.)
+>
+> **Data ultima sincronizzazione**: 2026-05-16
 >
 > Origin: derived from `CLAUDE-dotnet-vue-apps.md` (la famiglia full-stack .NET + Vue). **Relaxed** contract for self-contained Vue 3 apps without their own backend, deployed as static sites (GitHub Pages / Netlify / Cloudflare Pages / Vercel).
 > Language: English for body, Italian retained for canonical doc templates (ADR/request/incident sections describing files that will be written in Italian unless the per-repo `CLAUDE.md` declares otherwise). Scope: small-scope projects, single or small teams, often in MVP or beta phase.
@@ -443,11 +444,30 @@ When an entry transitions to `chiuso`, move it under "Voci chiuse" with a closur
 
 When the corresponding inline marker exists in code (e.g. `TODO(td-001):`), it must match the ID in this file. The marker is the in-code pointer; this file is the authoritative tracker. **In-code marker without entry here = bug**: open the entry.
 
-### Tech debt & issue tracker (capability-gated)
+### Triggers — when a cassetto file is created
 
-When the platform issue tracker CLI is available and authenticated (`gh` / `az repos` / `glab`), entries of `tech-debt.md` that the user deems worth tracking **also** exist as issues. File = source-of-truth for **AI context** (aggregate, always readable locally); issue = source-of-truth for **humans** (comments, labels, assignment, stable ID, external input). Cross-link `→ issue #N` in the file. **The user decides which entries warrant an issue** — no significance threshold prescribed; AI proposes, user picks.
+The previous chapter defines **what** each cassetto contains. This section defines **when** a new file must be born — prescriptive rule, omission = anti-pattern.
 
-The AI **reads** issue comments to surface external feedback but **never auto-acts** without user confirmation.
+- **`docs/decisions/`** → every non-trivial architectural or process decision, even if applied immediately. Typical triggers: choice between ≥2 alternatives with rationale, conscious deviation from the contract, scope/non-scope of a feature, technology pick. The file is born in the turn the decision is taken, **before or contextually** with implementation.
+- **`docs/requests/`** → every client request that opens interlocution and **does not close in the current turn**. Trigger: the request requires analysis, estimate, requirement gathering, confirmations pending answer, or discussion extending beyond a single turn. Trivial request executed in the same turn → no file needed.
+- **`docs/incidents/`** → every operational anomaly with user/team impact requiring analysis, **even if hot-fixed in the same turn**. Triggers: production bug, regression, unexpected behaviour, emergency fix. The file is the crystallised lesson, not just the fix log.
+- **`docs/tech-debt.md`** → every conscious deferral of technical work during a task. Triggers: "we'll do it later", "TODO for the future", deferred decision (`TD-D-NNN`).
+- **`docs/tech/`** (cross-family, stack-specific where applicable) → live project structure: one entry per block/component/section/snippet (themes), one entry per module/registry/runbook (other families). Trigger: addition or modification of a documentable structural unit.
+
+**Anti-pattern**: deferring file creation "because it's small / the project is early-stage / not worth it". The file is born at the **first** qualifying trigger, not the second. Otherwise the memory of the discussion is lost in the conversation and is not recoverable in subsequent sessions.
+
+### Issue tracker — universal coupling (capability-gated)
+
+When the platform issue tracker (`gh` / `az repos` / `glab` / equivalent) is available and authenticated, **every cassetto file representing significant work** has a 1:1 cross-link with an issue/work-item in the tracker. Platform-agnostic schema: 1 cassetto file = 1 issue/work-item, **regardless of type** (Bug / User Story / Task / Feature / Issue of the tracker). File = source-of-truth for **AI context** (aggregate, always readable locally); issue = source-of-truth for **humans** (comments, labels, assignment, stable ID, external input). The AI **reads** issue comments to surface external feedback but **never auto-acts** without user confirmation.
+
+**Coupling per cassetto**:
+
+- `docs/requests/<file>.md` ↔ issue/work-item of **client request** (any type: User Story, Feature, Task, Issue). Bidirectional cross-link: in the file `→ <issue URL>`, in the issue `→ <file path relative to repo>`. **Mandatory** if the tracker is active: no file without issue, no issue without file (for this cassetto).
+- `docs/incidents/<file>.md` ↔ issue/work-item of **anomaly** (any type: Bug, Issue, Incident). Same bidirectional cross-link and same mandate.
+- `docs/tech-debt.md` entries that the user deems worth tracking ↔ tech backlog issue — **per-entry optional**. **The user decides which entries warrant an issue** — AI proposes, user picks. Cross-link `→ issue #N` in the file.
+- `docs/decisions/<file>.md` ↔ coupling **optional** (ADRs are retrospectives of decisions taken, not tracking of pending work). Couples only if the decision generates separately trackable work.
+
+**Per-repo declares its tracker**: each `CLAUDE.md` per-repo declares the platform in use, the organisation/account, and the project ownership category. See §*Per-repo CLAUDE.md — minimum viable sections* for the declarative format.
 
 **Issue conventions** (when tracker is active):
 
@@ -456,7 +476,7 @@ The AI **reads** issue comments to surface external feedback but **never auto-ac
 - **Branch ↔ issue linkage** (for code-change issues): branch name encodes the ID with pattern `<slice-type>/<issue-id>-<slug>` (e.g. `ai/feat/42-new-export` on GitHub/GitLab; `ai/feat/AB1234-new-export` on Azure DevOps). Commit messages reference the issue (`feat: foo (#42)` on GitHub/GitLab; `feat: foo AB#1234` on Azure DevOps). PR/MR uses the platform auto-close keyword (`Closes #42` / `Fixes #42` on GitHub/GitLab; "Related work items" on Azure DevOps).
 - **Risk label**: every code-change issue carries the **`risk:<level>`** of the slice that addresses it. Definitions are stack-specific and live in §*Execution Workflow / Phase 1 Task intake* of this contract (`risk:low` / `risk:medium` / `risk:high` / `risk:critical`); they reflect *cognitive blast radius* (how many parts of the codebase must be reconsidered after the change) and the rollback plan, **not** a generic file-count heuristic. On GitLab use the scoped form `risk::<level>` for per-issue exclusivity. The label drives review depth, PR/MR process, and rollback plan.
 
-If no platform CLI is available/authenticated (local-only repo, unauthenticated tooling, no issue tracker by design): file-only is sufficient. The per-repo `CLAUDE.md` declares the active policy (`issue tracker: github / azure / gitlab / none`).
+If no platform CLI is available/authenticated (local-only repo, unauthenticated tooling, no issue tracker by design): file-only is sufficient. The per-repo `CLAUDE.md` declares the active policy (`issue tracker: github / azure / gitlab / none`), the organisation/account, and the project ownership category.
 
 ### Root files (mandatory) — `README.md` + `CHANGELOG.md`
 
@@ -599,6 +619,11 @@ When scaffolding a new repo of this family, the root `CLAUDE.md` should contain 
 11. **Do-not list** — repo-specific footguns, **not** duplicates of the *Forbidden* section of the generic contract.
 12. **Documentation Layout adoption date** — date this repo adopted the *Documentation Layout & Lifecycle* chapter (`Data adozione Documentation Layout: YYYY-MM-DD`). Everything in `docs/` before this date is legacy documentation per that chapter.
 13. **Legacy documentation** — list of legacy files/folders in `docs/` (or equivalent) pre-existing the chapter adoption, with a one-line summary each. If there is no legacy doc, state so explicitly.
+
+### Mandatory — additions (2026-05-16 broadcast)
+
+- **Documentation cassetti** — enumerate **all adopted cassetti** (`docs/decisions/`, `docs/requests/`, `docs/incidents/`, `docs/tech-debt.md`, `docs/tech/` where applicable) with current population state: `populated` (contains ≥1 file/entry) or `empty-ready` (folder exists with `.gitkeep` or scaffold, but no useful content). **Omission of an adopted cassetto is an anti-pattern**: the next session reading the per-repo to orient itself risks not seeing the available option.
+- **Issue tracker** — declare the active platform (`github` / `azure` / `gitlab` / `none`), organisation/account (e.g. `ICT-Sviluppo` on GitHub, `Studium` on Azure DevOps), and **project ownership category** (`ictsviluppo` / `other-client:<name>` / `personal`). When `none`, declare it explicitly.
 
 ### Recommended
 
