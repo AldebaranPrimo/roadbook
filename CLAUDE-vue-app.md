@@ -1,8 +1,7 @@
 # AI Execution Contract — Vue 3 standalone app (no backend)
 
 > **Data ultimo aggiornamento**: 2026-05-16 (Cross-family broadcast §9.3 da `CLAUDE-meta.md` rev 8: aggiunte 3 regole dentro *Documentation Layout & Lifecycle* — Triggers di creazione cassetti + Issue tracker universal coupling + Per-repo Documentation cassetti & Issue tracker mandatory declarations. ADR: `docs/decisions/2026-05-16-trigger-cassetti-e-issue-coupling.md`. **Stesso giorno-1**: rev precedente Required tooling broadcast. Trigger reale di questa modifica: omissione su Roadbook 2026-05-16 — vedi ADR.)
->
-> **Data ultima sincronizzazione**: 2026-05-16
+> **Data ultima sincronizzazione**: 2026-05-29 (re-sync col master: aggiunge la sotto-sezione *PIANO di implementazione — promozione a cartella* [broadcast 2026-05-23d, mai propagato a Roadbook] con naming corretto `<slug>-piano.md`. Snapshot `storico/2026-05-29-sync1/`).
 >
 > Origin: derived from `CLAUDE-dotnet-vue-apps.md` (la famiglia full-stack .NET + Vue). **Relaxed** contract for self-contained Vue 3 apps without their own backend, deployed as static sites (GitHub Pages / Netlify / Cloudflare Pages / Vercel).
 > Language: English for body, Italian retained for canonical doc templates (ADR/request/incident sections describing files that will be written in Italian unless the per-repo `CLAUDE.md` declares otherwise). Scope: small-scope projects, single or small teams, often in MVP or beta phase.
@@ -381,6 +380,40 @@ Promuovi a cartella `docs/<cassetto>/YYYY-MM-DD-slug/` con `README.md` indice + 
 - Coinvolge ≥ 2 sotto-progetti del repo
 
 Sotto la soglia: il file `.md` singolo è auto-sufficiente. **Mai** creare cartelle scheletro vuote o file scheletro con sezioni vuote in attesa di essere riempite.
+
+### PIANO di implementazione — promozione a cartella (≥ media complessità)
+
+Per sviluppi non triviali (feature multi-file, integrazione esterna, refactoring strutturale) il pattern standard è: **prima del codice si apre il file di cassetto** appropriato all'origine; se serve un piano di implementazione **sostanzioso**, l'item si promuove a cartella seguendo la soglia già definita sopra. Promosso a regola cross-famiglia il 2026-05-23 (sync session ZordanIV — vedi `_master-contracts/STATO-CONTRATTI.md` §7 entry **2026-05-23d**).
+
+**Origine determina il cassetto**:
+
+- Sviluppo che nasce da **richiesta cliente** → `docs/requests/YYYY-MM-DD-<slug>.md` (o cartella promossa).
+- Sviluppo che nasce da **decisione interna** (scelta architetturale, refactoring deliberato, iniziativa tecnica) → `docs/decisions/YYYY-MM-DD-<slug>.md` (o cartella promossa).
+- Fix di un bug di produzione → `docs/incidents/YYYY-MM-DD-<slug>.md` (post-mortem) ed eventualmente piano di rimedio strutturale → ADR collegato in `decisions/`.
+
+**Forma del PIANO**:
+
+1. **PIANO leggero** (1-2 paragrafi di implementazione, ≤ 1 giorno di lavoro, nessun artefatto tecnico extra) → resta come **sezione interna** del file ADR/request, dentro le sezioni canoniche ("Conseguenze" per ADR, "Decisione"/"Implementazione" per request). Niente file separato.
+
+2. **PIANO sostanzioso** — applica la soglia *"file singolo vs cartella dedicata"* esistente (≥ 1 settimana di lavoro / ≥ 3 interlocuzioni cliente formali previste / ≥ 2 artefatti tecnici aggiuntivi / ≥ 2 sotto-progetti coinvolti, ≥ 2 dei 4 criteri veri). In tal caso l'ADR/request si promuove a cartella `docs/<cassetto>/YYYY-MM-DD-<slug>/` con dentro:
+
+   - **`README.md`** — l'ADR/request standard, sezioni canoniche al solito (Situazione/Scelta/Conseguenze o Richiesta/Interlocuzione/Decisione/Implementazione), front-matter YAML invariato. Il README *è* l'item del cassetto, non un indice manuale.
+   - **`<slug>-piano.md`** — il piano dettagliato di implementazione, sezioni: *Obiettivo*, *Architettura* (diagrammi, struttura cartelle, pattern), *Implementazione dettagliata* (pseudocodice o codice esempio per ogni componente), *Configurazione* (variabili ambiente, file di config), *Sicurezza* (considerazioni di sicurezza specifiche), *Piano fasi* (checklist ordinata), *Dipendenze* (librerie, versioni), *Verifica* (checklist finale di completamento). Il PIANO è **autosufficiente** (comprensibile senza il contesto della conversazione che l'ha generato) e **va sottoposto all'utente per approvazione** prima di procedere con l'implementazione.
+   - **Allegati**: mockup, diagrammi, dati di esempio, qualunque artefatto tecnico aggiuntivo che giustifica la promozione a cartella.
+
+**Workflow**:
+
+1. AI apre il file (o cartella, se PIANO sostanzioso) prima di toccare codice.
+2. Compila la struttura standard del cassetto + il `<slug>-piano.md` se serve.
+3. **Utente approva il PIANO** (specie per cartelle promosse — l'approvazione è blocking gate per l'implementazione).
+4. Implementazione → si aggiorna la sezione *Implementazione*/*Conseguenze* del README col link a branch/commit/PR.
+5. Alla chiusura, lo stato del file ADR/request si aggiorna come per il pattern canonico (`accettata`, `implementata`, `chiusa`, ecc.).
+
+**Anti-pattern (specifico di questo cassetto)**:
+
+- **`docs/PIANO_<NOME_FEATURE>.md` alla root di `docs/`** — viola la separazione cassetti vs doc viva. Era il pattern legacy di alcuni progetti pre-codifica di questa regola; oggi è sostituito dalla promozione a cartella ADR/request descritta sopra. I file `docs/PIANO_*.md` preesistenti restano come *legacy documentation* (vedi sezione dedicata) — non si convertono retroattivamente.
+- **Aprire il `<slug>-piano.md` prima del file README ADR/request** — il PIANO è *dentro* l'ADR/request, non un'entità autonoma. L'origine (decisione interna o richiesta cliente) determina il cassetto.
+- **PIANO sostanzioso senza approvazione utente** — l'approvazione del PIANO da parte dell'utente è blocking gate per l'implementazione. Implementare prima dell'approvazione = lavoro a rischio di butto.
 
 ### Live tech debt — `docs/tech-debt.md` (single file)
 
