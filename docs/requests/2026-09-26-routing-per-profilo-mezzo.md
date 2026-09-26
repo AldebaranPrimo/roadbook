@@ -74,9 +74,31 @@ Elenco costruito su conoscenze generali, **da verificare sulla documentazione uf
 4. Costi: solo servizi gratuiti o installati in proprio, oppure è accettabile un servizio con chiave?
 5. Offline: va bene il modello attuale (calcolo online una volta, poi cache senza scadenza)?
 
+### 2026-09-26 — Precisazioni dell'autore (chat, seconda parte)
+
+- **Il routing attuale non basta.** Il routing OSRM di oggi è basico e non serve alle esigenze descritte sopra.
+- **Il routing spetta a Roadbook** (risposta alla domanda 1). Il file di viaggio indica i punti cruciali, cioè le cose da vedere lungo il percorso, ma non dice come muoversi dall'uno all'altro né per dove passare. Il calcolo del percorso resta compito dell'applicazione, con un routing molto più specializzato di quello attuale: è lì che si applicano i criteri di questa richiesta. La strada «strumento esterno di pianificazione + traccia GPX» non è la direzione scelta.
+- **Estensione prevista dello schema**:
+  - il **mezzo** con cui si percorre il tratto intermedio (bici, piedi, camper, auto e così via);
+  - non il tracciato. Se serve orientare il percorso, lo si fa con **punti di passaggio**: una versione ridotta del punto, con la sola posizione, senza descrizione e senza gli altri campi di un punto di interesse.
+- **Evoluzione possibile**: Roadbook potrebbe diventare un'applicazione vera e propria, mantenendo anche la versione web.
+- **Multimodalità** ([issue #31](https://github.com/AldebaranPrimo/roadbook/issues/31)): confermata come idea collegata. Caso tipico: un percorso lungo, su più giorni, fatto in parte in camper, in parte a piedi, in parte in bicicletta.
+
+Conseguenze da considerare nello studio:
+
+- Se la funzionalità procede, andrà rivista la definizione del README (sezione «In due righe»), secondo cui Roadbook «non pianifica».
+- Resta il nodo dell'architettura: Roadbook oggi non ha backend e usa solo servizi pubblici gratuiti. Il routing specializzato va collocato da qualche parte: un motore installato in proprio, un servizio con chiave, oppure, nell'eventuale applicazione nativa, un calcolo sul dispositivo. Quest'ultima via sarebbe interessante per l'uso offline, caso d'uso primario del progetto. Da verificare.
+- I punti di passaggio orientano il percorso ma non conoscono altezze e larghezze: i vincoli di camper e carrello restano a carico del motore di routing.
+
+Domande aperte che restano: dalla 2 alla 5 della lista precedente, più una nuova:
+
+6. Il mezzo si indica per ogni tratto fra due punti, o resta per area come oggi (`area.modalita`)? La risposta si lega alla issue #31.
+
 ## Decisione
 
-**Non ancora presa.** Stato: `aperta`. Si attende la discussione sulle domande aperte e, se si procede, uno studio che verifichi le piste di indagine.
+**Non ancora presa** sull'implementazione. Stato: `aperta`.
+
+Orientamento dell'autore (2026-09-26): il routing specializzato per mezzo spetta a Roadbook. Lo schema indicherà il mezzo dei tratti e, se serve, punti di passaggio ridotti, ma non il tracciato. Prossimo passo: lo studio sulle piste di indagine; la scelta del motore e dell'architettura andrà poi in un ADR in `docs/decisions/`.
 
 ## Implementazione
 
