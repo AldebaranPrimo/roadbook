@@ -22,7 +22,7 @@ L'unico file dichiarato legacy ai sensi del capitolo *Documentation Layout & Lif
 
 - [`docs/SPECIFICHE-APP.md`](docs/SPECIFICHE-APP.md) — Specifiche iniziali del 24/4/2026. Alleggerito al 24/4 a documento storico del giorno zero. Contiene contesto iniziale e §6 "Problemi noti e lezioni apprese" ancora valido. Non consultare per scelte correnti.
 
-Tutti gli altri file in `docs/` sono **doc viva** (`TODO.md`, `CHANGELOG.md`, `STATO-PROGETTO.md`, `tech-debt.md`) o **ADR** (`docs/decisions/*.md`), nessun altro legacy.
+Tutti gli altri file in `docs/` sono **doc viva** (`TODO.md`, `STATO-PROGETTO.md`, `tech-debt.md`; il `CHANGELOG.md` sta in radice dal 2026-09-26) o **ADR** (`docs/decisions/*.md`), nessun altro legacy.
 
 ## Issue tracker
 
@@ -88,7 +88,7 @@ Ogni commit destinato a essere visibile online **deve portare avanti `package.js
 - Sito live: **https://AldebaranPrimo.github.io/roadbook/**
 - Specifiche funzionali: [`docs/SPECIFICHE-APP.md`](docs/SPECIFICHE-APP.md) (fonte di verità prodotto)
 - Stato attuale del sistema: [`docs/STATO-PROGETTO.md`](docs/STATO-PROGETTO.md)
-- Cronologia modifiche: [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
+- Cronologia modifiche: [`CHANGELOG.md`](CHANGELOG.md)
 - Cose da fare: [`docs/TODO.md`](docs/TODO.md)
 
 Nessun ecosistema multi-repo. Roadbook è un progetto standalone, non comunica con backend propri.

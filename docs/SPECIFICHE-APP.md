@@ -2,7 +2,7 @@
 
 > ⚠ **Documento storico non vivente.** Questo file conserva le specifiche iniziali con cui è nato il progetto il 24 aprile 2026. **Non rappresenta lo stato corrente dell'app**, che è evoluto in direzioni diverse.
 >
-> Per lo stato corrente: [`STATO-PROGETTO.md`](STATO-PROGETTO.md) · Per la cronologia: [`CHANGELOG.md`](CHANGELOG.md) · Per lo schema JSON vivente: [`../README.md`](../README.md) ("Schema del JSON di viaggio") o la versione accessibile agli LLM in [`../public/schema/viaggio-1.1.md`](../public/schema/viaggio-1.1.md).
+> Per lo stato corrente: [`STATO-PROGETTO.md`](STATO-PROGETTO.md) · Per la cronologia: [`CHANGELOG.md`](../CHANGELOG.md) · Per lo schema JSON vivente: [`../README.md`](../README.md) ("Schema del JSON di viaggio") o la versione accessibile agli LLM in [`../public/schema/viaggio-1.1.md`](../public/schema/viaggio-1.1.md).
 >
 > Il file è mantenuto per memoria storica: quali decisioni sono state prese al giorno zero, quali problemi tecnici erano previsti, quali scelte sono state sostituite in corso d'opera. Consultare per **contesto**, non per indicazioni operative correnti.
 
@@ -111,7 +111,7 @@ Tutte confermate nel prodotto corrente.
 7. **Sprint 6** (offline): fine-tuning SW per mappe, prompt installa.
 8. **Sprint 7+** (v2): filtri, ricerca, geolocalizzazione.
 
-*Sprint 0-7 completati (incluse diverse voci v2). Il progetto ha poi continuato con voci non previste inizialmente: selettore stile mappa con 5 provider, tema scuro OSM con filtro CSS invertito, schema JSON v1.1 con annotazioni embedded, versione visibile + auto-update PWA con toast, OsmAnd nei deep link. Storico completo in [`CHANGELOG.md`](CHANGELOG.md).*
+*Sprint 0-7 completati (incluse diverse voci v2). Il progetto ha poi continuato con voci non previste inizialmente: selettore stile mappa con 5 provider, tema scuro OSM con filtro CSS invertito, schema JSON v1.1 con annotazioni embedded, versione visibile + auto-update PWA con toast, OsmAnd nei deep link. Storico completo in [`CHANGELOG.md`](../CHANGELOG.md).*
 
 ## 10. Test consigliati al giorno zero
 

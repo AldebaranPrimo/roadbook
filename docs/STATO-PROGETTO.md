@@ -1,7 +1,7 @@
 # Stato progetto Roadbook
 
 > **Snapshot** dello stato attuale del sistema: come è fatto **adesso**, non come ci siamo arrivati.
-> Per la cronologia delle modifiche vedere [`CHANGELOG.md`](CHANGELOG.md).
+> Per la cronologia delle modifiche vedere [`CHANGELOG.md`](../CHANGELOG.md).
 > Per le cose da fare vedere [`TODO.md`](TODO.md).
 > Ultimo aggiornamento: 2026-04-24.
 
@@ -126,7 +126,6 @@ roadbook/
 │       └── app.css                variabili tema chiaro/scuro/auto + base print
 ├── docs/
 │   ├── STATO-PROGETTO.md          questo file (snapshot corrente)
-│   ├── CHANGELOG.md               cronologia modifiche
 │   ├── TODO.md                    lista cose future
 │   ├── SPECIFICHE-APP.md          specifiche storiche iniziali (non vivente — vedere nota in testa)
 │   ├── analisi/                   documenti di design di slice complesse
@@ -135,6 +134,7 @@ roadbook/
 ├── .github/workflows/deploy.yml   build + deploy su Pages
 ├── vite.config.js                 + plugin locale per viaggi/manifest.json
 ├── README.md
+├── CHANGELOG.md                   cronologia modifiche
 ├── CLAUDE.md                      contratto AI specifico del repo
 ├── CLAUDE-vue-app.md              contratto AI generico per Vue app standalone
 └── package.json

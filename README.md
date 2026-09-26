@@ -74,7 +74,7 @@ Questo è il primo rilascio pubblico: è *funzionalmente* completo rispetto al p
 - **Nessun meccanismo di sync cloud** ancora: tutto è locale al dispositivo (IndexedDB). È in roadmap per la v2.
 - Le **icone PWA** sono ancora placeholder SVG; per installabilità Android al 100% vanno sostituite con PNG 192/512/maskable.
 
-Stato dettagliato: [`docs/STATO-PROGETTO.md`](docs/STATO-PROGETTO.md). Cronologia modifiche: [`docs/CHANGELOG.md`](docs/CHANGELOG.md). Cose da fare: [`docs/TODO.md`](docs/TODO.md).
+Stato dettagliato: [`docs/STATO-PROGETTO.md`](docs/STATO-PROGETTO.md). Cronologia modifiche: [`CHANGELOG.md`](CHANGELOG.md). Cose da fare: [`docs/TODO.md`](docs/TODO.md).
 
 ## Funzionalità v1
 
@@ -94,7 +94,7 @@ Stato dettagliato: [`docs/STATO-PROGETTO.md`](docs/STATO-PROGETTO.md). Cronologi
 - ✅ **Backup**: esporta tutto (viaggi + visitati + note + routing cache + preferenze) come JSON, e reimporta
 - ✅ **PWA installabile**: manifest, service worker Workbox, runtime caching tile CartoDB (CacheFirst 30gg, max 3000 tile) e OSRM (NetworkFirst 5s)
 
-Le funzionalità residue in roadmap sono tracciate nel [`docs/TODO.md`](docs/TODO.md); la cronologia di ciò che è stato rilasciato nel [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
+Le funzionalità residue in roadmap sono tracciate nel [`docs/TODO.md`](docs/TODO.md); la cronologia di ciò che è stato rilasciato nel [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
@@ -284,7 +284,7 @@ Se l'itinerario contiene tappe miste (es. arrivo a Civitavecchia in auto, attrav
 ## Documenti correlati
 
 - **[`docs/STATO-PROGETTO.md`](docs/STATO-PROGETTO.md)** — snapshot dello stato attuale del sistema
-- **[`docs/CHANGELOG.md`](docs/CHANGELOG.md)** — cronologia sintetica delle modifiche
+- **[`CHANGELOG.md`](CHANGELOG.md)** — cronologia sintetica delle modifiche
 - **[`docs/TODO.md`](docs/TODO.md)** — lista delle cose da fare
 - **[`docs/SPECIFICHE-APP.md`](docs/SPECIFICHE-APP.md)** — specifiche iniziali storiche (documento non vivente, utile per contesto del giorno zero)
 - **[`public/schema/viaggio-1.1.md`](public/schema/viaggio-1.1.md)** — schema JSON vivente, pensato per essere passato a un LLM per produrre nuovi viaggi
