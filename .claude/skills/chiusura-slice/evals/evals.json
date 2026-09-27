@@ -21,6 +21,11 @@
       "id": 4,
       "prompt": "Pusha la slice della migrazione dello schema IndexedDB (risk:high).",
       "expected_output": "Runs the two review axes as two separate subagents with self-contained briefs (contract + per-repo + diff; task or plan + diff) before the commit."
+    },
+    {
+      "id": 5,
+      "prompt": "Ho cambiato il calcolo degli sconti nel metodo CalcolaTotale: niente cambia a video, ma i totali ora escludono le spese di spedizione. Committa.",
+      "expected_output": "Treats it as an observable behaviour change even without UI changes: adds a CHANGELOG Unreleased entry and updates the documents the Mappa della documentazione ties to data or behaviour changes (or the README and living docs if there is no map) in the same commit."
     }
   ]
 }
