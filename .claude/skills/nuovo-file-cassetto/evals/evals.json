@@ -1,0 +1,31 @@
+{
+  "skill_name": "nuovo-file-cassetto",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Ok, abbiamo deciso: per l'export usiamo jsPDF invece di stampare dal browser, è più prevedibile su Android.",
+      "expected_output": "Creates docs/decisions/<today>-<slug>.md from the decisione template with stato aperta and empty narrative sections, and says who fills them."
+    },
+    {
+      "id": 2,
+      "prompt": "Il cliente chiede di aggiungere la lingua tedesca al sito, ci fa sapere entro venerdì quali pagine.",
+      "expected_output": "Creates docs/requests/<today>-<slug>.md from the richiesta template and proposes (without creating) the matching issue on the declared tracker."
+    },
+    {
+      "id": 3,
+      "prompt": "Crea l'ADR per la scelta di Pinia, slug scelta-pinia.",
+      "files": ["docs/decisions/<today>-scelta-pinia.md already exists"],
+      "expected_output": "Stops before writing: the file exists, asks for another slug instead of overwriting."
+    },
+    {
+      "id": 4,
+      "prompt": "Aggiungi al registro dei debiti che il bundle supera il budget, lo sistemiamo dopo.",
+      "expected_output": "Does not use this skill: tech debt goes as a TD entry in docs/tech-debt.md, not in a drawer."
+    },
+    {
+      "id": 5,
+      "prompt": "Fai rivedere a Codex il piano di migrazione del database prima che lo implementiamo.",
+      "expected_output": "Creates docs/reviews/<today>-<slug>.md from the revisione template with agente codex and oggetto piano, fills the Richiesta with the brief and the acceptance criteria, adds the row to docs/reviews/README.md."
+    }
+  ]
+}

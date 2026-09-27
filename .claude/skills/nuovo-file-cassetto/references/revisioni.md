@@ -1,0 +1,11 @@
+# Review threads — rules of the `reviews/` drawer
+
+Read when creating, answering or updating a review thread. The external reviewer (Codex) is briefed by `AGENTS.md` at the repo root, which carries the same rules: if the two wordings diverge, fix them together.
+
+- **One writer per section, filled in place.** Each section replaces its placeholder line in parentheses; a filled section is never rewritten; never a second section with a title already present; nothing below `## Esito`.
+- **Who writes what.** The reviewer: *Rilievi* and *Replica* only, never code, never other drawers, never `stato`, never commits (work outside these bounds is discarded, not merged). Claude: *Richiesta* (optional brief), *Risposta*, and `stato: risposta` once answered. **Only the user** writes *Esito* and sets `chiusa` + `data-chiusura`; `superata` + `superata-da` when a new file replaces it.
+- **Two axes.** *Rilievi* is split into *Standard* (does it follow the repo rules: contract invariants, file scope, forbidden list, testing policy, per-repo conventions) and *Specifica* (does it do what the task asked: acceptance criteria of the plan or request). The *Richiesta* states the acceptance criteria so the second axis can be judged.
+- **Extra round.** New findings (not a reply) add `## Rilievi (giro N)` by the reviewer and `## Risposta (giro N)` by Claude, both right before `## Esito`; *Replica* stays one.
+- **Whose turn.** Derived from `stato` and from the sections still at their placeholder (`aperta` with empty *Rilievi* = reviewer; `risposta` with empty *Replica* = reviewer or user). No extra frontmatter field.
+- **Answering.** Accepted fixes only inside the slice's file scope; outside it they become `TODO(review): …` plus an entry in `docs/tech-debt.md`. A finding on a production path is never closed with "not observed": reproduce it or explain why it cannot happen.
+- **Index.** `reviews/README.md`, one row per review (date, id, reviewer, object, `stato`, one-line outcome), kept by Claude by hand at every `stato` change; no hook or script writes it; the reviewer does not touch it. The SessionStart briefing lists open reviews (`aperta`, `risposta`): read and answer them before other work.

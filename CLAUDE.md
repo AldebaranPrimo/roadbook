@@ -165,8 +165,6 @@ Deviazioni da `CLAUDE-vue-app.md`:
 - **Lingua di UI, errori e commenti**: **italiano**. Anche gli identificatori di dominio (variabili, funzioni, file) sono in italiano (`useViaggio`, `aree`, `chiavePunto`). I nomi tecnici universali (hook Vue, API standard: `ref`, `computed`, `onMounted`, `fetch`) restano inglesi.
 - **Accessibilità WCAG AA (I-09)** è un obiettivo, ma non completamente auditato in v1.0. Obbligatorio sulle modifiche future; debito attuale tracciato come [`TD-003`](docs/tech-debt.md) e come `TODO(a11y):` inline dove rilevato.
 - **Code documentation applicato solo a file nuovi** — il capitolo *Code documentation* del contratto chiede header su file, funzioni esportate, composable e componenti. In Roadbook applichiamo gli header **a regime su file nuovi** e a file modificati in modo sostanziale (slice tematica su quel file). Niente refactor retroattivo di massa sulla codebase v1.0. Il livello di copertura crescerà organicamente nelle slice future.
-- **Cassetti senza skill (temporanea)** — il contratto vuole i file dei cassetti creati con le skill del kit (`/decision-new`, `/request-new`, `/incident-new`, `/review-new`), che qui non sono ancora installate: finché non arrivano, i file si creano a mano sul modello di quelli già presenti nel cassetto, con lo stesso frontmatter.
-
 Nessun'altra deviazione rispetto a I-01..I-15.
 
 ---
@@ -255,10 +253,10 @@ Secondo il capitolo *Documentation layout* di `CLAUDE-vue-app.md`. Stato corrent
 - **`docs/reviews/`** — non ancora creato, nasce alla prima revisione di un'AI esterna (Codex).
 - **`docs/tech-debt.md`** — popolato.
 
-Le skill del kit non sono installate: vedi l'eccezione *Cassetti senza skill*.
+I file dei cassetti si creano con la skill `nuovo-file-cassetto`.
 
 ---
 
 ## Skill disponibili
 
-Nessuna skill di progetto in `.claude/skills/` (il kit del master non è ancora installato qui). Valgono le skill globali della macchina, in particolare `recupera-memoria` e `salva-memoria` per il passaggio fra sessioni.
+Kit del master in `.claude/skills/` (dal 2026-09-27): `nuovo-file-cassetto` (file nei cassetti), `chiusura-slice` (gate e autorevisione a fine slice), `verify`, `session-close`. Più le skill globali della macchina, in particolare `recupera-memoria` e `salva-memoria` per il passaggio fra sessioni.

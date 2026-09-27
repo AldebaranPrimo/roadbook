@@ -1,13 +1,15 @@
 # AI Execution Contract — Vue 3 standalone app (no backend)
 
-> **Data ultimo aggiornamento**: 2026-09-27 (rev 2026-09-27 — trimmed: drawer templates and rules left to the skills that emit them, per-repo required sections moved to the `master-sync` skill, revision history left to the registry. History: `_master-contracts/STATO-CONTRATTI.md` §7, `CHANGELOG.md`.)
-> **Data ultima sincronizzazione**: 2026-09-27 (pilota della propagazione con import `@` dal per-repo; snapshot `storico/2026-09-27-sync1/`).
+> **Data ultimo aggiornamento**: 2026-09-27 (rev 2026-09-27 — trimmed: drawer templates and rules left to the skills that emit them, per-repo required sections moved to the `master-sync` skill, revision history left to the registry; drawer files through the skill `nuovo-file-cassetto`, completion gate and two-axis self-review through `chiusura-slice`. Gradual adherence for existing repos. History: `_master-contracts/STATO-CONTRATTI.md` §7, `CHANGELOG.md`.)
+> **Data ultima sincronizzazione**: 2026-09-27 (sync2, propagazione generale; snapshot `storico/2026-09-27-sync2/`).
 >
 > Derived 2026-04-24 from `CLAUDE-dotnet-vue-apps.md` as a relaxed contract for self-contained Vue 3 apps deployed as static sites. Consumer: Roadbook.
 
 Runtime execution policy for projects that are a **pure Vue 3 frontend** (`<script setup>`, Composition API) with no backend of their own, a **static build** (Vite, `dist/` servable from any CDN: GitHub Pages, Netlify, Cloudflare Pages, Vercel), **local storage** (`localStorage`, `IndexedDB`, `sessionStorage`) and read-only external services (tile servers, public APIs), by a single developer or a small team. Out of scope: SSR apps, frontends coupled to an in-repo backend, marketing sites, native mobile.
 
 This file is loaded after the user-global rules (conduct, git, language, safety, incidents: never repeated here) and before the per-repo `CLAUDE.md` (actual versions, declared scale, storage keys, performance budget, service-worker policy, current git policy, exceptions to the invariants below).
+
+An existing repo adapts to this contract on its own schedule: deviations recorded in the per-repo `CLAUDE.md` (an override, or an *adeguamento in corso* with a `docs/tech-debt.md` entry) are known and decided — follow the per-repo, never raise them again, report only a new deviation, once.
 
 ---
 
@@ -44,7 +46,7 @@ Debt seen outside scope is recorded, not fixed: inline `// TODO(<tag>): <reason>
 
 **Implementation.** For a less-known library or an API that changed across majors, read the official docs or a live-docs MCP (`context7`) instead of memory. More than three files to touch: sketch the plan in a sentence or two first.
 
-**Completion gate**, before commit: `npm run type-check` (if TS), `npm run lint -- --fix` (if configured), `npm run build`; tests added by the slice; a manual smoke test on `npm run preview` for UI-visible slices at `risk:high` or above. Then **self-review the full diff as the human reviewer would** (`git diff HEAD`): semantics against the task, edge cases (`null`, empty, unicode, hostile input), security (every external input escaped before `innerHTML`, URL or storage; every `fetch` with timeout and error handling), consistency with the codebase, dead code and forgotten `console.log`, documentation and numbered lists (CHANGELOG, TODO) realigned. A problem found is fixed before commit; an unresolvable one keeps the slice open and is reported, never closed "for speed". Commit, push and PR follow the global default and the per-repo git policy.
+**Completion gate**, before commit, through the skill `chiusura-slice` (gate, then self-review on the Standard and Specifica axes): `npm run type-check` (if TS), `npm run lint -- --fix` (if configured), `npm run build`; tests added by the slice; a manual smoke test on `npm run preview` for UI-visible slices at `risk:high` or above. Stack review points for the Standard axis: every external input escaped before `innerHTML`, URL or storage; every `fetch` with timeout and error handling; no forgotten `console.log`. Commit, push and PR follow the global default and the per-repo git policy.
 
 ---
 
@@ -89,13 +91,13 @@ Debt seen outside scope is recorded, not fixed: inline `// TODO(<tag>): <reason>
 
 ## Documentation layout
 
-Drawers `docs/decisions|requests|incidents|reviews/`, one event = one file, created only through the skills `decision-new`, `request-new`, `incident-new`, `review-new` (they hold template, frontmatter and drawer rules); `docs/tech-debt.md` as the single debt registry (`TD-NNN`, deferred decisions `TD-D-NNN` with a reopening trigger, closed entries kept, inline `TODO(td-nnn)` matching an entry); living docs at the root of `docs/` (`TODO.md`, `DEPLOY.md`, `HOWTO-*.md`) edited in place; `README.md` + `CHANGELOG.md` at repo root; `HANDOFF.md` for session state (global skills `recupera-memoria` / `salva-memoria`). Legacy docs present at the adoption date stay where they are, listed in the per-repo. No empty skeleton folders, no hand-kept index README except `docs/reviews/README.md`, no nested drawers, no more than two levels under `docs/`.
+Drawers `docs/decisions|requests|incidents|reviews/`, one event = one file, created only through the skill `nuovo-file-cassetto` (it holds templates, frontmatter and drawer rules); `docs/tech-debt.md` as the single debt registry (`TD-NNN`, deferred decisions `TD-D-NNN` with a reopening trigger, closed entries kept, inline `TODO(td-nnn)` matching an entry); living docs at the root of `docs/` (`TODO.md`, `DEPLOY.md`, `HOWTO-*.md`) edited in place; `README.md` + `CHANGELOG.md` at repo root; `HANDOFF.md` for session state (global skills `recupera-memoria` / `salva-memoria`). Legacy docs present at the adoption date stay where they are, listed in the per-repo. No empty skeleton folders, no hand-kept index README except `docs/reviews/README.md`, no nested drawers, no more than two levels under `docs/`.
 
 When a file is born: a decision in the turn it is taken; a client or stakeholder request when it does not close in the same turn; an incident for every anomaly with impact; a debt entry for every conscious deferral. A substantial plan (≥ 2 of: estimate above 8 hours of active Claude time, per the global skill `stima-tempi-sviluppo` (Marco sets the final figure), ≥ 3 formal exchanges, ≥ 2 extra technical artifacts, ≥ 2 sub-projects) promotes the ADR or request to a folder with `README.md` and `<slug>-piano.md`, approved by the user before implementation.
 
 Issue tracker, when a platform CLI is authenticated (`gh` here): one drawer file = one issue, mandatory for requests and incidents, optional for tech debt and decisions; cross-links both ways; branch names and commits carry the id (`(#42)`); the code-change issue carries the slice's `risk:<level>`.
 
-Reviews by an external AI (Codex, thread rules in `/review-new`): the SessionStart briefing lists the open ones, read and answer them before other work; Claude fills Risposta in place, moves `stato` to `risposta`, fixes only inside the slice's file scope and updates `docs/reviews/README.md`; only the user closes.
+Reviews by an external AI (Codex, thread rules in the skill `nuovo-file-cassetto`): the SessionStart briefing lists the open ones, read and answer them before other work; Claude fills Risposta in place, moves `stato` to `risposta`, fixes only inside the slice's file scope and updates `docs/reviews/README.md`; only the user closes.
 
 ---
 

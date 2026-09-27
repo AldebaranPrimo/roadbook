@@ -1,0 +1,26 @@
+{
+  "skill_name": "chiusura-slice",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Ok, l'export in PDF funziona, committa e apri la PR.",
+      "expected_output": "Before committing: runs the gate (verify skill or the contract's Completion gate), then the Standard and Specifica self-review of the whole diff, shows the short report, and only then commits, pushes and opens the PR."
+    },
+    {
+      "id": 2,
+      "prompt": "Abbiamo finito la slice del filtro per data, chiudila.",
+      "files": ["the build fails with a type error in FiltroData.vue"],
+      "expected_output": "Stops at the gate: reports the failing build, fixes it inside the slice's file scope or asks, and does not commit."
+    },
+    {
+      "id": 3,
+      "prompt": "Committa la correzione del refuso nel README.",
+      "expected_output": "Does not run the gate: documentation-only change, follows the docs-only exception and the per-repo git policy."
+    },
+    {
+      "id": 4,
+      "prompt": "Pusha la slice della migrazione dello schema IndexedDB (risk:high).",
+      "expected_output": "Runs the two review axes as two separate subagents with self-contained briefs (contract + per-repo + diff; task or plan + diff) before the commit."
+    }
+  ]
+}
