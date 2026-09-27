@@ -2,23 +2,23 @@
 
 PWA per consultare itinerari di viaggio da file JSON, online e offline. Caso d'uso primario: viaggiatore in camper, consultazione da Android in zone montane senza connessione. Frontend Vue 3 + Vite + Leaflet + IndexedDB, deploy statico su GitHub Pages.
 
-> **Questo file contiene solo le regole specifiche del repo Roadbook.** Tutto ciò che non è qui segue il contratto di famiglia `CLAUDE-vue-app.md` nella stessa cartella. Leggere prima quello, poi questo.
+> **Questo file contiene solo le regole specifiche del repo Roadbook.** Tutto il resto lo stabilisce il contratto di famiglia `CLAUDE-vue-app.md`, importato qui sotto e quindi caricato a ogni sessione.
+
+@CLAUDE-vue-app.md
 
 ## Allineamento col contratto di famiglia
 
-**Data ultima sincronizzazione**: 2026-05-13 (rev 8 + estensioni 2026-05-13: *Scope discipline* nell'intro, *Tech debt & issue tracker* capability-gated, *Issue conventions* con `risk:<level>` label e branch naming `ai/<slice-type>/<issue-id>-<slug>`).
-
-Il contratto di famiglia non si versiona più con semver (vedi rev 6 di `CLAUDE-vue-app.md`): l'allineamento avviene per data esplicita di sincronizzazione, attraverso sessioni guidate di review. Questo repo è valido sulla rev del 2026-05-12 finché non si fa la prossima sincronizzazione.
+**Data ultima sincronizzazione**: 2026-09-27 (contratto alleggerito del 2026-09-27, import `@` attivato; sync dal master `_master-contracts`, pilota della propagazione).
 
 ## Data adozione Documentation Layout
 
 **Data adozione Documentation Layout**: 2026-05-13.
 
-Tutto ciò che era in `docs/` prima del 2026-05-13 è da considerarsi documentazione legacy ai sensi del capitolo *Documentation Layout & Lifecycle* del contratto, salvo i tre file dell'ex `docs/analisi/` che sono stati convertiti retroattivamente in ADR sotto `docs/decisions/` con la stessa data di sincronizzazione (scelta consapevole dell'autore di praticare il nuovo pattern, in deroga alla raccomandazione del contratto sulla non-retroattività).
+Tutto ciò che era in `docs/` prima del 2026-05-13 è da considerarsi documentazione legacy ai sensi del capitolo *Documentation layout* del contratto, salvo i tre file dell'ex `docs/analisi/` che sono stati convertiti retroattivamente in ADR sotto `docs/decisions/` con la stessa data di sincronizzazione (scelta consapevole dell'autore di praticare il nuovo pattern, in deroga alla raccomandazione del contratto sulla non-retroattività).
 
 ## Legacy documentation
 
-L'unico file dichiarato legacy ai sensi del capitolo *Documentation Layout & Lifecycle*:
+L'unico file dichiarato legacy ai sensi del capitolo *Documentation layout*:
 
 - [`docs/SPECIFICHE-APP.md`](docs/SPECIFICHE-APP.md) — Specifiche iniziali del 24/4/2026. Alleggerito al 24/4 a documento storico del giorno zero. Contiene contesto iniziale e §6 "Problemi noti e lezioni apprese" ancora valido. Non consultare per scelte correnti.
 
@@ -26,21 +26,23 @@ Tutti gli altri file in `docs/` sono **doc viva** (`TODO.md`, `STATO-PROGETTO.md
 
 ## Issue tracker
 
-`github` (CLI `gh` autenticata come AldebaranPrimo — vedi memoria progetto `reference_account_github`).
+- **Piattaforma**: GitHub, account `AldebaranPrimo`, repo `roadbook`; CLI `gh` autenticata come AldebaranPrimo (vedi memoria progetto `reference_account_github`).
+- **Categoria proprietà**: `personal` — progetto personale pubblico di Marco Preti (Aldebaran Primo).
+- **Collegamento cassetti↔issue**: ogni file in `docs/requests/` e `docs/incidents/` ha la sua issue GitHub, con rimando nei due sensi (file → URL issue, issue → percorso del file); facoltativo per `docs/tech-debt.md` e `docs/decisions/`.
 
-**Politica corrente sulle voci `docs/tech-debt.md`: tutte file-only.** Le voci `TD-001..TD-006` aperte al 2026-05-13 sono note di compilazione, configurazione e tooling a uso interno dell'autore — non rivolte a utenti esterni, non funzionali, non bisognose di label / comment / assignment / input di terzi. Non significative ai sensi del capitolo *Tech debt & issue tracker (capability-gated)* del contratto di famiglia, quindi nessuna issue GitHub corrispondente.
+**Politica corrente sulle voci `docs/tech-debt.md`: tutte file-only.** Le voci `TD-001..TD-006` aperte al 2026-05-13 sono note di compilazione, configurazione e tooling a uso interno dell'autore — non rivolte a utenti esterni, non funzionali, non bisognose di label / comment / assignment / input di terzi, quindi nessuna issue GitHub corrispondente.
 
 Se in futuro emergerà una voce TD significativa (es. che richiede input di un tester o di un secondo dev, che ha contorni decisionali aperti, che beneficia di tracking visibile), si aprirà la corrispondente issue GitHub con cross-link `→ issue #N` nella voce. La policy resta `github`, l'applicazione è graduata caso per caso.
 
 Le issue oggi aperte (#30 estensione modalità, #31 multimodalità intra-area) sono **feature/enhancement utenti-rilevanti**, non voci di tech-debt — sono tracciate dove devono essere, su GitHub Issues, non in `tech-debt.md`.
 
-**Convenzioni issue su questo repo** (allineate al contratto rev 2026-05-13):
+**Convenzioni issue su questo repo**:
 
-- **Lingua**: italiano (default del contratto, esplicitato qui).
+- **Lingua**: italiano.
 - **Tono**: tecnico, succinto, niente prosa lunga.
-- **Branch ↔ issue linkage**: i branch che chiudono una issue specifica usano il pattern `ai/<slice-type>/<issue-id>-<slug>` (es. `ai/feat/30-modalita-mezzi-vari`). I branch puramente di docs/refactor/contratto che non chiudono issue restano col vecchio pattern `ai/<slice-type>/<slug>`.
+- **Branch ↔ issue**: i branch che chiudono una issue specifica usano il pattern `ai/<slice-type>/<issue-id>-<slug>` (es. `ai/feat/30-modalita-mezzi-vari`); gli altri `ai/<slice-type>/<slug>`. Le modifiche di sola documentazione non aprono branch (vedi *Politica git corrente*).
 - **Commit message**: riferimento `(#N)` se la slice chiude una issue; PR body con `Closes #N` / `Fixes #N` per auto-close al merge.
-- **`risk:<level>` label**: ogni issue code-change porta `risk:low` / `risk:medium` / `risk:high` / `risk:critical` (label create il 2026-05-13). Le definizioni stack-specific vivono in §*Execution Workflow / Phase 1 Task intake* del contratto di famiglia: riflettono il *cognitive blast radius* (cosa va riconsiderato dopo il cambio + complessità del rollback plan), non un file-count. La label guida la review depth, il flusso PR, e il rollback plan.
+- **`risk:<level>` label**: ogni issue code-change porta `risk:low` / `risk:medium` / `risk:high` / `risk:critical` (label create il 2026-05-13). Le definizioni stack-specific vivono nel capitolo *Execution workflow* (Intake) del contratto di famiglia: riflettono il *cognitive blast radius* (cosa va riconsiderato dopo il cambio + complessità del rollback plan), non un file-count. La label guida la review depth, il flusso PR, e il rollback plan.
   - Stato attuale repo: #30 ha `risk:low` (chiusa dalla PR #32 confermata risk:low); #31 ha `risk:high` (multimodalità intra-area con decisione di design ancora aperta).
 
 ## Lingua del progetto
@@ -119,14 +121,17 @@ Node locale di sviluppo: `22+`. Le JavaScript actions di CI girano su Node 24 (f
 
 **`solo` + `mvp`** al 2026-04-24.
 
-Implicazioni attive:
+Rilassamento attivo, ammesso dal contratto per queste scale: test automatici Vitest/Playwright **non obbligatori** — il backstop è uno smoke test manuale su `npm run preview` via Playwright MCP quando la slice tocca UI visibile (classificata almeno `risk:medium`, vedi *Test*). Quando passeremo a `small-team` (più di un dev attivo) si attivano review sulle PR verso `develop` e protezione di `main`.
 
-- Commit diretti su `develop` ammessi per slice piccole (prefisso `ai/` opzionale, raccomandato per slice AI-led significative).
-- Commit diretti su `main` **solo** per docs-only (`*.md`, `docs/**`, `CLAUDE*.md`, commenti codice) o per la gestione del contratto AI stesso. Tutto il resto passa da `develop`.
-- PR `develop` → `main` sono self-merge fatte dal dev.
-- Test automatici Vitest/Playwright **non obbligatori** — il backstop è uno smoke test manuale su `npm run preview` via Playwright MCP quando la slice tocca UI visibile (classificata almeno `risk:medium`).
+---
 
-Quando passeremo a `piccolo-team` (>1 dev attivo), questa sezione va aggiornata e si attivano: PR obbligatorie verso `develop`, review richiesta su `main`.
+## Politica git corrente
+
+**Default del contratto e delle regole globali, nessun override** (decisione di Marco del 2026-09-27, che toglie la libertà dichiarata prima in *Scale*: commit diretti su `develop` con prefisso `ai/` facoltativo, sola documentazione su `main`):
+
+- ogni slice su un branch `ai/<slice-type>/<slug>` (o `ai/<slice-type>/<issue-id>-<slug>` se chiude una issue) creato da `develop` prima di toccare file; a fine slice commit, push e PR verso `develop`, fatti da Claudio;
+- le modifiche di sola documentazione vanno direttamente su `develop`, senza branch né PR;
+- `develop` → `main` alla promozione (PR o merge), che rilascia su GitHub Pages; nessun commit diretto su `main`.
 
 ---
 
@@ -159,8 +164,8 @@ Deviazioni da `CLAUDE-vue-app.md`:
 - **JavaScript, non TypeScript** — il progetto è JS puro. Di conseguenza I-12 si applica solo per le parti disponibili: `npm run build` obbligatorio; `npm run type-check` non esiste (non c'è lint step configurato al momento — quando sarà aggiunto l'eslint, questa eccezione si accorcia).
 - **Lingua di UI, errori e commenti**: **italiano**. Anche gli identificatori di dominio (variabili, funzioni, file) sono in italiano (`useViaggio`, `aree`, `chiavePunto`). I nomi tecnici universali (hook Vue, API standard: `ref`, `computed`, `onMounted`, `fetch`) restano inglesi.
 - **Accessibilità WCAG AA (I-09)** è un obiettivo, ma non completamente auditato in v1.0. Obbligatorio sulle modifiche future; debito attuale tracciato come [`TD-003`](docs/tech-debt.md) e come `TODO(a11y):` inline dove rilevato.
-- **Code documentation standard applicato solo a file nuovi** — il capitolo rev 8 del contratto introduce header obbligatori su file, exported function/composable/class/method, e component. In Roadbook applichiamo gli header **a regime su file nuovi** e a file modificati in modo sostanziale (slice tematica su quel file). Niente refactor retroattivo di massa sulla codebase v1.0. Il livello di copertura crescerà organicamente nelle slice future.
-- **Memoria Claude esterna** — la scelta per-progetto su "memoria interna vs esterna" (capitolo *Claude memory — internal vs external*) per Roadbook è **esterna**, default del contratto: la memoria vive in `~/.claude/projects/d---RedBones-Tomita-roadbook/memory/`, gitignorata, locale alla macchina dell'autore. Non duplicare i contenuti dentro il repo.
+- **Code documentation applicato solo a file nuovi** — il capitolo *Code documentation* del contratto chiede header su file, funzioni esportate, composable e componenti. In Roadbook applichiamo gli header **a regime su file nuovi** e a file modificati in modo sostanziale (slice tematica su quel file). Niente refactor retroattivo di massa sulla codebase v1.0. Il livello di copertura crescerà organicamente nelle slice future.
+- **Cassetti senza skill (temporanea)** — il contratto vuole i file dei cassetti creati con le skill del kit (`/decision-new`, `/request-new`, `/incident-new`, `/review-new`), che qui non sono ancora installate: finché non arrivano, i file si creano a mano sul modello di quelli già presenti nel cassetto, con lo stesso frontmatter.
 
 Nessun'altra deviazione rispetto a I-01..I-15.
 
@@ -235,49 +240,25 @@ Test automatici Vitest sono da aggiungere quando la base di codice cresce oltre 
 
 ---
 
-## Memoria dinamica
+## Stato fra sessioni e memoria
 
-I file di memoria Claude Code di questo progetto vivono in:
-
-```
-C:\Users\aldeb\.claude\projects\d---RedBones-Tomita-roadbook\memory\
-```
-
-Contengono decisioni fondamentali prese dall'utente, profilo utente, pendenze di deploy, architettura dati. **Aggiornare la memoria** quando una decisione rilevante cambia o ne arriva una nuova; **non duplicare** il contenuto di questo `CLAUDE.md` o di `CLAUDE-vue-app.md` nella memoria.
+Lo stato per riprendere il lavoro sta nel repo: `HANDOFF.md` (skill globali `recupera-memoria` / `salva-memoria`), `STATUS.md`, `docs/STATO-PROGETTO.md`. La memoria di Claude Code in `C:\Users\aldeb\.claude\projects\d---RedBones-Tomita-roadbook\memory\` è uno specchio: non duplica questo file né il contratto.
 
 ---
 
-## Briefing di inizio sessione (manuale, senza hook)
+## Cassetti documentali
 
-Mentre non è configurato un hook SessionStart, a ogni nuova sessione Claude:
+Secondo il capitolo *Documentation layout* di `CLAUDE-vue-app.md`. Stato corrente:
 
-1. Legge `MEMORY.md` (automatico).
-2. Se l'operatore chiede esplicitamente "recupera memoria" o simili, ri-legge `STATO-PROGETTO.md` + `docs/SPECIFICHE-APP.md` per ricostruire il contesto.
-3. Prima di una slice su UI, controlla la branch corrente e lo stato di `main` vs `develop` con `git status` / `git log --oneline -5` su entrambi.
-4. Verifica la build locale con `npm run build` se sta per toccare codice (opzionale ma consigliato dopo un `git pull`).
+- **`docs/decisions/`** e **`docs/requests/`** — popolati.
+- **`docs/incidents/`** — non ancora creato, nasce al primo incidente con impatto su utenti.
+- **`docs/reviews/`** — non ancora creato, nasce alla prima revisione di un'AI esterna (Codex).
+- **`docs/tech-debt.md`** — popolato.
 
-Quando verrà attivato un hook `SessionStart` in `.claude/settings.json`, questa sezione si accorcia a un puntatore.
+Le skill del kit non sono installate: vedi l'eccezione *Cassetti senza skill*.
 
 ---
 
-## Documentation cassetti
+## Skill disponibili
 
-Cassetti documentali secondo *Documentation Layout & Lifecycle* di `CLAUDE-vue-app.md` (rev 2026-05-16 broadcast). Stato corrente:
-
-- **`docs/decisions/`** — `populated` (cartella adottata con ADR esistenti). Skill `/decision-new` **non installata** in questo repo (no `.claude/skills/`); la creazione è manuale seguendo il template del contratto di famiglia (`CLAUDE-vue-app.md` §*Three ADR-style cassetti*).
-- **`docs/requests/`** — `populated` (cartella adottata). Stesso pattern manuale.
-- **`docs/incidents/`** — **non scaffolded** ancora. Da creare al primo trigger qualificato (anomalia operativa con impatto utente/team).
-- **`docs/tech-debt.md`** — `populated` (file presente con voci correnti).
-- **`docs/tech/`** — non applica alla famiglia `vue-app` con convenzione mandatory specifica.
-
-**Nota storica**: il 2026-05-16 questo satellite ha omesso di creare un file in `docs/requests/` durante una richiesta cliente che apriva interlocuzione non chiusa nel turno. Quell'omissione è stata il trigger reale della modifica del contratto di famiglia (vedi ADR `_master-contracts/docs/decisions/2026-05-16-trigger-cassetti-e-issue-coupling.md`) — il nuovo chapter *Triggers — when a cassetto file is created* di `CLAUDE-vue-app.md` rende ora prescrittivo cosa fare.
-
-## Issue tracker
-
-- **Piattaforma**: `github`.
-- **Organizzazione/Account**: `AldebaranPrimo` (host: `github.com/AldebaranPrimo`).
-- **Repo**: `roadbook`.
-- **Categoria proprietà**: `personal` — progetto personale pubblico di Aldebaran Primo (Marco Preti, autore Roadbook).
-- **CLI**: `gh` (GitHub CLI) per issue + PR + repo ops.
-
-**Coupling cassetti↔issue** (capability-gated, regola universale `CLAUDE-meta.md` rev 8): ogni file in `docs/requests/` e `docs/incidents/` ha cross-link 1:1 con una GitHub issue — bidirezionale (file → URL issue, issue → path file). Per-entry optional in `docs/tech-debt.md`. Optional per `docs/decisions/`.
+Nessuna skill di progetto in `.claude/skills/` (il kit del master non è ancora installato qui). Valgono le skill globali della macchina, in particolare `recupera-memoria` e `salva-memoria` per il passaggio fra sessioni.
