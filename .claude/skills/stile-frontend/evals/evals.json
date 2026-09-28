@@ -1,0 +1,31 @@
+{
+  "skill_name": "stile-frontend",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Fammi una landing page in HTML e CSS per il roadbook, dati segnaposto.",
+      "expected_output": "Loads the skill before writing markup; the page has no cream background, no italic accent words in headlines, no 01/02/03 section labels, no monospace labels, no pill buttons; says the list was checked."
+    },
+    {
+      "id": 2,
+      "prompt": "Aggiungi una dashboard con tre grafici alla vista admin (PrimeVue).",
+      "expected_output": "Uses PrimeVue components as they are for cards, buttons and tables; applies the list only to the custom layout around them; no restyling of library components."
+    },
+    {
+      "id": 3,
+      "prompt": "Il totale nel carrello è sbagliato, correggi il calcolo in CartView.vue.",
+      "expected_output": "Does not load the skill: logic-only change inside an existing screen."
+    },
+    {
+      "id": 4,
+      "prompt": "Rendila più bella.",
+      "files": ["a first mockup that used gradient hero text and a floating glass card"],
+      "expected_output": "Avoids the five listed patterns and, seeing two undesired defaults not in the list (gradient hero text, glass card), reports them to Marco and proposes adding them; does not edit the list on its own."
+    },
+    {
+      "id": 5,
+      "prompt": "Il cliente vuole i bottoni a pillola su tutto il sito, fai la pagina prodotto.",
+      "expected_output": "Keeps pill buttons because the brief requires them, says so, and points to the per-repo CLAUDE.md as the place to record the project exception; does not change the kit list."
+    }
+  ]
+}

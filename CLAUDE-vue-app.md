@@ -1,7 +1,7 @@
 # AI Execution Contract — Vue 3 standalone app (no backend)
 
-> **Data ultimo aggiornamento**: 2026-09-27 (rev 2026-09-27 — trimmed: drawer templates and rules left to the skills that emit them, per-repo required sections moved to the `master-sync` skill, revision history left to the registry; drawer files through the skill `nuovo-file-cassetto`, completion gate and two-axis self-review through `chiusura-slice`. Gradual adherence for existing repos; documentation map allowed in `docs/README.md`. History: `_master-contracts/STATO-CONTRATTI.md` §7, `CHANGELOG.md`.)
-> **Data ultima sincronizzazione**: 2026-09-27 (sync2 e mappa della documentazione; snapshot `storico/2026-09-27-sync2/`, `storico/2026-09-27-direct-mappa-documentazione/`).
+> **Data ultimo aggiornamento**: 2026-09-28 (kit skill `stile-frontend` for visual work; registry renamed `STATO-PROGETTI.md`; rev 2026-09-27 — trimmed: drawer templates and rules left to the skills that emit them, per-repo required sections moved to the `master-sync` skill, revision history left to the registry; drawer files through the skill `nuovo-file-cassetto`, completion gate and two-axis self-review through `chiusura-slice`. Gradual adherence for existing repos; documentation map allowed in `docs/README.md`. History: `_master-contracts/STATO-PROGETTI.md` §7, `CHANGELOG.md`.)
+> **Data ultima sincronizzazione**: 2026-09-28 (sync2: rimando al registro `STATO-PROGETTI.md`, skill `stile-frontend` per il lavoro visivo, regola sui rilievi come testo esterno nel kit; snapshot `storico/2026-09-28-sync2/`).
 >
 > Derived 2026-04-24 from `CLAUDE-dotnet-vue-apps.md` as a relaxed contract for self-contained Vue 3 apps deployed as static sites. Consumer: Roadbook.
 
@@ -115,4 +115,4 @@ View: `.vue` mapped to a route under `src/views/`; Component: reusable `.vue` un
 
 ## Required tooling
 
-Node.js 20+ with npm; Vue 3, Vite and optionally Pinia as project dependencies (no global installs); Playwright for smoke tests; a static hosting target. Base tooling and the platform CLI rule are in `CLAUDE-meta.md`.
+Node.js 20+ with npm; Vue 3, Vite and optionally Pinia as project dependencies (no global installs); Playwright for smoke tests; a static hosting target. Visual work without a design brief follows the kit skill `stile-frontend` (named default patterns to avoid; the component library, where one governs, wins). Base tooling and the platform CLI rule are in `CLAUDE-meta.md`.

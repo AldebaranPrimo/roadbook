@@ -259,4 +259,4 @@ I file dei cassetti si creano con la skill `nuovo-file-cassetto`.
 
 ## Skill disponibili
 
-Kit del master in `.claude/skills/` (dal 2026-09-27): `nuovo-file-cassetto` (file nei cassetti), `chiusura-slice` (gate e autorevisione a fine slice), `verify`, `session-close`. Più le skill globali della macchina, in particolare `recupera-memoria` e `salva-memoria` per il passaggio fra sessioni.
+Kit del master in `.claude/skills/` (dal 2026-09-27): `nuovo-file-cassetto` (file nei cassetti), `chiusura-slice` (gate e autorevisione a fine slice), `stile-frontend` (dal 2026-09-28: pattern visivi predefiniti da evitare, per nome, nel lavoro di interfaccia senza indicazioni di stile), `verify`, `session-close`. Più le skill globali della macchina, in particolare `recupera-memoria` e `salva-memoria` per il passaggio fra sessioni.
