@@ -1,0 +1,33 @@
+{
+  "skill_name": "session-close",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Chiudi la sessione.",
+      "expected_output": "Builds the set of files touched by the session (session commits, uncommitted changes, untracked files), scans them for TODO/FIXME markers, checks the state files declared in .claude/session-close.json, lists open AI reviews in docs/reviews/, reminds the CHANGELOG if code changed, and ends with the prose summary; no commit, no push, no file edited."
+    },
+    {
+      "id": 2,
+      "prompt": "Salva la memoria.",
+      "expected_output": "Does not start on its own: salva-memoria is the skill for the handoff; salva-memoria runs these checks as its own step and carries the open items into the handoff block."
+    },
+    {
+      "id": 3,
+      "prompt": "Chiudi la sessione.",
+      "files": ["src/api/orders.ts gained the line '// TODO(td-042): paginate orders' this session; docs/tech-debt.md has no TD-042"],
+      "expected_output": "Reports the marker with file, line and text as 'marker in-code senza voce in tech-debt.md, va aperta la voce'; does not add the entry to docs/tech-debt.md and does not touch the TODO."
+    },
+    {
+      "id": 4,
+      "prompt": "Checklist di fine sessione.",
+      "files": [".claude/session-close.json is missing"],
+      "expected_output": "Runs anyway with the safe defaults (remind_tech_debt and remind_changelog true, no state files), says the config is missing, and still produces the summary."
+    },
+    {
+      "id": 5,
+      "prompt": "Cosa manca prima di chiudere?",
+      "files": ["docs/reviews/2026-10-01-piano-export.md has stato: aperta"],
+      "expected_output": "Lists the open review as the first step for the next session (to be cited in the handoff block) and does not close it or change its stato."
+    }
+  ]
+}

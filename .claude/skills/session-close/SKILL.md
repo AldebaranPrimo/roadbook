@@ -1,5 +1,6 @@
 ---
-description: Project-agnostic session-close ritual. Surfaces inline TODO markers added during the session and reminds to register them in `docs/tech-debt.md`. Reviews state files declared in `.claude/session-close.json` and reminds to update them if relevant. Does NOT commit, does NOT push. Closing checklist + reminders only.
+name: session-close
+description: Closing checklist of a work session, project-agnostic - lists the TODO markers added to the code during the session and reminds to register them in docs/tech-debt.md, checks the state files declared in .claude/session-close.json, lists the AI reviews still open in docs/reviews/, reminds the CHANGELOG entry. Reminders only - no commit, no push, no file edited. Use it when the user says "chiudi la sessione", "checklist di fine sessione", "cosa manca prima di chiudere", "/session-close"; salva-memoria runs it on its own before the handoff commit. Not for "salva la memoria" or updating HANDOFF.md (salva-memoria), not for closing a slice with gate and self-review (chiusura-slice), not for registering tech-debt entries (the user writes them).
 argument-hint: <none — reads .claude/session-close.json>
 ---
 

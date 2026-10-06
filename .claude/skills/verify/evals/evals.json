@@ -1,0 +1,34 @@
+{
+  "skill_name": "verify",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Lancia le verifiche.",
+      "files": [".claude/verify.json declares Lint, Type-check and Build, all blocking; Type-check exits 2"],
+      "expected_output": "Runs Lint (pass), runs Type-check, reports it failed with the tail of its output, stops: Build is not run, the verdict is BLOCKED ON Type-check; no automatic fix, no commit."
+    },
+    {
+      "id": 2,
+      "prompt": "È tutto verde?",
+      "files": [".claude/verify.json with three blocking steps, all exit 0"],
+      "expected_output": "Runs the three steps in order, announces each one, ends with the step | esito table and READY TO COMMIT; does not commit or push."
+    },
+    {
+      "id": 3,
+      "prompt": "Fai girare i test prima di committare.",
+      "files": [".claude/verify.json is missing"],
+      "expected_output": "Stops with the message that the configuration is absent and that the project must declare .claude/verify.json; runs nothing by guessing commands."
+    },
+    {
+      "id": 4,
+      "prompt": "/verify",
+      "files": [".claude/verify.json: Build blocking passes, E2E tests non-blocking exit 1"],
+      "expected_output": "Reports E2E as a warning with a short tail, continues with the remaining steps, final verdict READY TO COMMIT with the warning visible."
+    },
+    {
+      "id": 5,
+      "prompt": "Committa la correzione del refuso nel README.",
+      "expected_output": "Does not start: a documentation-only commit has no gate (docs-only exception); the commit follows the per-repo git policy."
+    }
+  ]
+}

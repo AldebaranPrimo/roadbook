@@ -1,5 +1,6 @@
 ---
-description: Project-agnostic pre-commit/pre-PR verification checklist. Reads the list of steps to run from `.claude/verify.json` (commands, blocking flags, descriptions) and executes them in order, reporting pass/fail. Stops on the first blocking failure; non-blocking failures are reported as warnings. Used as the Phase 4 gate codified in family contracts.
+name: verify
+description: Runs the project's pre-commit / pre-PR verification checklist from .claude/verify.json - the steps the project declares (shell commands or MCP tools, blocking or not) in order, reporting pass/fail and stopping at the first blocking failure. It is the gate that chiusura-slice runs before the commit of a slice; use it on your own also when the user says "lancia le verifiche", "fai girare i test prima di committare", "è tutto verde?", "/verify". Not for fixing what fails (a separate action the user decides), not for committing or pushing (chiusura-slice), not for documentation-only commits; without .claude/verify.json it stops and says so.
 argument-hint: <none — reads .claude/verify.json>
 ---
 
