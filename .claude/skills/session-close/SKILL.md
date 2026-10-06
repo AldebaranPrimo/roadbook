@@ -24,7 +24,7 @@ Legge `.claude/session-close.json`:
 }
 ```
 
-Tutte le chiavi opzionali. Default sicuri se file manca: `remind_tech_debt=true`, `remind_changelog=true`, `state_files_to_review=[]`.
+Tutte le chiavi opzionali. Default sicuri se il file manca (e lo si dichiara nel riepilogo): `remind_tech_debt=true`, `remind_changelog=true`, `state_files_to_review=[]`.
 
 ## Workflow
 
