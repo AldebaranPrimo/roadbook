@@ -5,7 +5,7 @@ description: Named list of default visual patterns to avoid when producing front
 
 # stile-frontend
 
-Asked for frontend work without design direction, the model falls back on a few recognisable default styles, and a general instruction such as "avoid a generic look" only swaps one default for another. What works is naming the specific patterns to avoid, then checking which ones the first result used and extending the list (official guide *Prompting Claude Opus 5.5*, section *Frontend design defaults*, read on 2026-09-28).
+Asked for frontend work without design direction, the model falls back on a few recognisable default styles, and a general instruction such as "avoid a generic look" only swaps one default for another. What works is naming the specific patterns to avoid, then checking which ones the first result used and extending the list (official guide *Prompting Claude Opus 5.5*, section *Frontend design defaults*).
 
 ## Flow
 
@@ -17,7 +17,7 @@ Asked for frontend work without design direction, the model falls back on a few 
 
 ## Patterns to avoid (by name)
 
-Initial list, from the official guide (2026-09-28):
+Initial list, from the official guide:
 
 1. Cream or off-white page background.
 2. Italic accent words in headlines.

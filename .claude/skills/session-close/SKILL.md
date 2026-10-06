@@ -30,7 +30,7 @@ Tutte le chiavi opzionali. Default sicuri se file manca: `remind_tech_debt=true`
 
 ### 1. Scan tech-debt aperti nel codice durante la sessione
 
-Costruisci l'insieme dei file toccati dalla sessione unendo tre fonti: (a) i commit della sessione, `git diff <baseline>..HEAD --name-only` dove baseline è l'ultimo commit precedente alla sessione se lo conosci (dal briefing di apertura o dall'orario), altrimenti **dichiara** che il confronto parte da `origin/HEAD` e può includere commit di altri; (b) le modifiche non ancora committate, `git diff --name-only` e `git diff --cached --name-only`; (c) i file nuovi non tracciati, `git ls-files --others --exclude-standard`. I file cancellati si escludono. Una sessione interrotta prima del commit ha tutto il suo lavoro in (b) e (c): senza di loro la scansione sarebbe vuota (revisione Codex `verifica-governance-operativa`, rilievo 8). Nei file così raccolti cerca i pattern:
+Costruisci l'insieme dei file toccati dalla sessione unendo tre fonti: (a) i commit della sessione, `git diff <baseline>..HEAD --name-only` dove baseline è l'ultimo commit precedente alla sessione se lo conosci (dal briefing di apertura o dall'orario), altrimenti **dichiara** che il confronto parte da `origin/HEAD` e può includere commit di altri; (b) le modifiche non ancora committate, `git diff --name-only` e `git diff --cached --name-only`; (c) i file nuovi non tracciati, `git ls-files --others --exclude-standard`. I file cancellati si escludono. Una sessione interrotta prima del commit ha tutto il suo lavoro in (b) e (c): senza di loro la scansione sarebbe vuota. Nei file così raccolti cerca i pattern:
 - `TODO(refactor):`
 - `TODO(perf):`
 - `TODO(a11y):`

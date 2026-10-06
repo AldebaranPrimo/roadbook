@@ -6,7 +6,7 @@ argument-hint: "[decisione|richiesta|incidente|revisione] <slug>"
 
 # nuovo-file-cassetto
 
-One skill for the four ADR-style drawers (it replaced `decision-new`, `request-new`, `incident-new`, `review-new` on 2026-09-27). The drawer rules of the family contract (*Documentation layout*: when a file is born, plan promotion, issue tracker) apply; this skill holds the templates and the mechanics.
+One skill for the four ADR-style drawers. The drawer rules of the family contract (*Documentation layout*: when a file is born, plan promotion, issue tracker) apply; this skill holds the templates and the mechanics.
 
 ## Modes
 
